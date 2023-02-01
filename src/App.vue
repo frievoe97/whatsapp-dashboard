@@ -1,7 +1,5 @@
 <script setup>
-import HelloWorld from "./components/HelloWorld.vue";
-import TheWelcome from "./components/TheWelcome.vue";
-import Plot1 from "./components/Plot1.vue";
+import Plot1 from ".components/Plot1.vue";
 import Plot2 from "./components/Plot2.vue";
 </script>
 
