@@ -2,7 +2,7 @@ name: Upload the Whatsapp-Dashboard to the server of the subdomain whatsapp-dash
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   Upload-to-SFTP:
