@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteCond %{SERVER_PORT} !=443
+RewriteRule ^(.*)$ https://whatsapp-dashboard.friedrichvoelkers.de/$1 [R=301,L]
