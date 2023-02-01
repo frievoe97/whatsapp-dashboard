@@ -15,7 +15,7 @@ import TheWelcome from "./components/TheWelcome.vue";
       />
 
       <div class="wrapper">
-        <HelloWorld msg="You did it! GitHub" />
+        <HelloWorld msg="You did it! This was a deploy..." />
       </div>
     </header>
 
