@@ -1,16 +1,22 @@
 <script setup>
 import HelloWorld from "./components/HelloWorld.vue";
 import TheWelcome from "./components/TheWelcome.vue";
+import Plot1 from "./components/Plot1.vue";
+import Plot2 from "./components/Plot2.vue";
 </script>
 
 <template>
-  <input
-    type="file"
-    id="input"
-    name="myfile"
-    class="inputfile"
-    @change="fileUploaded"
-  />
+  <div>
+    <Plot1 :data="allChats" :globalWidth="widthPlot1" classIDProp="plot-1" />
+    <Plot2 :data="allChats" :globalWidth="widthPlot2" classIDProp="plot-2" />
+    <input
+      type="file"
+      id="input"
+      name="myfile"
+      class="inputfile"
+      @change="fileUploaded"
+    />
+  </div>
 </template>
 
 <script>
@@ -55,6 +61,10 @@ export default {
       showSelectedNames: false,
       selectedNames: [],
     };
+  },
+  components: {
+    Plot1,
+    Plot2,
   },
   methods: {
     fileUploaded: async function () {

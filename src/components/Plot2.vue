@@ -1,29 +1,12 @@
 <template>
   <div :id="classID + '-container'">
-    <div :id="classID + '-title'">
-      Number Of Messages per {{ this.indexName[this.index - 1] }}
-    </div>
+    <div :id="classID + '-title'">Number Of Messages Per Hour</div>
     <div :id="classID"></div>
     <div class="buttons">
-      <div @click="changeIndex2(3)" class="single-button">Year</div>
-      <div @click="changeIndex2(2)" class="single-button">Month</div>
-      <div @click="changeIndex2(1)" class="single-button">Days</div>
-      <input
-        type="date"
-        id="start"
-        name="trip-start"
-        :value="starteDate"
-        :min="starteDate"
-        :max="endDate"
-      />
-      <input
-        type="date"
-        id="end"
-        name="trip-end"
-        :value="endDate"
-        :min="starteDate"
-        :max="endDate"
-      />
+      <div @click="changeIndex2(5)" class="single-button">Hour</div>
+      <div @click="changeIndex2(6)" class="single-button">Minute</div>
+      <div @click="changeIndex2(7)" class="single-button">Weekday</div>
+      <div @click="changeIndex2(8)" class="single-button">Month</div>
     </div>
   </div>
 </template>
@@ -33,7 +16,7 @@ import * as d3 from "d3";
 import { interpolatePath } from "d3-interpolate-path";
 
 export default {
-  name: "Plot-1",
+  name: "Plot-2",
   components: {},
   props: {
     data: Object,
@@ -45,7 +28,7 @@ export default {
       plotData: [], // erster Index ist Lisa, Friedrich, Gesamt // Zweiter Index ist unvonverted, perDay, perMonth, perYear
       starteDate: "",
       endDate: "",
-      index: 3,
+      index: 5,
       parseTime: d3.timeParse("%Y-%m-%d"),
       allCurveObjects: [],
       curve: {},
@@ -128,11 +111,10 @@ export default {
     },
   },
   methods: {
-    // Wofür wird das benötigt?
-    createClassArrays: function () {
+    createClassArrays: async function () {
       this.classNames = [];
       this.classNamesDot = [];
-      for (let i = 0; i <= this.data.names.length; i++) {
+      for (let i = 0; i < this.data.names.length; i++) {
         const index = (i + 1).toString();
         this.classNames.push("line-" + index);
         this.classNamesDot.push(".line" + index);
@@ -171,21 +153,32 @@ export default {
     prepareData2: function () {
       if (!this.data.allMessages.length) return;
       this.plotData = [];
-      const defaultPaerseTime = d3.timeParse("%Y-%m-%d");
+      // eslint-disable-next-line
+      const defaultPaerseTime = d3.timeParse("%H");
 
       if (this.index == 2) {
-        this.parseTime = d3.timeParse("%Y-%m");
+        this.parseTime = d3.timeParse("%M");
       } else if (this.index == 1) {
-        this.parseTime = d3.timeParse("%Y-%m-%d");
+        this.parseTime = d3.timeParse("%M");
       } else if (this.index == 3) {
-        this.parseTime = d3.timeParse("%Y");
+        this.parseTime = d3.timeParse("%M");
+      } else if (this.index == 5) {
+        this.parseTime = d3.timeParse("%H");
+      } else if (this.index == 6) {
+        this.parseTime = d3.timeParse("%H%M");
+      } else if (this.index == 7) {
+        this.parseTime = d3.timeParse("%b %d"); // Need to be changed
       }
 
       for (let i = 0; i < this.data.names.length; i++) {
-        this.plotData.push([[], [], [], [], []]);
+        this.plotData.push([[], [], [], [], [], [], [], []]);
       }
 
-      this.plotData.push([[], [], [], [], []]);
+      // 0 unconverted?
+      // 1 hour
+      // Format: [ "2017-06-22", 7 ]
+
+      this.plotData.push([[], [], [], [], [], [], [], []]);
 
       for (let i = 0; i < this.data.allMessages.length; i++) {
         const name = this.data.allMessages[i].name;
@@ -197,139 +190,6 @@ export default {
         ]);
       }
 
-      // Count Unvonverted, still stored as unconverted
-      for (let i = 0; i < this.plotData.length; i++) {
-        let updatedUnconverted = [];
-        let lastDate = "";
-        for (let j = 0; j < this.plotData[i][0].length; j++) {
-          if (this.plotData[i][0][j][0] != lastDate) {
-            lastDate = this.plotData[i][0][j][0];
-            updatedUnconverted.push([lastDate, 1]);
-          } else {
-            lastDate = this.plotData[i][0][j][0];
-            const lastvalue =
-              updatedUnconverted[updatedUnconverted.length - 1][1];
-            updatedUnconverted[updatedUnconverted.length - 1] = [
-              lastDate,
-              lastvalue + 1,
-            ];
-          }
-        }
-        this.plotData[i][0] = updatedUnconverted;
-      }
-
-      // per Day
-      for (let i = 0; i < this.plotData.length; i++) {
-        const startDate = this.plotData[i][0][0][0];
-        const endDate = this.plotData[i][0][this.plotData[i][0].length - 1][0];
-
-        const allDates = [];
-        for (let j = 0; j < this.plotData[i][0].length; j++) {
-          allDates.push(this.plotData[i][0][j][0]);
-        }
-        for (
-          let j = new Date(defaultPaerseTime(startDate));
-          j <= new Date(defaultPaerseTime(endDate));
-          j.setDate(j.getDate() + 1)
-        ) {
-          const date = new Date(j).toISOString().split("T")[0];
-          if (allDates.includes(date)) {
-            const dateIndex = allDates.indexOf(date);
-            this.plotData[i][1].push([
-              this.plotData[i][0][dateIndex][0],
-              this.plotData[i][0][dateIndex][1],
-            ]);
-          } else {
-            this.plotData[i][1].push([date, 0]);
-          }
-        }
-      }
-
-      // per month
-      for (let i = 0; i < this.plotData.length; i++) {
-        const startDate = this.plotData[i][0][0][0];
-        const endDate = this.plotData[i][0][this.plotData[i][0].length - 1][0];
-        const allMonth = []; // 2015-06
-        let daysPerMonth = [];
-        let daysPerMonthValue = [];
-
-        for (
-          let j = new Date(defaultPaerseTime(startDate));
-          j <= new Date(defaultPaerseTime(endDate));
-          j.setDate(j.getDate() + 1)
-        ) {
-          // add "empty" months
-          const month = new Date(j).toISOString().substring(0, 7);
-          if (!allMonth.includes(month)) {
-            allMonth.push(month);
-            this.plotData[i][2].push([month, 0]);
-            daysPerMonth.push(month);
-            daysPerMonthValue.push(0);
-          }
-          const countIndex = daysPerMonth.indexOf(month);
-          daysPerMonthValue[countIndex]++;
-        }
-        // loop throu all days
-        for (let j = 0; j < this.plotData[i][0].length; j = j + 1) {
-          const month = this.plotData[i][0][j][0].substring(0, 7);
-          const value = this.plotData[i][0][j][1];
-          const monthIndex = allMonth.indexOf(month);
-
-          this.plotData[i][2][monthIndex][1] =
-            this.plotData[i][2][monthIndex][1] + value;
-        }
-
-        for (let j = 0; j < this.plotData[i][2].length; j = j + 1) {
-          const month = this.plotData[i][2][j][0];
-          const value = this.plotData[i][2][j][1];
-          const monthIndex = daysPerMonth.indexOf(month);
-          const days = daysPerMonthValue[monthIndex];
-          if (value != 0) {
-            this.plotData[i][2][j][1] = value / days;
-          }
-        }
-      }
-
-      // per year
-      for (let i = 0; i < this.plotData.length; i++) {
-        const startDate = this.plotData[i][0][0][0];
-        const endDate = this.plotData[i][0][this.plotData[i][0].length - 1][0];
-        const allYears = []; // 2015
-        let daysPerYear = [];
-        let daysPerYearValue = [];
-        for (
-          let j = new Date(defaultPaerseTime(startDate));
-          j <= new Date(defaultPaerseTime(endDate));
-          j.setDate(j.getDate() + 1)
-        ) {
-          const year = new Date(j).toISOString().substring(0, 4);
-          if (!allYears.includes(year)) {
-            allYears.push(year);
-            this.plotData[i][3].push([year, 0]);
-            daysPerYear.push(year);
-            daysPerYearValue.push(0);
-          }
-          const countIndex = daysPerYear.indexOf(year);
-          daysPerYearValue[countIndex]++;
-        }
-        for (let j = 0; j < this.plotData[i][0].length; j = j + 1) {
-          const year = this.plotData[i][0][j][0].substring(0, 4);
-          const value = this.plotData[i][0][j][1];
-          const yearIndex = allYears.indexOf(year);
-          this.plotData[i][3][yearIndex][1] =
-            this.plotData[i][3][yearIndex][1] + value;
-        }
-        for (let j = 0; j < this.plotData[i][3].length; j = j + 1) {
-          const year = this.plotData[i][3][j][0];
-          const value = this.plotData[i][3][j][1];
-          const yearIndex = daysPerYear.indexOf(year);
-          const days = daysPerYearValue[yearIndex];
-          if (value != 0) {
-            this.plotData[i][3][j][1] = value / days;
-          }
-        }
-      }
-
       for (let i = 0; i < this.plotData.length; i++) {
         for (let j = 0; j < this.plotData[i][3].length; j++) {
           this.plotData[i][4].push([
@@ -339,7 +199,72 @@ export default {
         }
       }
 
-      console.log(this.plotData);
+      for (let i = 0; i < this.plotData.length; i++) {
+        for (let j = 0; j < 24; j++) {
+          let hourString = j.toString();
+          hourString = hourString.length == 2 ? hourString : "0" + hourString;
+          this.plotData[i][5].push([hourString, 0]);
+        }
+      }
+
+      for (let i = 0; i < this.plotData.length; i++) {
+        for (let j = 0; j < 24; j++) {
+          for (let k = 0; k < 60; k++) {
+            let hourString = j.toString();
+            hourString = hourString.length == 2 ? hourString : "0" + hourString;
+
+            let minuteString = k.toString();
+            minuteString =
+              minuteString.length == 2 ? minuteString : "0" + minuteString;
+
+            this.plotData[i][6].push([hourString + minuteString, 0]);
+          }
+        }
+      }
+
+      for (let i = 0; i < this.data.allMessages.length; i++) {
+        const name = this.data.allMessages[i].name;
+        // eslint-disable-next-line
+        const nameIndex = this.data.names.indexOf(name);
+        // eslint-disable-next-line
+        const hour = this.data.allMessages[i].time.slice(0, 2);
+        const minute = this.data.allMessages[i].time.slice(3, 5);
+        const index = +hour * 60 + +minute;
+
+        this.plotData[nameIndex][5][+hour][1]++;
+        this.plotData[nameIndex][6][index][1]++;
+      }
+
+      for (let i = 0; i < this.plotData.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < this.plotData[i][5].length; j++) {
+          sum = sum + this.plotData[i][5][j][1];
+        }
+        if (sum != 0) {
+          for (let j = 0; j < this.plotData[i][5].length; j++) {
+            this.plotData[i][5][j][1] = (this.plotData[i][5][j][1] / sum) * 100;
+          }
+        }
+      }
+
+      for (let i = 0; i < this.plotData.length; i++) {
+        for (let j = 0; j < 7; j++) {
+          this.plotData[i][7].push([j, 0]);
+        }
+      }
+
+      for (let i = 0; i < this.data.allMessages.length; i++) {
+        const name = this.data.allMessages[i].name;
+        const nameIndex = this.data.names.indexOf(name);
+        const weekday = this.data.allMessages[i].weekday;
+        this.plotData[nameIndex][7][weekday][1]++;
+      }
+
+      for (let i = 0; i < this.data.names.length; i++) {
+        for (let j = 0; j < 7; j++) {
+          this.plotData[i][7][j][1] = "2022-08-0" + this.plotData[i][7][j][1];
+        }
+      }
 
       this.createPlot();
     },
@@ -360,7 +285,23 @@ export default {
         this.endDate = this.plotData[2][3][
           this.plotData[2][3].length - 1
         ][0].substring(0, 4);
+      } else if (this.index == 5) {
+        this.starteDate = this.plotData[2][5][0][0].substring(0, 4);
+        this.endDate = this.plotData[2][5][
+          this.plotData[2][5].length - 1
+        ][0].substring(0, 4);
       }
+
+      /*
+            this.width =
+                parseInt(d3.select("#my_dataviz2").style("width")) -
+                this.margin.left -
+                this.margin.right;
+            this.height =
+                parseInt(d3.select("#my_dataviz2").style("height")) -
+                this.margin.top -
+                this.margin.bottom;
+                */
 
       // svg
       d3.select("#" + this.classID + "-svg").remove();
@@ -375,8 +316,12 @@ export default {
         .append("g")
         .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
-      const x = d3.scaleTime().range([0, this.width]);
-      const xAxis = d3.axisBottom().scale(x);
+      const x = d3.scaleTime().range([0, this.width]).nice();
+      const xAxis = d3
+        .axisBottom()
+        .scale(x)
+        //.tickFormat(d3.timeFormat("%H:%M"));
+        .tickFormat(d3.timeFormat("%a"));
 
       // myXaxis -> plot-1-x-axis
       svg
@@ -399,6 +344,32 @@ export default {
         .attr("transform", "rotate(-90)")
         .text("average messages per " + this.indexName[this.index - 1]);
 
+      // TOOLTIP
+      // eslint-disable-next-line
+      var rectOverlay = svg
+        .append("rect")
+        //.attr("cursor", "move")
+        .attr("fill", "none")
+        .attr("pointer-events", "all")
+        .attr("class", "zoom")
+        .attr("width", this.width)
+        .attr("height", this.height)
+        .on("mouseover", this.focusMouseOver())
+        .on("mousemove", this.focusMouseMove())
+        .on("mouseout", this.focusMouseOut());
+      /*.attr(
+                    "transform",
+                    "translate(" +
+                        this.margin.left +
+                        "," +
+                        this.margin.top +
+                        ")"
+                );
+            //.call(zoom)
+            //.on("mousemove", focusMouseMove)
+            .on("mouseover", focusMouseOver)
+            /*.on("mouseout", focusMouseOut);*/
+
       this.x = x;
       this.y = y;
       this.xAxis = xAxis;
@@ -407,10 +378,11 @@ export default {
       this.focus = focus;
 
       this.setInitalLine();
+      //this.updateCurve();
     },
     setInitalLine() {
-      let maxY = 0;
-      for (let i = 0; i <= this.data.names.length; i++) {
+      let maxY = this.calculateMaxY(this.plotData[0][this.index]);
+      for (let i = 0; i < this.data.names.length; i++) {
         maxY =
           this.calculateMaxY(this.plotData[i][this.index]) > maxY
             ? this.calculateMaxY(this.plotData[i][this.index])
@@ -419,12 +391,20 @@ export default {
 
       let parseTime = this.parseTime;
       if (this.index == 2) {
-        parseTime = d3.timeParse("%Y-%m");
+        parseTime = d3.timeParse("%H");
       } else if (this.index == 1) {
-        parseTime = d3.timeParse("%Y-%m-%d");
+        parseTime = d3.timeParse("%H");
       } else if (this.index == 3) {
-        parseTime = d3.timeParse("%Y");
+        parseTime = d3.timeParse("%H");
+      } else if (this.index == 5) {
+        parseTime = d3.timeParse("%H");
+      } else if (this.index == 6) {
+        parseTime = d3.timeParse("%H%M");
+      } else if (this.index == 7) {
+        this.parseTime = d3.timeParse("%Y-%m-%d"); // Need to be changed
       }
+
+      const timeShift = 0;
 
       if (this.index == 2) {
         this.starteDate = this.plotData[2][2][0][0].substring(0, 7);
@@ -442,10 +422,31 @@ export default {
         this.endDate = this.plotData[2][3][
           this.plotData[2][3].length - 1
         ][0].substring(0, 4);
+      } else if (this.index == 5) {
+        this.starteDate = (0 + timeShift).toString();
+        this.endDate = (23 + timeShift).toString();
+        this.starteDate = "00";
+        this.endDate = "24";
+      } else if (this.index == 6) {
+        this.starteDate = "0000";
+        this.endDate = "2359";
+      } else if (this.index == 7) {
+        this.starteDate = "2022-08-01";
+        this.endDate = "2022-08-07";
       }
 
       this.x.domain([parseTime(this.starteDate), parseTime(this.endDate)]);
       this.svg.selectAll("#" + this.classID + "-x-axis").call(this.xAxis);
+
+      /*
+            this.svg
+                .append("text")
+                .attr("class", "x label")
+                .attr("text-anchor", "end")
+                .attr("x", this.width)
+                .attr("y", this.height - 6)
+                .text("x-Achse");
+            */
 
       // create the Y axis
       this.y.domain([0, maxY]).nice();
@@ -454,6 +455,11 @@ export default {
       this.svg
         .select("#" + this.classID + "-y-label")
         .text("Average Messages Per " + this.indexName[this.index - 1]);
+
+      // this.indexName[this.index - 1].charAt(0).toUpperCase() + this.indexName[this.index - 1].slice(1)
+      //.text("average messages per " + this.indexName[this.index - 1]);
+
+      //this.svg.select("title").text("NEUN");
 
       const x = this.x;
       // eslint-disable-next-line
@@ -500,13 +506,16 @@ export default {
       this.updateCurve();
     },
     updateCurve() {
-      let maxY = 0;
-      for (let i = 0; i <= this.data.names.length; i++) {
+      let maxY = this.calculateMaxY(this.plotData[0][this.index]);
+      for (let i = 0; i < this.data.names.length; i++) {
         maxY =
           this.calculateMaxY(this.plotData[i][this.index]) > maxY
             ? this.calculateMaxY(this.plotData[i][this.index])
             : maxY;
       }
+
+      console.log(this.plotData);
+      console.log(this.index);
 
       let parseTime = this.parseTime;
       if (this.index == 2) {
@@ -515,6 +524,14 @@ export default {
         parseTime = d3.timeParse("%Y-%m-%d");
       } else if (this.index == 3) {
         parseTime = d3.timeParse("%Y");
+      } else if (this.index == 5) {
+        parseTime = d3.timeParse("%H");
+      } else if (this.index == 6) {
+        parseTime = d3.timeParse("%H");
+      } else if (this.index == 7) {
+        parseTime = d3.timeParse("%Y-%m-%d");
+      } else if (this.index == 8) {
+        parseTime = d3.timeParse("%H");
       }
 
       if (this.index == 2) {
@@ -533,6 +550,13 @@ export default {
         this.endDate = this.plotData[2][3][
           this.plotData[2][3].length - 1
         ][0].substring(0, 4);
+      } else if (this.index == 7) {
+        // Weekday
+        this.starteDate = "2022-08-01";
+        this.endDate = "2022-08-07";
+      } else {
+        this.starteDate = 0;
+        this.endDate = 23;
       }
 
       this.x.domain([parseTime(this.starteDate), parseTime(this.endDate)]);
@@ -587,14 +611,26 @@ export default {
 
       this.lineObjects = [];
 
-      for (let i = 0; i < this.classNames.length; i++) {
-        this.lineObjects.push(
-          this.svg
-            .selectAll("." + this.classNames[i])
-            .data([this.plotData[i][this.index]], function (d) {
-              return parseTime(d[0]);
-            })
-        );
+      if (this.index == 7) {
+        for (let i = 0; i < this.classNames.length; i++) {
+          this.lineObjects.push(
+            this.svg
+              .selectAll("." + this.classNames[i])
+              .data([this.plotData[i][this.index]], function (d) {
+                return parseTime("2022-08-0" + d[0] + 1);
+              })
+          );
+        }
+      } else {
+        for (let i = 0; i < this.classNames.length; i++) {
+          this.lineObjects.push(
+            this.svg
+              .selectAll("." + this.classNames[i])
+              .data([this.plotData[i][this.index]], function (d) {
+                return parseTime(d[0]);
+              })
+          );
+        }
       }
 
       const classNames = this.classNames;
@@ -609,6 +645,7 @@ export default {
           .duration(1000)
           .attrTween("d", function (d) {
             var previous = d3.select("." + classNames[i]).attr("d");
+
             //previous.attr("d");
             var current = line(d);
             return interpolatePath(previous, current);
@@ -625,11 +662,7 @@ export default {
           max = array[i][1];
         }
       }
-      if (max < 3) {
-        max = 3;
-      } else if (max < 5) {
-        max = 5;
-      } else if (max < 10) {
+      if (max < 10) {
         max = 10;
       } else if (max < 100) {
         let modulo = max % 10;
