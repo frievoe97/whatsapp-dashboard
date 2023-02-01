@@ -7,6 +7,8 @@
     "preview": "vite preview --port 4173"
   },
   "dependencies": {
+    "d3": "^7.8.2",
+    "d3-interpolate-path": "^2.3.0",
     "vue": "^2.7.7"
   },
   "devDependencies": {
