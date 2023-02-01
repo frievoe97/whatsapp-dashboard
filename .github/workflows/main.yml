@@ -5,6 +5,7 @@ on: [push]
 jobs:
   Upload-to-SFTP:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: 🚚 Get latest code                     # Checkout the latest code
         uses: actions/checkout@v2
