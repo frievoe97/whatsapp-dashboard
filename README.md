@@ -27,3 +27,9 @@ npm run dev
 ```sh
 npm run build
 ```
+
+### Publish
+- work on deploy branch
+- merge deploy into master
+- npm run build on master
+- push master
