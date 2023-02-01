@@ -16,6 +16,6 @@ jobs:
           username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
           forceUpload: true                          # Optional, Force uploading all files, Default to false(upload only newer files).
-          localDir: './dist'                              # Required, Absolute or relative to cwd.
+          localDir: 'dist'                              # Required, Absolute or relative to cwd.
           remoteDir: '/vuetest'                             # Required, Absolute path only.
           exclude: '.git*,.DS_Store'                 # Optional. exclude patterns (glob), use ',' to split, Default to ''.
