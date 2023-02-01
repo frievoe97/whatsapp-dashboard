@@ -1,22 +1,29 @@
 <template>
-  <div>
-    <first-plot
-      :data="allChats"
-      :globalWidth="widthPlot1"
-      classIDProp="plot-1"
-    />
-    <second-plot
-      :data="allChats"
-      :globalWidth="widthPlot2"
-      classIDProp="plot-2"
-    />
-    <input
-      type="file"
-      id="input"
-      name="myfile"
-      class="inputfile"
-      @change="fileUploaded"
-    />
+  <div id="app">
+    <div class="grid">
+      <input
+        type="file"
+        id="input"
+        name="myfile"
+        class="inputfile"
+        @change="fileUploaded"
+      />
+      <div class="grid-element" id="grid-plot-1">
+        <FirstPlot
+          :data="allChats"
+          :globalWidth="widthPlot1"
+          classIDProp="plot-1"
+        />
+      </div>
+
+      <div class="grid-element" id="grid-plot-2">
+        <SecondPlot
+          :data="allChats"
+          :globalWidth="widthPlot2"
+          classIDProp="plot-2"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -61,7 +68,8 @@ export default {
         plot7: 0,
       },
       testProp: 1,
-      widthPlot1: 0,
+      widthPlot1: 800,
+      widthPlot2: 800,
       showSelectedNames: false,
       selectedNames: [],
     };
@@ -267,4 +275,8 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+#app {
+  margin: auto;
+}
+</style>

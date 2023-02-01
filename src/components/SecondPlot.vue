@@ -100,6 +100,7 @@ export default {
     this.getStartWidth();
     this.createClassArrays();
     this.prepareData2();
+    console.log(this.plotData);
   },
   watch: {
     data() {
@@ -156,6 +157,7 @@ export default {
       // eslint-disable-next-line
       const defaultPaerseTime = d3.timeParse("%H");
 
+      // Welche Zeit wird hier eingetragen? Die die in dem Array als Index steht? Probieren wir es mal...
       if (this.index == 2) {
         this.parseTime = d3.timeParse("%M");
       } else if (this.index == 1) {
@@ -167,7 +169,9 @@ export default {
       } else if (this.index == 6) {
         this.parseTime = d3.timeParse("%H%M");
       } else if (this.index == 7) {
-        this.parseTime = d3.timeParse("%b %d"); // Need to be changed
+        this.parseTime = d3.timeParse("%w"); // Need to be changed
+      } else if (this.index == 8) {
+        this.parseTime = d3.timeParse("%m"); // Need to be changed
       }
 
       for (let i = 0; i < this.data.names.length; i++) {
@@ -249,22 +253,18 @@ export default {
 
       for (let i = 0; i < this.plotData.length; i++) {
         for (let j = 0; j < 7; j++) {
-          this.plotData[i][7].push([j, 0]);
+          this.plotData[i][7].push([j.toString(), 0]);
         }
       }
 
       for (let i = 0; i < this.data.allMessages.length; i++) {
         const name = this.data.allMessages[i].name;
         const nameIndex = this.data.names.indexOf(name);
-        const weekday = this.data.allMessages[i].weekday;
+        const weekday = this.data.allMessages[i].weekday.toString();
         this.plotData[nameIndex][7][weekday][1]++;
       }
 
-      for (let i = 0; i < this.data.names.length; i++) {
-        for (let j = 0; j < 7; j++) {
-          this.plotData[i][7][j][1] = "2022-08-0" + this.plotData[i][7][j][1];
-        }
-      }
+      console.log(this.plotData);
 
       this.createPlot();
     },
@@ -290,6 +290,15 @@ export default {
         this.endDate = this.plotData[2][5][
           this.plotData[2][5].length - 1
         ][0].substring(0, 4);
+      } else if (this.index == 6) {
+        this.starteDate = "00";
+        this.endDate = "2359";
+      } else if (this.index == 7) {
+        this.starteDate = "0";
+        this.endDate = "6";
+      } else if (this.index == 8) {
+        this.starteDate = "01";
+        this.endDate = "12";
       }
 
       /*
@@ -317,11 +326,21 @@ export default {
         .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
       const x = d3.scaleTime().range([0, this.width]).nice();
-      const xAxis = d3
-        .axisBottom()
-        .scale(x)
-        //.tickFormat(d3.timeFormat("%H:%M"));
-        .tickFormat(d3.timeFormat("%a"));
+
+      let xAxis = null;
+
+      if (this.index == 5)
+        xAxis = d3.axisBottom().scale(x).tickFormat(d3.timeFormat("%H:%M"));
+      if (this.index == 6)
+        xAxis = d3.axisBottom().scale(x).tickFormat(d3.timeFormat("%H:%M"));
+      if (this.index == 7)
+        xAxis = d3.axisBottom().scale(x).tickFormat(d3.timeFormat("%a"));
+      if (this.index == 8)
+        xAxis = d3.axisBottom().scale(x).tickFormat(d3.timeFormat("%H:%M"));
+
+      //.tickFormat(d3.timeFormat("%a"));
+
+      //xAxis = d3.axisBottom().scale(x).tickFormat(d3.timeFormat("%a"));
 
       // myXaxis -> plot-1-x-axis
       svg
@@ -390,49 +409,28 @@ export default {
       }
 
       let parseTime = this.parseTime;
-      if (this.index == 2) {
-        parseTime = d3.timeParse("%H");
-      } else if (this.index == 1) {
-        parseTime = d3.timeParse("%H");
-      } else if (this.index == 3) {
-        parseTime = d3.timeParse("%H");
-      } else if (this.index == 5) {
-        parseTime = d3.timeParse("%H");
+      if (this.index == 5) {
+        this.parseTime = d3.timeParse("%H");
       } else if (this.index == 6) {
-        parseTime = d3.timeParse("%H%M");
+        this.parseTime = d3.timeParse("%H%M");
       } else if (this.index == 7) {
-        this.parseTime = d3.timeParse("%Y-%m-%d"); // Need to be changed
+        this.parseTime = d3.timeParse("%w"); // Need to be changed
+      } else if (this.index == 8) {
+        this.parseTime = d3.timeParse("%m"); // Need to be changed
       }
 
-      const timeShift = 0;
-
-      if (this.index == 2) {
-        this.starteDate = this.plotData[2][2][0][0].substring(0, 7);
-        this.endDate = this.plotData[2][2][
-          this.plotData[2][2].length - 1
-        ][0].substring(0, 7);
-      } else if (this.index == 1) {
-        this.starteDate = this.plotData[2][1][0][0].substring(0, 10);
-        this.endDate = this.plotData[2][1][
-          this.plotData[2][1].length - 1
-        ][0].substring(0, 10);
-        //maxY = 60;
-      } else if (this.index == 3) {
-        this.starteDate = this.plotData[2][3][0][0].substring(0, 4);
-        this.endDate = this.plotData[2][3][
-          this.plotData[2][3].length - 1
-        ][0].substring(0, 4);
-      } else if (this.index == 5) {
-        this.starteDate = (0 + timeShift).toString();
-        this.endDate = (23 + timeShift).toString();
+      if (this.index == 5) {
         this.starteDate = "00";
-        this.endDate = "24";
+        this.endDate = "23";
       } else if (this.index == 6) {
-        this.starteDate = "0000";
+        this.starteDate = "00";
         this.endDate = "2359";
       } else if (this.index == 7) {
-        this.starteDate = "2022-08-01";
-        this.endDate = "2022-08-07";
+        this.starteDate = "0";
+        this.endDate = "6";
+      } else if (this.index == 8) {
+        this.starteDate = "01";
+        this.endDate = "12";
       }
 
       this.x.domain([parseTime(this.starteDate), parseTime(this.endDate)]);
@@ -518,48 +516,58 @@ export default {
       console.log(this.index);
 
       let parseTime = this.parseTime;
-      if (this.index == 2) {
-        parseTime = d3.timeParse("%Y-%m");
-      } else if (this.index == 1) {
-        parseTime = d3.timeParse("%Y-%m-%d");
-      } else if (this.index == 3) {
-        parseTime = d3.timeParse("%Y");
-      } else if (this.index == 5) {
-        parseTime = d3.timeParse("%H");
+      if (this.index == 5) {
+        this.parseTime = d3.timeParse("%H");
       } else if (this.index == 6) {
-        parseTime = d3.timeParse("%H");
+        this.parseTime = d3.timeParse("%H%M");
       } else if (this.index == 7) {
-        parseTime = d3.timeParse("%Y-%m-%d");
+        this.parseTime = d3.timeParse("%w"); // Need to be changed
       } else if (this.index == 8) {
-        parseTime = d3.timeParse("%H");
+        this.parseTime = d3.timeParse("%m"); // Need to be changed
       }
 
-      if (this.index == 2) {
-        this.starteDate = this.plotData[2][2][0][0].substring(0, 7);
-        this.endDate = this.plotData[2][2][
-          this.plotData[2][2].length - 1
-        ][0].substring(0, 7);
-      } else if (this.index == 1) {
-        this.starteDate = this.plotData[2][1][0][0].substring(0, 10);
-        this.endDate = this.plotData[2][1][
-          this.plotData[2][1].length - 1
-        ][0].substring(0, 10);
-        //maxY = 60;
-      } else if (this.index == 3) {
-        this.starteDate = this.plotData[2][3][0][0].substring(0, 4);
-        this.endDate = this.plotData[2][3][
-          this.plotData[2][3].length - 1
-        ][0].substring(0, 4);
+      if (this.index == 5) {
+        // Weekday
+        this.starteDate = "00";
+        this.endDate = "23";
+      } else if (this.index == 6) {
+        // Weekday
+        this.starteDate = "00";
+        this.endDate = "2359";
       } else if (this.index == 7) {
         // Weekday
-        this.starteDate = "2022-08-01";
-        this.endDate = "2022-08-07";
-      } else {
-        this.starteDate = 0;
-        this.endDate = 23;
+        this.starteDate = "0";
+        this.endDate = "6";
+      } else if (this.index == 8) {
+        // Weekday
+        this.starteDate = "01";
+        this.endDate = "12";
       }
 
-      this.x.domain([parseTime(this.starteDate), parseTime(this.endDate)]);
+      if (this.index == 5)
+        this.x
+          .domain([parseTime(this.starteDate), parseTime(this.endDate)])
+          .tickFormat(d3.timeFormat("%H"));
+      if (this.index == 6)
+        this.x
+          .domain([parseTime(this.starteDate), parseTime(this.endDate)])
+          .tickFormat(d3.timeFormat("%H%M"));
+      if (this.index == 7)
+        this.x
+          .domain([parseTime(this.starteDate), parseTime(this.endDate)])
+          .tickFormat(d3.timeFormat("%a"));
+      if (this.index == 8)
+        this.x
+          .domain([parseTime(this.starteDate), parseTime(this.endDate)])
+          .tickFormat(d3.timeFormat("%m"));
+
+      //this.x.domain([parseTime(this.starteDate), parseTime(this.endDate)]);
+
+      if (this.index == 5) this.xAxis.tickFormat(d3.timeFormat("%H"));
+      if (this.index == 6) this.xAxis.tickFormat(d3.timeFormat("%H%M"));
+      if (this.index == 7) this.xAxis.tickFormat(d3.timeFormat("%a"));
+      if (this.index == 8) this.xAxis.tickFormat(d3.timeFormat("%m"));
+
       this.svg
         .selectAll("#" + this.classID + "-x-axis")
         .transition()
@@ -611,26 +619,14 @@ export default {
 
       this.lineObjects = [];
 
-      if (this.index == 7) {
-        for (let i = 0; i < this.classNames.length; i++) {
-          this.lineObjects.push(
-            this.svg
-              .selectAll("." + this.classNames[i])
-              .data([this.plotData[i][this.index]], function (d) {
-                return parseTime("2022-08-0" + d[0] + 1);
-              })
-          );
-        }
-      } else {
-        for (let i = 0; i < this.classNames.length; i++) {
-          this.lineObjects.push(
-            this.svg
-              .selectAll("." + this.classNames[i])
-              .data([this.plotData[i][this.index]], function (d) {
-                return parseTime(d[0]);
-              })
-          );
-        }
+      for (let i = 0; i < this.classNames.length; i++) {
+        this.lineObjects.push(
+          this.svg
+            .selectAll("." + this.classNames[i])
+            .data([this.plotData[i][this.index]], function (d) {
+              return parseTime(d[0]);
+            })
+        );
       }
 
       const classNames = this.classNames;
