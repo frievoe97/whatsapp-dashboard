@@ -1,0 +1,23 @@
+name: Upload the Whatsapp-Dashboard to the server of the subdomain whatsapp-dashboard.friedrichvoelkers.de
+
+on: [push]
+
+jobs:
+  Upload-to-SFTP:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: 🚚 Get latest code                     
+        uses: actions/checkout@v2
+
+      - name: 📂 SFTP uploader                       
+        uses: wangyucode/sftp-upload-action@v1.4.8 # Thank you @https://github.com/wangyucode/sftp-upload-action
+        with:
+          host: ${{ secrets.SFTP_HOST }}                  
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          dryRun: false
+          forceUpload: true                         
+          localDir: 'dist'                         
+          remoteDir: '/vuetest'                       
+          exclude: '.git*,.DS_Store'
