@@ -1,7 +1,4 @@
-<script setup>
-import Plot1 from ".components/Plot1.vue";
-import Plot2 from "./components/Plot2.vue";
-</script>
+<script setup></script>
 
 <template>
   <div>
@@ -17,7 +14,7 @@ import Plot2 from "./components/Plot2.vue";
   </div>
 </template>
 
-<script>
+<script setup>
 export default {
   name: "App",
   data() {
