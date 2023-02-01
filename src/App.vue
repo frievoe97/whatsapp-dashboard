@@ -1,15 +1,21 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+import HelloWorld from "./components/HelloWorld.vue";
+import TheWelcome from "./components/TheWelcome.vue";
 </script>
 
 <template>
   <div id="app">
     <header>
-      <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
+      <img
+        alt="Vue logo"
+        class="logo"
+        src="./assets/logo.svg"
+        width="125"
+        height="125"
+      />
 
       <div class="wrapper">
-        <HelloWorld msg="You did it!" />
+        <HelloWorld msg="You did it! GitHub" />
       </div>
     </header>
 
@@ -18,6 +24,24 @@ import TheWelcome from './components/TheWelcome.vue'
     </main>
   </div>
 </template>
+
+<script>
+export default {
+  name: "App",
+  data() {
+    return {
+      testArray: [],
+    };
+  },
+  mounted() {
+    for (let i = 0; i < 100; i++) {
+      //this.testArray.push({ name: "test", age: 5 });
+    }
+
+    //console.log(this.testArray);
+  },
+};
+</script>
 
 <style scoped>
 header {
