@@ -1,0 +1,21 @@
+ame: Upload complete repo (e.g. website) to a SFTP destination
+
+on: [push]
+
+jobs:
+  Upload-to-SFTP:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code                     # Checkout the latest code
+        uses: actions/checkout@v2
+
+      - name: 📂 SFTP uploader                       # Upload to SFTP 
+        uses: wangyucode/sftp-upload-action@v1.4.8
+        with:
+          host: ${{ secrets.SFTP_HOST }}                  # Recommended to put the credentials in github secrets.
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          forceUpload: true                          # Optional, Force uploading all files, Default to false(upload only newer files).
+          localDir: './dist'                              # Required, Absolute or relative to cwd.
+          remoteDir: '/vuetest'                             # Required, Absolute path only.
+          exclude: '.git*,.DS_Store'                 # Optional. exclude patterns (glob), use ',' to split, Default to ''.
