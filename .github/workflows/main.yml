@@ -1,4 +1,4 @@
-ame: Upload complete repo (e.g. website) to a SFTP destination
+name: Upload complete repo (e.g. website) to a SFTP destination
 
 on: [push]
 
