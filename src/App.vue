@@ -1,9 +1,15 @@
-<script setup></script>
-
 <template>
   <div>
-    <Plot1 :data="allChats" :globalWidth="widthPlot1" classIDProp="plot-1" />
-    <Plot2 :data="allChats" :globalWidth="widthPlot2" classIDProp="plot-2" />
+    <first-plot
+      :data="allChats"
+      :globalWidth="widthPlot1"
+      classIDProp="plot-1"
+    />
+    <second-plot
+      :data="allChats"
+      :globalWidth="widthPlot2"
+      classIDProp="plot-2"
+    />
     <input
       type="file"
       id="input"
@@ -15,6 +21,9 @@
 </template>
 
 <script>
+import FirstPlot from "./components/FirstPlot.vue";
+import SecondPlot from "./components/SecondPlot.vue";
+
 export default {
   name: "App",
   data() {
@@ -58,8 +67,8 @@ export default {
     };
   },
   components: {
-    Plot1,
-    Plot2,
+    FirstPlot,
+    SecondPlot,
   },
   methods: {
     fileUploaded: async function () {
