@@ -15,6 +15,7 @@ jobs:
           host: ${{ secrets.SFTP_HOST }}                  # Recommended to put the credentials in github secrets.
           username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
+          dryRun: false
           forceUpload: true                          # Optional, Force uploading all files, Default to false(upload only newer files).
           localDir: 'dist'                              # Required, Absolute or relative to cwd.
           remoteDir: '/vuetest'                             # Required, Absolute path only.
