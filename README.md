@@ -1,6 +1,4 @@
-# whatsapp-dashboard
-
-[# I'm an inline-style link](whatsapp-dashboard.friedrichvoelkers.de)
+# [whatsapp-dashboard](whatsapp-dashboard.friedrichvoelkers.de)
 
 This template should help get you started developing with Vue 3 in Vite.
 
