@@ -1,5 +1,5 @@
 // src/components/Plot4.tsx
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 import { removeStopwords, deu } from "stopword";
@@ -14,8 +14,11 @@ interface AggregatedWordData {
   topWords: WordCount[];
 }
 
+const ITEMS_PER_PAGE = 2;
+
 const Plot4: React.FC = () => {
-  const { messages, darkMode } = useChat();
+  const { messages } = useChat();
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Aggregiere die Top 10 Wörter pro Sender
   const aggregatedWordData: AggregatedWordData[] = useMemo(() => {
@@ -31,7 +34,8 @@ const Plot4: React.FC = () => {
       // Tokenize und bereinige den Text
       const words = msg.message
         .toLowerCase()
-        .replace(/[^a-zA-Z\s]/g, "")
+        // Angepasste Regex zum Beibehalten von Umlauten
+        .replace(/[^a-zA-ZäöüßÄÖÜ\s]/g, "")
         .split(/\s+/);
 
       // Entferne Stopwörter und kurze Wörter
@@ -57,7 +61,7 @@ const Plot4: React.FC = () => {
   // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
     const senders = aggregatedWordData.map((d) => d.sender);
-    const colors = d3.schemeCategory10;
+    const colors = d3.schemePaired;
     const scale = new Map<string, string>();
     senders.forEach((sender, index) => {
       scale.set(sender, colors[index % colors.length]);
@@ -65,37 +69,40 @@ const Plot4: React.FC = () => {
     return scale;
   }, [aggregatedWordData]);
 
+  const totalPages = Math.ceil(aggregatedWordData.length / ITEMS_PER_PAGE);
+
+  const currentData = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return aggregatedWordData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [aggregatedWordData, currentPage]);
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
   return (
-    <div
-      className={`border-[1px] ${
-        darkMode
-          ? "border-white bg-gray-800 text-white"
-          : "border-black bg-white text-black"
-      } min-w-[800px] basis-[800px] flex-grow p-4 h-96 overflow-auto`}
-    >
-      <h2
-        className={`text-lg font-semibold mb-4 ${
-          darkMode ? "text-white" : "text-black"
-        }`}
-      >
-        Top 10 Words per Person
-      </h2>
-      <div className="flex flex-col md:flex-row gap-8">
-        {aggregatedWordData.map((senderData) => {
+    <div className="border border-black bg-white text-black min-w-[800px] p-4 min-h-96 overflow-auto flex-grow">
+      <h2 className="text-lg font-semibold mb-4">Top 10 Words per Person</h2>
+      <div className="flex flex-row gap-8">
+        {currentData.map((senderData) => {
           const maxCount = Math.max(
             ...senderData.topWords.map((w) => w.count),
             1
           );
 
           return (
-            <div key={senderData.sender} className="w-full md:w-1/2">
-              <h3
-                className={`text-md font-medium mb-2 ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
-              >
-                {senderData.sender}
-              </h3>
+            <div
+              key={senderData.sender}
+              className="flex-grow border border-black p-4 rounded-none"
+              style={{
+                borderLeft: `4px solid ${colorScale.get(senderData.sender)}`,
+              }}
+            >
+              <h3 className="text-md font-medium mb-2">{senderData.sender}</h3>
               <div className="space-y-1">
                 {senderData.topWords.map((wordData, index) => {
                   const barWidth = (wordData.count / maxCount) * 100;
@@ -103,19 +110,9 @@ const Plot4: React.FC = () => {
                   return (
                     <div key={wordData.word} className="flex items-center">
                       {/* Rank */}
-                      <div
-                        className={`w-6 text-sm ${
-                          darkMode ? "text-white" : "text-black"
-                        }`}
-                      >
-                        {index + 1}.
-                      </div>
+                      <div className="w-6 text-sm text-black">{index + 1}.</div>
                       {/* Word */}
-                      <div
-                        className={`w-24 text-sm ${
-                          darkMode ? "text-white" : "text-black"
-                        }`}
-                      >
+                      <div className="w-24 text-sm text-black">
                         {wordData.word}
                       </div>
                       {/* Bar */}
@@ -129,11 +126,7 @@ const Plot4: React.FC = () => {
                         ></div>
                       </div>
                       {/* Count */}
-                      <div
-                        className={`w-8 text-sm ${
-                          darkMode ? "text-white" : "text-black"
-                        }`}
-                      >
+                      <div className="w-8 text-sm text-black">
                         {wordData.count}
                       </div>
                     </div>
@@ -144,6 +137,35 @@ const Plot4: React.FC = () => {
           );
         })}
       </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center mt-4 space-x-2">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className={`px-2 py-1 rounded-none border border-black hover:border-black ${
+              currentPage === 1
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-black"
+            }`}
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className={`px-2 py-1 rounded-none border border-black hover:border-black ${
+              currentPage === totalPages
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-black"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

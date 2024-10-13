@@ -4,6 +4,9 @@ import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 import { ChatMessage } from "../context/ChatContext";
 import useResizeObserver from "../hooks/useResizeObserver";
+import Switch from "react-switch";
+import "./Plot1.css"; // Importiere die CSS-Datei
+import ClipLoader from "react-spinners/ClipLoader";
 
 interface TimeAggregatedData {
   sender: string;
@@ -17,48 +20,50 @@ interface TimeAggregatedData {
 type Mode = "year" | "month"; // Entfernt "day"
 
 const Plot2: React.FC = () => {
-  const { messages, darkMode } = useChat();
+  const { messages, darkMode, isUploading } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
 
   // State für Aggregationsmodus und Darstellung
-  const [mode, setMode] = useState<Mode>("month"); // Initial auf "year" setzen
+  const [mode, setMode] = useState<Mode>("month"); // Initial auf "month" setzen
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
+
+  // Definiere die Kategorien basierend auf dem Modus
+  const categories: string[] = useMemo(() => {
+    switch (mode) {
+      case "year":
+        return Array.from(
+          new Set(
+            messages.map((msg) => new Date(msg.date).getFullYear().toString())
+          )
+        ).sort();
+      case "month":
+        return Array.from(
+          new Set(
+            messages.map((msg) => d3.timeFormat("%Y-%m")(new Date(msg.date)))
+          )
+        ).sort();
+      default:
+        return [];
+    }
+  }, [mode, messages]);
 
   // Aggregiere Daten basierend auf dem aktuellen Modus und der Darstellung
   const aggregatedData: TimeAggregatedData[] = useMemo(() => {
     if (messages.length === 0) return [];
 
-    let dateFormat: (date: Date) => string;
-    let categories: string[] = [];
-
-    switch (mode) {
-      case "year":
-        dateFormat = d3.timeFormat("%Y");
-        categories = Array.from(
-          new Set(
-            messages.map((msg) => new Date(msg.date).getFullYear().toString())
-          )
-        ).sort();
-        break;
-      case "month":
-        dateFormat = d3.timeFormat("%Y-%m");
-        categories = Array.from(
-          new Set(
-            messages.map((msg) => d3.timeFormat("%Y-%m")(new Date(msg.date)))
-          )
-        ).sort();
-        break;
-      default:
-        dateFormat = () => "";
-        categories = [];
-    }
-
     // Funktion zur Extraktion der Kategorie basierend auf dem Modus
     const getCategory = (msg: ChatMessage): string => {
       const date = new Date(msg.date);
-      return dateFormat(date);
+      switch (mode) {
+        case "year":
+          return date.getFullYear().toString();
+        case "month":
+          return d3.timeFormat("%Y-%m")(date);
+        default:
+          return "";
+      }
     };
 
     // Aggregiere Nachrichten nach Sender und Kategorie
@@ -110,7 +115,7 @@ const Plot2: React.FC = () => {
     }
 
     return result;
-  }, [messages, mode, showPercentage]);
+  }, [messages, mode, showPercentage, categories]);
 
   // Extrahiere die Sender für die Legende
   const senders = useMemo(
@@ -120,7 +125,7 @@ const Plot2: React.FC = () => {
 
   // Definiere das Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
-    return d3.scaleOrdinal<string, string>(d3.schemeCategory10).domain(senders);
+    return d3.scaleOrdinal<string, string>(d3.schemePaired).domain(senders);
   }, [senders]);
 
   useEffect(() => {
@@ -136,7 +141,7 @@ const Plot2: React.FC = () => {
     // D3 Diagramm erstellen
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
-    const margin = { top: 10, right: 20, bottom: 110, left: 40 }; // Angepasst, da "day" entfernt wurde
+    const margin = { top: 10, right: 20, bottom: 110, left: 40 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -166,12 +171,12 @@ const Plot2: React.FC = () => {
     // Dynamische Berechnung der maximalen Anzahl der Ticks basierend auf der Breite
     const maxTicks = Math.floor(innerWidth / 80); // 80px pro Tick als Beispiel
     const xAxis = d3.axisBottom(xScale).ticks(maxTicks);
-
     const yAxis = d3.axisLeft(yScale).ticks(5);
 
-    // Linien-Generator mit Glättung
+    // Linien-Generator mit Glättung und defined-Funktion
     const line = d3
       .line<{ date: Date; count: number; percentage?: number }>()
+      .defined((d) => d.count !== null && d.count !== undefined)
       .x((d) => xScale(d.date))
       .y((d) => yScale(showPercentage ? d.percentage || 0 : d.count))
       .curve(d3.curveMonotoneX);
@@ -186,6 +191,33 @@ const Plot2: React.FC = () => {
         .attr("class", "chart-group")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
+      // X-Grid
+      chart
+        .append("g")
+        .attr("class", "x-grid")
+        .attr("transform", `translate(0,${innerHeight})`)
+        .call(
+          d3
+            .axisBottom(xScale)
+            .tickSize(-innerHeight)
+            .tickFormat(() => "")
+        )
+        .selectAll("line")
+        .attr("stroke", darkMode ? "#606060" : "#e0e0e0");
+
+      // Y-Grid
+      chart
+        .append("g")
+        .attr("class", "y-grid")
+        .call(
+          d3
+            .axisLeft(yScale)
+            .tickSize(-innerWidth)
+            .tickFormat(() => "")
+        )
+        .selectAll("line")
+        .attr("stroke", darkMode ? "#606060" : "#e0e0e0");
+
       // Append X-Achse
       chart
         .append("g")
@@ -196,7 +228,7 @@ const Plot2: React.FC = () => {
         .attr("transform", "translate(0,5)")
         .style("text-anchor", "middle")
         .style("font-size", "12px")
-        .style("display", "block"); // Sicherstellen, dass Texte sichtbar sind
+        .style("fill", darkMode ? "white" : "black");
 
       // Append Y-Achse
       chart
@@ -204,9 +236,10 @@ const Plot2: React.FC = () => {
         .attr("class", "y-axis")
         .call(yAxis)
         .selectAll("text")
-        .style("font-size", "12px");
+        .style("font-size", "12px")
+        .style("fill", darkMode ? "white" : "black");
 
-      // Append initial lines
+      // Linien hinzufügen
       chart
         .selectAll<SVGPathElement, TimeAggregatedData>(".line")
         .data(aggregatedData, (d) => d.sender)
@@ -216,42 +249,74 @@ const Plot2: React.FC = () => {
         .attr("fill", "none")
         .attr("stroke", (d) => colorScale(d.sender))
         .attr("stroke-width", 3)
-        .attr("d", (d) => line(d.values) as string)
-        .attr("stroke-dasharray", function (this: SVGPathElement) {
-          const totalLength = this.getTotalLength();
-          return `${totalLength} ${totalLength}`;
-        })
-        .attr("stroke-dashoffset", function (this: SVGPathElement) {
-          return this.getTotalLength();
+        .attr("d", (d) => {
+          // Initialer Pfad mit y auf innerHeight (vom Boden kommend)
+          const initialValues = d.values.map((v) => ({
+            ...v,
+            y: innerHeight,
+          }));
+          const initialLine = d3
+            .line<{
+              date: Date;
+              count: number;
+              percentage?: number;
+            }>()
+            .x((d) => xScale(d.date))
+            .y(() => innerHeight)
+            .curve(d3.curveMonotoneX);
+          return initialLine(initialValues) as string;
         })
         .transition()
         .duration(2000)
         .ease(d3.easeCubic)
-        .attr("stroke-dashoffset", 0);
+        .attr("d", (d) => line(d.values) as string);
     } else {
-      // Update Scales
-      xScale.domain(xExtent as [Date, Date]);
-      const updatedYMax = showPercentage
-        ? d3.max(aggregatedData, (d) =>
-            d3.max(d.values, (v) => v.percentage)
-          ) || 100
-        : d3.max(aggregatedData, (d) => d3.max(d.values, (v) => v.count)) || 10;
-      yScale.domain([0, updatedYMax]).nice();
+      // Update Grid
+      chart
+        .select<SVGGElement>(".x-grid")
+        .transition()
+        .duration(1000)
+        .call(
+          d3
+            .axisBottom(xScale)
+            .tickSize(-innerHeight)
+            .tickFormat(() => "")
+        )
+        .selectAll("line")
+        .attr("stroke", darkMode ? "#a0a0a0" : "#e0e0e0");
 
-      // Dynamische Berechnung der maximalen Anzahl der Ticks basierend auf der Breite
-      const maxTicks = Math.floor(innerWidth / 80); // 80px pro Tick als Beispiel
-      const updatedXAxis = d3.axisBottom(xScale).ticks(maxTicks);
+      chart
+        .select<SVGGElement>(".y-grid")
+        .transition()
+        .duration(1000)
+        .call(
+          d3
+            .axisLeft(yScale)
+            .tickSize(-innerWidth)
+            .tickFormat(() => "")
+        )
+        .selectAll("line")
+        .attr("stroke", darkMode ? "#a0a0a0" : "#e0e0e0");
+
+      // Entferne die letzte Grid-Linie (rechte Kante) durch Filterung
+      chart
+        .selectAll(".x-grid line")
+        .filter((d, i, nodes) => {
+          return i === nodes.length - 1;
+        })
+        .attr("stroke", "none"); // oder setze auf grau, wenn du sie behalten möchtest
 
       // Update Achsen mit Transitionen
       chart
         .select<SVGGElement>(".x-axis")
         .transition()
         .duration(1000)
-        .call(updatedXAxis)
+        .call(xAxis)
         .selectAll("text")
         .attr("transform", "translate(0,5)")
         .style("text-anchor", "middle")
-        .style("font-size", "12px");
+        .style("font-size", "12px")
+        .style("fill", darkMode ? "white" : "black");
 
       chart
         .select<SVGGElement>(".y-axis")
@@ -259,7 +324,8 @@ const Plot2: React.FC = () => {
         .duration(1000)
         .call(yAxis)
         .selectAll("text")
-        .style("font-size", "12px");
+        .style("font-size", "12px")
+        .style("fill", darkMode ? "white" : "black");
 
       // Bind Daten
       const lines = chart
@@ -275,18 +341,27 @@ const Plot2: React.FC = () => {
             .attr("fill", "none")
             .attr("stroke", (d) => colorScale(d.sender))
             .attr("stroke-width", 3)
-            .attr("d", (d) => line(d.values) as string)
-            .attr("stroke-dasharray", function (this: SVGPathElement) {
-              const totalLength = this.getTotalLength();
-              return `${totalLength} ${totalLength}`;
-            })
-            .attr("stroke-dashoffset", function (this: SVGPathElement) {
-              return this.getTotalLength();
+            .attr("d", (d) => {
+              // Initialer Pfad mit y auf innerHeight (vom Boden kommend)
+              const initialValues = d.values.map((v) => ({
+                ...v,
+                y: innerHeight,
+              }));
+              const initialLine = d3
+                .line<{
+                  date: Date;
+                  count: number;
+                  percentage?: number;
+                }>()
+                .x((d) => xScale(d.date))
+                .y(() => innerHeight)
+                .curve(d3.curveMonotoneX);
+              return initialLine(initialValues) as string;
             })
             .transition()
             .duration(2000)
             .ease(d3.easeCubic)
-            .attr("stroke-dashoffset", 0),
+            .attr("d", (d) => line(d.values) as string),
         (update) =>
           update
             .transition()
@@ -304,7 +379,15 @@ const Plot2: React.FC = () => {
             .remove()
       );
     }
-  }, [aggregatedData, dimensions, colorScale, mode, showPercentage]);
+  }, [
+    aggregatedData,
+    dimensions,
+    colorScale,
+    mode,
+    showPercentage,
+    darkMode,
+    categories,
+  ]);
 
   return (
     <div
@@ -315,29 +398,59 @@ const Plot2: React.FC = () => {
           : "border-black bg-white text-black"
       } w-full md:min-w-[800px] md:basis-[800px] flex-grow p-4 h-96 flex flex-col`}
     >
-      {/* Buttons and switch in one row */}
+      {/* Buttons und Switch in einer Zeile */}
       <div className="flex items-center justify-between mb-2">
-        {/* Buttons for different modes */}
-        <div className="flex space-x-2">
-          <button
-            className={`px-3 py-1 rounded ${
+        {/* Buttons für verschiedene Modi */}
+        <div className="flex space-x-2 mt-0">
+          {/* <button
+            className={`px-3 py-1 rounded-none ${
               mode === "year"
-                ? "bg-green-500 text-white"
+                ? "bg-black text-white"
                 : darkMode
-                ? "bg-gray-700 text-white"
-                : "bg-gray-200 text-gray-700"
+                ? "bg-gray-700 text-white border-[1px] border-white"
+                : "bg-white text-gray-700 border-[1px] border-black"
+            }`}
+            onClick={() => setMode("year")}
+          >
+            Year
+          </button> */}
+          {/* <button
+            className={`px-3 py-1 rounded-none ${
+              mode === "month"
+                ? "bg-black text-white"
+                : darkMode
+                ? "bg-gray-700 text-white border-[1px] border-white"
+                : "bg-white text-gray-700 border-[1px] border-black"
+            }`}
+            onClick={() => setMode("month")}
+          >
+            Month
+          </button> */}
+
+          <button
+            className={`px-3 py-1 rounded-none ${
+              mode === "year"
+                ? darkMode
+                  ? "bg-white text-black border border-white hover:border-white"
+                  : "bg-black text-white border-none"
+                : darkMode
+                ? "bg-gray-700 text-white border border-white hover:border-white"
+                : "bg-white text-gray-700 border border-black hover:border-black"
             }`}
             onClick={() => setMode("year")}
           >
             Year
           </button>
+
           <button
-            className={`px-3 py-1 rounded ${
+            className={`px-3 py-1 rounded-none ${
               mode === "month"
-                ? "bg-green-500 text-white"
+                ? darkMode
+                  ? "bg-white text-black border border-white hover:border-white"
+                  : "bg-black text-white border-none"
                 : darkMode
-                ? "bg-gray-700 text-white"
-                : "bg-gray-200 text-gray-700"
+                ? "bg-gray-700 text-white border border-white hover:border-white"
+                : "bg-white text-gray-700 border border-black hover:border-black"
             }`}
             onClick={() => setMode("month")}
           >
@@ -345,44 +458,75 @@ const Plot2: React.FC = () => {
           </button>
         </div>
 
-        {/* Toggle for Absolute Numbers / Percentages */}
+        {/* Toggle für Absolute Numbers / Percentages */}
         <div className="flex items-center">
-          <label className="flex items-center space-x-2">
-            <span
-              className={`text-sm ${darkMode ? "text-white" : "text-gray-700"}`}
-            >
-              Absolute Numbers
-            </span>
-            <input
-              type="checkbox"
-              checked={showPercentage}
-              onChange={() => setShowPercentage(!showPercentage)}
-              className="toggle-checkbox"
-            />
-            <span
-              className={`text-sm ${darkMode ? "text-white" : "text-gray-700"}`}
-            >
-              Percentages
-            </span>
-          </label>
+          <span
+            className={`text-sm ${
+              darkMode ? "text-white" : "text-gray-700"
+            } mr-2`}
+          >
+            Absolute Numbers
+          </span>
+          <Switch
+            onChange={() => setShowPercentage(!showPercentage)}
+            checked={showPercentage}
+            offColor={darkMode ? "#444" : "#ccc"}
+            onColor="#000"
+            uncheckedIcon={false}
+            checkedIcon={false}
+            height={20}
+            width={48}
+            handleDiameter={16}
+            borderRadius={20}
+            boxShadow="none" // Schatten entfernen
+            activeBoxShadow="none" // Aktive Schatten entfernen
+            className="custom-switch" // Benutzerdefinierte Klasse hinzufügen
+          />
+          <span
+            className={`text-sm ${
+              darkMode ? "text-white" : "text-gray-700"
+            } ml-2`}
+          >
+            Percentages
+          </span>
         </div>
       </div>
 
-      {/* Legend above the chart */}
-      <div className="flex flex-wrap items-center mb-2">
+      {/* Legende über dem Diagramm */}
+      <div className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2">
         {senders.map((sender) => (
           <div key={sender} className="flex items-center mr-4 mb-2">
             <div
               className="w-4 h-4 mr-1"
               style={{ backgroundColor: colorScale(sender) }}
             ></div>
-            <span className="text-sm text-gray-700">{sender}</span>
+            <span
+              className="text-sm text-nowrap"
+              style={{ color: darkMode ? "#fff" : "#000" }}
+            >
+              {sender}
+            </span>
           </div>
         ))}
       </div>
 
-      {/* SVG for the chart */}
-      <svg ref={svgRef} className="w-full flex-grow"></svg>
+      {/* Bedingtes Rendering des Inhalts */}
+      <div className="flex-grow flex justify-center items-center">
+        {isUploading ? (
+          // Ladeanimation anzeigen, wenn Daten hochgeladen werden
+          <ClipLoader
+            color={darkMode ? "#ffffff" : "#000000"}
+            loading={true}
+            size={50}
+          />
+        ) : messages.length === 0 ? (
+          // "No Data" anzeigen, wenn keine Daten vorhanden sind
+          <span className="text-lg">No Data Available</span>
+        ) : (
+          // Diagramm anzeigen, wenn Daten vorhanden sind
+          <svg ref={svgRef} className="h-full w-full flex-grow"></svg>
+        )}
+      </div>
     </div>
   );
 };

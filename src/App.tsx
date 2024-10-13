@@ -6,6 +6,7 @@ import Plot3 from "./components/Plot3";
 import Plot4 from "./components/Plot4";
 import Plot5 from "./components/Plot5";
 import Plot6 from "./components/Plot6";
+import Plot7 from "./components/Plot7";
 import { useChat } from "./context/ChatContext"; // Verwende den ChatContext
 import "./index.css";
 
@@ -36,6 +37,7 @@ function App() {
         <Plot6 />
         <Plot4 />
         <Plot5 />
+        <Plot7 />
       </div>
     </div>
   );

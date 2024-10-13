@@ -13,12 +13,12 @@ interface ErrorMessage {
   error: string;
 }
 
-// Regex zum Parsen der Nachrichten
+// Regex zum Parsen der Nachrichten mit Unicode-Flag
 const messageRegex =
-  /^\[(\d{2})\.(\d{2})\.(\d{2}), (\d{2}:\d{2}:\d{2})\] (.*?): (.*)$/;
+  /^\[(\d{2})\.(\d{2})\.(\d{2}), (\d{2}:\d{2}:\d{2})\] (.*?): (.*)$/u;
 
-// Regex zum Entfernen unerwünschter Unicode-Zeichen (z.B. U+200E, U+200F, etc.)
-const unwantedUnicodeRegex = /[\u200E\u200F\u202A-\u202E]/g;
+// Regex zum Entfernen unerwünschter Unicode-Zeichen (z.B. U+200E, U+200F, etc.) mit globalem Flag
+const unwantedUnicodeRegex = /[\u200E\u200F\u202A-\u202E]/gu;
 
 // Liste der Strings, deren Nachrichten ignoriert werden sollen
 const ignoreStrings: string[] = [
@@ -27,7 +27,6 @@ const ignoreStrings: string[] = [
   "hat dich hinzugefügt",
   "Ende-zu-Ende-verschlüssel",
   "erheitsnummer für alle Mitglieder hat sich geänd",
-  // Weitere Strings können hier hinzugefügt werden
 ];
 
 // Füge einen Event-Listener für eingehende Nachrichten hinzu
@@ -89,11 +88,6 @@ self.addEventListener("message", (event: MessageEvent<string>) => {
           );
 
           if (shouldIgnore) {
-            // console.info(
-            //   `Worker: Nachricht in Zeile ${
-            //     index // Hinweis: Dies bezieht sich auf die vorherige Nachricht
-            //   } ignoriert aufgrund von Übereinstimmung mit Ignorier-Strings.`
-            // );
             // Nachricht ignorieren, daher nicht hinzufügen
           } else {
             messages.push(currentMessage);

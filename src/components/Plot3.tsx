@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 import useResizeObserver from "../hooks/useResizeObserver";
+import ClipLoader from "react-spinners/ClipLoader";
 
 interface PieData {
   sender: string;
@@ -10,7 +11,7 @@ interface PieData {
 }
 
 const Plot3: React.FC = () => {
-  const { messages, darkMode } = useChat();
+  const { messages, darkMode, isUploading } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
@@ -31,7 +32,7 @@ const Plot3: React.FC = () => {
   // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
     const senders = pieData.map((d) => d.sender);
-    return d3.scaleOrdinal<string, string>(d3.schemeCategory10).domain(senders);
+    return d3.scaleOrdinal<string, string>(d3.schemePaired).domain(senders);
   }, [pieData]);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ const Plot3: React.FC = () => {
 
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
-    const radius = Math.min(width, height) / 2 - 40; // Padding für Labels
+    const radius = Math.min(width, height) / 2 - 50; // Padding für Labels
 
     svg.selectAll("*").remove(); // Clear previous contents
 
@@ -88,7 +89,7 @@ const Plot3: React.FC = () => {
       .attr("font-size", "12px")
       .text((d) => `${d.data.sender}: ${d.data.count}`);
 
-    // Optional: Add a legend
+    // Add a legend
     const legend = svg
       .append("g")
       .attr("transform", `translate(${width - 150}, 20)`);
@@ -110,9 +111,10 @@ const Plot3: React.FC = () => {
         .attr("y", 12)
         .attr("text-anchor", "start")
         .style("text-transform", "capitalize")
+        .style("fill", darkMode ? "white" : "black") // Textfarbe basierend auf darkMode
         .text(d.sender);
     });
-  }, [pieData, dimensions, colorScale]);
+  }, [pieData, dimensions, colorScale, darkMode]); // darkMode hinzugefügt
 
   return (
     <div
@@ -123,10 +125,31 @@ const Plot3: React.FC = () => {
           : "border-black bg-white text-black"
       } min-w-[400px] basis-[400px] flex-grow p-4 h-96 flex flex-col`}
     >
-      {/* <h2 className="text-lg font-semibold mb-4 text-gray-800">
+      <h2
+        className={`text-lg font-semibold mb-4 ${
+          darkMode ? "text-white" : "text-black"
+        }`}
+      >
         Nachrichtenverhältnis
-      </h2> */}
-      <svg ref={svgRef} className="w-full h-full"></svg>
+      </h2>
+
+      {/* Bedingtes Rendering des Inhalts */}
+      <div className="flex-grow flex justify-center items-center">
+        {isUploading ? (
+          // Ladeanimation anzeigen, wenn Daten hochgeladen werden
+          <ClipLoader
+            color={darkMode ? "#ffffff" : "#000000"}
+            loading={true}
+            size={50}
+          />
+        ) : pieData.length === 0 ? (
+          // "No Data" anzeigen, wenn keine Daten vorhanden sind
+          <span className="text-lg">No Data Available</span>
+        ) : (
+          // Diagramm anzeigen, wenn Daten vorhanden sind
+          <svg ref={svgRef} className="w-full h-full"></svg>
+        )}
+      </div>
     </div>
   );
 };

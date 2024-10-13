@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useMemo, useState } from "react";
 import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 import useResizeObserver from "../hooks/useResizeObserver";
+import ClipLoader from "react-spinners/ClipLoader";
 
 interface DailyMessages {
   date: Date;
@@ -10,7 +11,7 @@ interface DailyMessages {
 }
 
 const Plot6: React.FC = () => {
-  const { messages, darkMode } = useChat();
+  const { messages, darkMode, isUploading } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
@@ -59,12 +60,26 @@ const Plot6: React.FC = () => {
     return allDates;
   }, [messages, selectedYear]);
 
+  // Überprüfe, ob mindestens ein Tag Daten hat
+  const hasData = useMemo(
+    () => dailyMessages.some((d) => d.count > 0),
+    [dailyMessages]
+  );
+
+  // Debugging: Überprüfe den Wert von hasData
+  useEffect(() => {
+    console.log(`Selected Year: ${selectedYear}, Has Data: ${hasData}`);
+  }, [selectedYear, hasData]);
+
   const maxCount = useMemo(() => {
     return d3.max(dailyMessages, (d) => d.count) || 0;
   }, [dailyMessages]);
 
   useEffect(() => {
-    if (!dimensions) {
+    if (!dimensions || !hasData) {
+      // Wenn keine Daten vorhanden sind, entferne alle Elemente außer dem Container
+      const svg = d3.select(svgRef.current);
+      svg.selectAll("*").remove();
       return;
     }
 
@@ -84,7 +99,7 @@ const Plot6: React.FC = () => {
     const cellSize = Math.min(cellSizeWidth, cellSizeHeight);
 
     const colorScale = d3
-      .scaleSequential(d3.interpolateYlGnBu)
+      .scaleSequential(d3.interpolateGnBu)
       .domain([0, maxCount]);
 
     svg.selectAll("*").remove();
@@ -94,7 +109,13 @@ const Plot6: React.FC = () => {
       .append("g")
       .attr("transform", `translate(${padding.left}, ${padding.top})`);
 
-    const tooltip = d3
+    // Entferne die Tooltip-Logik, wenn keine Daten vorhanden sind
+    const tooltip = d3.select(containerRef.current).select(".tooltip"); // Verwende eine separate Klasse oder ID
+
+    // Entferne vorhandene Tooltips, um Duplikate zu vermeiden
+    tooltip.remove();
+
+    const newTooltip = d3
       .select(containerRef.current)
       .append("div")
       .attr(
@@ -105,7 +126,8 @@ const Plot6: React.FC = () => {
             : "bg-white text-black border-black"
         }`
       )
-      .style("pointer-events", "none");
+      .style("pointer-events", "none")
+      .attr("class", "tooltip"); // Füge eine separate Klasse hinzu
 
     g.selectAll<SVGRectElement, DailyMessages>(".day")
       .data(dailyMessages)
@@ -127,19 +149,18 @@ const Plot6: React.FC = () => {
           : "#ebedf0"
       )
       .on("mouseover", (event, d) => {
-        tooltip
+        newTooltip
           .style("opacity", 1)
           .html(
-            `
-            <strong>${d3.timeFormat("%d.%m.%Y")(d.date)}</strong><br/>
-            Nachrichten: ${d.count}
-          `
+            `<strong>${d3.timeFormat("%d.%m.%Y")(
+              d.date
+            )}</strong><br/>Nachrichten: ${d.count}`
           )
           .style("left", `${event.pageX + 10}px`)
           .style("top", `${event.pageY - 28}px`);
       })
       .on("mouseout", () => {
-        tooltip.style("opacity", 0);
+        newTooltip.style("opacity", 0);
       });
 
     const months = d3.timeMonths(startOfYear, endOfYear);
@@ -172,57 +193,9 @@ const Plot6: React.FC = () => {
       .attr("fill", darkMode ? "#ffffff" : "#000000")
       .attr("text-anchor", "end");
 
-    const legendWidth = 100;
-    const legendHeight = 10;
-
-    const legend = svg
-      .append("g")
-      .attr(
-        "transform",
-        `translate(${padding.left}, ${height - padding.bottom + 10})`
-      );
-
-    const defs = svg.append("defs");
-
-    const linearGradient = defs
-      .append("linearGradient")
-      .attr("id", "legend-gradient");
-
-    linearGradient
-      .selectAll<SVGStopElement, { offset: string; color: string }>("stop")
-      .data([
-        { offset: "0%", color: d3.interpolateYlGnBu(0) },
-        { offset: "100%", color: d3.interpolateYlGnBu(1) },
-      ])
-      .enter()
-      .append("stop")
-      .attr("offset", (d) => d.offset)
-      .attr("stop-color", (d) => d.color);
-
-    legend
-      .append("rect")
-      .attr("width", legendWidth)
-      .attr("height", legendHeight)
-      .style("fill", "url(#legend-gradient)");
-
-    const legendScale = d3
-      .scaleLinear()
-      .domain([0, maxCount])
-      .range([0, legendWidth]);
-
-    const legendAxis = d3
-      .axisBottom(legendScale)
-      .ticks(5)
-      .tickFormat(d3.format("d"));
-
-    legend
-      .append("g")
-      .attr("transform", `translate(0, ${legendHeight})`)
-      .call(legendAxis)
-      .selectAll("text")
-      .attr("font-size", "10px")
-      .attr("fill", darkMode ? "#ffffff" : "#000000");
-  }, [dailyMessages, dimensions, maxCount, selectedYear, darkMode]);
+    // Entferne die Legende vollständig
+    // Alles, was mit der Legende zu tun hat, wurde entfernt
+  }, [dailyMessages, dimensions, maxCount, selectedYear, darkMode, hasData]);
 
   return (
     <div
@@ -240,6 +213,8 @@ const Plot6: React.FC = () => {
       >
         Nachrichten-Heatmap Kalender
       </h2>
+
+      {/* Jahr auswählen */}
       <div className="mb-4">
         <label
           htmlFor="year-select"
@@ -264,7 +239,24 @@ const Plot6: React.FC = () => {
           ))}
         </select>
       </div>
-      <svg ref={svgRef} className="w-full h-full"></svg>
+
+      {/* Bedingtes Rendering des Inhalts */}
+      <div className="flex-grow flex justify-center items-center">
+        {isUploading ? (
+          // Ladeanimation anzeigen, wenn Daten hochgeladen werden
+          <ClipLoader
+            color={darkMode ? "#ffffff" : "#000000"}
+            loading={true}
+            size={50}
+          />
+        ) : !hasData ? (
+          // "No Data" anzeigen, wenn keine Daten vorhanden sind
+          <span className="text-lg">No Data Available</span>
+        ) : (
+          // Diagramm anzeigen, wenn Daten vorhanden sind
+          <svg ref={svgRef} className="w-full h-full"></svg>
+        )}
+      </div>
     </div>
   );
 };

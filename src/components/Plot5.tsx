@@ -1,5 +1,5 @@
 // src/components/Plot5.tsx
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 
@@ -13,10 +13,15 @@ interface SenderStats {
   activeDays: number;
   firstMessageDate: Date;
   lastMessageDate: Date;
+  uniqueWordsCount: number; // Neue Statistik
+  averageCharactersPerMessage: number; // Neue Statistik
 }
 
+const ITEMS_PER_PAGE = 2;
+
 const Plot5: React.FC = () => {
-  const { messages, darkMode } = useChat();
+  const { messages } = useChat();
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Aggregiere Statistiken pro Sender
   const aggregatedStats: SenderStats[] = useMemo(() => {
@@ -26,6 +31,8 @@ const Plot5: React.FC = () => {
         wordCounts: number[];
         totalWords: number;
         dates: Date[];
+        uniqueWords: Set<string>; // Für einzigartige Wörter
+        totalCharacters: number; // Für durchschnittliche Zeichen
       };
     } = {};
 
@@ -39,12 +46,16 @@ const Plot5: React.FC = () => {
         .split(/\s+/)
         .filter((word) => word.length > 0);
 
+      const characters = msg.message.length;
+
       if (!dataMap[sender]) {
         dataMap[sender] = {
           messages: [],
           wordCounts: [],
           totalWords: 0,
           dates: [],
+          uniqueWords: new Set<string>(),
+          totalCharacters: 0,
         };
       }
 
@@ -52,6 +63,8 @@ const Plot5: React.FC = () => {
       dataMap[sender].wordCounts.push(words.length);
       dataMap[sender].totalWords += words.length;
       dataMap[sender].dates.push(date);
+      words.forEach((word) => dataMap[sender].uniqueWords.add(word));
+      dataMap[sender].totalCharacters += characters;
     });
 
     return Object.keys(dataMap).map((sender) => {
@@ -73,9 +86,14 @@ const Plot5: React.FC = () => {
 
       // Aktive Tage
       const uniqueDays = new Set(
-        senderData.dates.map((date) => d3.timeDay(date))
+        senderData.dates.map((date) => d3.timeDay(date).getTime())
       );
       const activeDays = uniqueDays.size;
+
+      // Neue Statistiken
+      const uniqueWordsCount = senderData.uniqueWords.size;
+      const averageCharactersPerMessage =
+        messageCount > 0 ? senderData.totalCharacters / messageCount : 0;
 
       return {
         sender,
@@ -87,6 +105,10 @@ const Plot5: React.FC = () => {
         activeDays,
         firstMessageDate: d3.min(senderData.dates) as Date,
         lastMessageDate: d3.max(senderData.dates) as Date,
+        uniqueWordsCount, // Hinzugefügt
+        averageCharactersPerMessage: parseFloat(
+          averageCharactersPerMessage.toFixed(2)
+        ), // Hinzugefügt
       };
     });
   }, [messages]);
@@ -94,7 +116,7 @@ const Plot5: React.FC = () => {
   // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
     const senders = aggregatedStats.map((d) => d.sender);
-    const colors = d3.schemeCategory10;
+    const colors = d3.schemePaired;
     const scale = new Map<string, string>();
     senders.forEach((sender, index) => {
       scale.set(sender, colors[index % colors.length]);
@@ -102,172 +124,113 @@ const Plot5: React.FC = () => {
     return scale;
   }, [aggregatedStats]);
 
+  const totalPages = Math.ceil(aggregatedStats.length / ITEMS_PER_PAGE);
+
+  const currentStats = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return aggregatedStats.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [aggregatedStats, currentPage]);
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
   return (
-    <div
-      className={`border-[1px] ${
-        darkMode
-          ? "border-white bg-gray-800 text-white"
-          : "border-black bg-white text-black"
-      } min-w-[800px] p-4 min-h-96 overflow-auto flex-grow`}
-    >
-      <h2
-        className={`text-lg font-semibold mb-4 ${
-          darkMode ? "text-white" : "text-black"
-        }`}
-      >
+    <div className="border border-black bg-white text-black min-w-[800px] p-4 min-h-96 overflow-auto flex-grow">
+      <h2 className="text-lg font-semibold mb-4">
         Message Statistics per Person
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {aggregatedStats.map((stat) => (
+        {currentStats.map((stat) => (
           <div
             key={stat.sender}
-            className={`border-[1px] p-4 ${
-              darkMode ? "border-white" : "border-black"
-            }`}
+            className="border border-black p-4 rounded-none"
             style={{ borderLeft: `4px solid ${colorScale.get(stat.sender)}` }}
           >
-            <h3
-              className={`text-md font-medium mb-2 ${
-                darkMode ? "text-white" : "text-black"
-              }`}
-            >
-              {stat.sender}
-            </h3>
+            <h3 className="text-md font-medium mb-2">{stat.sender}</h3>
             <div className="space-y-1">
-              <div className="flex justify-between">
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  Number of Messages:
-                </span>
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  {stat.messageCount}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  Avg. Words per Message:
-                </span>
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  {stat.averageWordsPerMessage}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  Median Words per Message:
-                </span>
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  {stat.medianWordsPerMessage}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  Total Words Sent:
-                </span>
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  {stat.totalWordsSent}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  Max Words in a Message:
-                </span>
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  {stat.maxWordsInMessage}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  Active Days:
-                </span>
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  {stat.activeDays}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  First Message:
-                </span>
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  {d3.timeFormat("%d.%m.%Y %H:%M")(stat.firstMessageDate)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  Last Message:
-                </span>
-                <span
-                  className={`text-sm ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
-                >
-                  {d3.timeFormat("%d.%m.%Y %H:%M")(stat.lastMessageDate)}
-                </span>
-              </div>
+              <StatRow label="Number of Messages:" value={stat.messageCount} />
+              <StatRow
+                label="Avg. Words per Message:"
+                value={stat.averageWordsPerMessage}
+              />
+              <StatRow
+                label="Median Words per Message:"
+                value={stat.medianWordsPerMessage}
+              />
+              <StatRow label="Total Words Sent:" value={stat.totalWordsSent} />
+              <StatRow
+                label="Max Words in a Message:"
+                value={stat.maxWordsInMessage}
+              />
+              <StatRow label="Active Days:" value={stat.activeDays} />
+              <StatRow
+                label="Unique Words Count:"
+                value={stat.uniqueWordsCount}
+              />
+              <StatRow
+                label="Avg. Characters per Message:"
+                value={stat.averageCharactersPerMessage}
+              />
+              <StatRow
+                label="First Message:"
+                value={d3.timeFormat("%d.%m.%Y %H:%M")(stat.firstMessageDate)}
+              />
+              <StatRow
+                label="Last Message:"
+                value={d3.timeFormat("%d.%m.%Y %H:%M")(stat.lastMessageDate)}
+              />
             </div>
           </div>
         ))}
       </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center mt-4 space-x-2">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className={`px-2 py-1 rounded-none border border-black ${
+              currentPage === 1
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-black"
+            }`}
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className={`px-2 py-1 rounded-none border border-black hover:border-black ${
+              currentPage === totalPages
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-black"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };
+
+interface StatRowProps {
+  label: string;
+  value: string | number;
+}
+
+const StatRow: React.FC<StatRowProps> = ({ label, value }) => (
+  <div className="flex justify-between">
+    <span className="text-sm">{label}</span>
+    <span className="text-sm">{value}</span>
+  </div>
+);
 
 export default Plot5;
