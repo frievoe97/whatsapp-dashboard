@@ -1,7 +1,7 @@
-// src/components/Plot5.tsx
 import React, { useMemo, useState } from "react";
 import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
+import ClipLoader from "react-spinners/ClipLoader";
 
 interface SenderStats {
   sender: string;
@@ -20,7 +20,7 @@ interface SenderStats {
 const ITEMS_PER_PAGE = 2;
 
 const Plot5: React.FC = () => {
-  const { messages } = useChat();
+  const { messages, darkMode, isUploading } = useChat();
   const [currentPage, setCurrentPage] = useState(1);
 
   // Aggregiere Statistiken pro Sender
@@ -140,83 +140,120 @@ const Plot5: React.FC = () => {
   };
 
   return (
-    <div className="border border-black bg-white text-black min-w-[800px] p-4 min-h-96 overflow-auto flex-grow">
+    <div
+      className={`border border-black bg-white text-black w-full md:min-w-[500px] md:basis-[500px] p-4 min-h-96 overflow-auto flex-grow ${
+        darkMode
+          ? "border-white bg-gray-800 text-white"
+          : "border-black bg-white text-black"
+      }`}
+    >
       <h2 className="text-lg font-semibold mb-4">
         Message Statistics per Person
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {currentStats.map((stat) => (
-          <div
-            key={stat.sender}
-            className="border border-black p-4 rounded-none"
-            style={{ borderLeft: `4px solid ${colorScale.get(stat.sender)}` }}
-          >
-            <h3 className="text-md font-medium mb-2">{stat.sender}</h3>
-            <div className="space-y-1">
-              <StatRow label="Number of Messages:" value={stat.messageCount} />
-              <StatRow
-                label="Avg. Words per Message:"
-                value={stat.averageWordsPerMessage}
-              />
-              <StatRow
-                label="Median Words per Message:"
-                value={stat.medianWordsPerMessage}
-              />
-              <StatRow label="Total Words Sent:" value={stat.totalWordsSent} />
-              <StatRow
-                label="Max Words in a Message:"
-                value={stat.maxWordsInMessage}
-              />
-              <StatRow label="Active Days:" value={stat.activeDays} />
-              <StatRow
-                label="Unique Words Count:"
-                value={stat.uniqueWordsCount}
-              />
-              <StatRow
-                label="Avg. Characters per Message:"
-                value={stat.averageCharactersPerMessage}
-              />
-              <StatRow
-                label="First Message:"
-                value={d3.timeFormat("%d.%m.%Y %H:%M")(stat.firstMessageDate)}
-              />
-              <StatRow
-                label="Last Message:"
-                value={d3.timeFormat("%d.%m.%Y %H:%M")(stat.lastMessageDate)}
-              />
+
+      {/* Bedingtes Rendering für Ladeanimation und Datenanzeige */}
+      <div className="flex-grow flex justify-center items-center flex-col">
+        {isUploading ? (
+          // Ladeanimation anzeigen, wenn Daten hochgeladen werden
+          <ClipLoader
+            color={darkMode ? "#ffffff" : "#000000"}
+            loading={true}
+            size={50}
+          />
+        ) : aggregatedStats.length === 0 ? (
+          // "No Data" anzeigen, wenn keine Daten vorhanden sind
+          <span className="text-lg">No Data Available</span>
+        ) : (
+          // Statistiken und Paginierung anzeigen
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+              {currentStats.map((stat) => (
+                <div
+                  key={stat.sender}
+                  className="border border-black p-4 rounded-none"
+                  style={{
+                    borderLeft: `4px solid ${colorScale.get(stat.sender)}`,
+                  }}
+                >
+                  <h3 className="text-md font-medium mb-2">{stat.sender}</h3>
+                  <div className="space-y-1">
+                    <StatRow
+                      label="Number of Messages:"
+                      value={stat.messageCount}
+                    />
+                    <StatRow
+                      label="Avg. Words per Message:"
+                      value={stat.averageWordsPerMessage}
+                    />
+                    <StatRow
+                      label="Median Words per Message:"
+                      value={stat.medianWordsPerMessage}
+                    />
+                    <StatRow
+                      label="Total Words Sent:"
+                      value={stat.totalWordsSent}
+                    />
+                    <StatRow
+                      label="Max Words in a Message:"
+                      value={stat.maxWordsInMessage}
+                    />
+                    <StatRow label="Active Days:" value={stat.activeDays} />
+                    <StatRow
+                      label="Unique Words Count:"
+                      value={stat.uniqueWordsCount}
+                    />
+                    <StatRow
+                      label="Avg. Characters per Message:"
+                      value={stat.averageCharactersPerMessage}
+                    />
+                    <StatRow
+                      label="First Message:"
+                      value={d3.timeFormat("%d.%m.%Y %H:%M")(
+                        stat.firstMessageDate
+                      )}
+                    />
+                    <StatRow
+                      label="Last Message:"
+                      value={d3.timeFormat("%d.%m.%Y %H:%M")(
+                        stat.lastMessageDate
+                      )}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-4 space-x-2">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className={`px-2 py-1 rounded-none border border-black ${
+                    currentPage === 1
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-black"
+                  }`}
+                >
+                  Previous
+                </button>
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className={`px-2 py-1 rounded-none border border-black hover:border-black ${
+                    currentPage === totalPages
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-black"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center mt-4 space-x-2">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className={`px-2 py-1 rounded-none border border-black ${
-              currentPage === 1
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-black"
-            }`}
-          >
-            Previous
-          </button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            className={`px-2 py-1 rounded-none border border-black hover:border-black ${
-              currentPage === totalPages
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-black"
-            }`}
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 };
@@ -227,7 +264,7 @@ interface StatRowProps {
 }
 
 const StatRow: React.FC<StatRowProps> = ({ label, value }) => (
-  <div className="flex justify-between">
+  <div className="flex justify-between h-[28px]">
     <span className="text-sm">{label}</span>
     <span className="text-sm">{value}</span>
   </div>

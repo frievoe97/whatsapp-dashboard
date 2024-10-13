@@ -15,6 +15,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isInitialLoad, setIsInitialLoad] = useState(false);
+  const [fileName, setFileName] = useState("");
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([
     "Mon",
     "Tue",
@@ -50,6 +51,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     setMessages([]);
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
+
+      if (file) {
+        setFileName(file.name);
+      } else {
+        setFileName("");
+      }
+
       onFileUpload(file);
 
       // Reset all settings
@@ -170,16 +178,36 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
       {/* a) File Upload + Delete File */}
       <div className="flex flex-col space-y-2">
         <div className="flex flex-row space-x-2">
-          <input
-            type="file"
-            accept=".txt"
-            onChange={handleFileChange}
-            className={`text-sm px-2 py-1 border ${
-              darkMode ? "border-white" : "border-black"
-            } w-full ${
-              darkMode ? "bg-gray-700 text-white" : "bg-white text-black"
-            }`}
-          />
+          <div className="w-full flex flew-row">
+            <label
+              htmlFor="file-upload"
+              className={`cursor-pointer text-sm px-4 py-2 border ${
+                darkMode
+                  ? "border-white bg-gray-700 text-white"
+                  : "border-black bg-white text-black"
+              } hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 inline-block`}
+            >
+              Datei auswählen
+            </label>
+            <input
+              id="file-upload"
+              type="file"
+              accept=".txt"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            {/* Anzeige des Dateinamens */}
+            {fileName && (
+              <p className="mt-2 text-sm ml-4">
+                {darkMode ? (
+                  <span className="text-white">{fileName}</span>
+                ) : (
+                  <span className="text-black">{fileName}</span>
+                )}
+              </p>
+            )}
+          </div>
+
           <button
             onClick={handleDeleteFile}
             className={`px-4 py-1 text-sm rounded-none border ${
@@ -290,7 +318,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           <div className="flex flex-col space-y-2">
             <h3 className="text-md font-semibold">Select Weekdays:</h3>
             <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-4">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-0">
                 {weekdays.map((day) => (
                   <label
                     key={day}

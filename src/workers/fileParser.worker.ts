@@ -25,6 +25,7 @@ const ignoreStrings: string[] = [
   "weggelassen",
   "hast den Gruppennamen",
   "hat dich hinzugefügt",
+  "sicherheitsnummer",
   "Ende-zu-Ende-verschlüssel",
   "erheitsnummer für alle Mitglieder hat sich geänd",
 ];

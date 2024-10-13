@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import FileUpload from "./components/FileUpload";
-import Plot1 from "./components/Plot1";
-import Plot2 from "./components/Plot2";
-import Plot3 from "./components/Plot3";
-import Plot4 from "./components/Plot4";
-import Plot5 from "./components/Plot5";
-import Plot6 from "./components/Plot6";
-import Plot7 from "./components/Plot7";
+import AggregatePerTime from "./components/AggregatePerTime";
+import Timeline from "./components/Timeline";
+import MessageRatio from "./components/MessageRatio";
+import WordCount from "./components/WordCount";
+import Stats from "./components/Stats";
+import Heatmap from "./components/Heatmap";
+import Emoji from "./components/Emoji";
 import { useChat } from "./context/ChatContext"; // Verwende den ChatContext
 import "./index.css";
 
@@ -25,19 +25,19 @@ function App() {
 
   return (
     <div className="p-4 h-screen flex flex-col">
-      <h1 className="text-2xl font-bold mb-4 text-center">
+      {/* <h1 className="text-2xl font-bold mb-4 text-center">
         WhatsApp Dashboard
-      </h1>
+      </h1> */}
       <FileUpload onFileUpload={(uploadedFile) => setFile(uploadedFile)} />
 
       <div className="mt-4 flex-1 overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch">
-        <Plot1 />
-        <Plot2 />
-        <Plot3 />
-        <Plot6 />
-        <Plot4 />
-        <Plot5 />
-        <Plot7 />
+        <AggregatePerTime />
+        <Timeline />
+        <MessageRatio />
+        <Heatmap />
+        <Emoji />
+        <WordCount />
+        <Stats />
       </div>
     </div>
   );

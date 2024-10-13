@@ -204,7 +204,7 @@ const Plot6: React.FC = () => {
         darkMode
           ? "border-white bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } min-w-[800px] basis-[800px] flex-grow p-4 h-96 flex flex-col`}
+      } w-full md:min-w-[800px] md:basis-[800px] flex-grow p-4 h-[460px] flex flex-col`}
     >
       <h2
         className={`text-lg font-semibold mb-4 ${

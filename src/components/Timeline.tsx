@@ -402,31 +402,6 @@ const Plot2: React.FC = () => {
       <div className="flex items-center justify-between mb-2">
         {/* Buttons für verschiedene Modi */}
         <div className="flex space-x-2 mt-0">
-          {/* <button
-            className={`px-3 py-1 rounded-none ${
-              mode === "year"
-                ? "bg-black text-white"
-                : darkMode
-                ? "bg-gray-700 text-white border-[1px] border-white"
-                : "bg-white text-gray-700 border-[1px] border-black"
-            }`}
-            onClick={() => setMode("year")}
-          >
-            Year
-          </button> */}
-          {/* <button
-            className={`px-3 py-1 rounded-none ${
-              mode === "month"
-                ? "bg-black text-white"
-                : darkMode
-                ? "bg-gray-700 text-white border-[1px] border-white"
-                : "bg-white text-gray-700 border-[1px] border-black"
-            }`}
-            onClick={() => setMode("month")}
-          >
-            Month
-          </button> */}
-
           <button
             className={`px-3 py-1 rounded-none ${
               mode === "year"
