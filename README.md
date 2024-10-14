@@ -170,4 +170,4 @@ git push origin feature/YourFeature
 
 ## License
 
-This project is licensed under the MIT License with attribution requirement – see the [LICENSE](./LICENSE) file for details.
+This project is licensed under the MIT License with attribution requirement – see the [LICENSE](./LICENSE.txt) file for details.
