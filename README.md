@@ -39,7 +39,7 @@ A React application that visually represents WhatsApp chats. Upload your `.txt` 
 1. **Clone the Repository**
 
 ```bash
-git clone https://github.com/frievoe97/whatsapp-dashboard.git
+git clone git@github.com:frievoe97/whatsapp-dashboard.git
 cd whatsapp-dashboard
 ```
 
