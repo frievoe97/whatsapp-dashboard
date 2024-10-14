@@ -5,6 +5,7 @@ A React application that visually represents WhatsApp chats. Upload your `.txt` 
 ## Table of Contents
 
 - [Features](#features)
+- [Demo](#demo)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Project Structure](#project-structure)
@@ -26,13 +27,23 @@ A React application that visually represents WhatsApp chats. Upload your `.txt` 
 - **Dark Mode**: Toggle between light and dark themes for a comfortable viewing experience.
 - **Responsive Design**: Optimized for various screen sizes and devices.
 
-<!---
 ## Demo
 
-![Dashboard Screenshot](path_to_screenshot.png)
+<div align="center">
+  <img width="600" alt="screenshot_01" src="https://github.com/user-attachments/assets/845c072e-4c38-4f49-83ca-c2ed3500f32a">
+</div>
+<div align="center">
+  <img width="600" alt="screenshot_02" src="https://github.com/user-attachments/assets/ebba500d-2382-4959-ad46-a64ebeeae931">
+</div>
+<div align="center">
+  <img width="600" alt="screenshot_03" src="https://github.com/user-attachments/assets/b2cce540-0757-4bd5-a57c-bbf396120496">
+</div>
+<div align="center">
+  <img width="600" alt="screenshot_04" src="https://github.com/user-attachments/assets/d25dac69-886f-4edb-ad3a-73bc5fe1a189">
+</div>
 
-*Note: Replace `path_to_screenshot.png` with the actual path to your screenshot.*
--->
+
+
 
 ## Installation
 
