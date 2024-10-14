@@ -547,7 +547,11 @@ const Plot1: React.FC = () => {
           <span className="text-lg">No Data Available</span>
         ) : (
           // Diagramm anzeigen, wenn Daten vorhanden sind
-          <svg ref={svgRef} className="h-full w-full flex-grow"></svg>
+          <svg
+            id="aggregate_plot"
+            ref={svgRef}
+            className="h-full w-full flex-grow"
+          ></svg>
         )}
       </div>
     </div>

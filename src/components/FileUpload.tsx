@@ -2,6 +2,7 @@ import React, { ChangeEvent, useMemo, useState, useEffect } from "react";
 import { useChat } from "../context/ChatContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+// import jsPDF from "jspdf";
 
 interface FileUploadProps {
   onFileUpload: (uploadedFile: File) => void;
@@ -166,6 +167,156 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   ]);
 
   const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  // const exportToPDF = (): void => {
+  //   console.log("Start exportToPDF");
+
+  //   // Hole beide SVGs
+  //   const svg1 = document.getElementById(
+  //     "aggregate_plot"
+  //   ) as SVGSVGElement | null;
+  //   const svg2 = document.getElementById(
+  //     "timeline_plot"
+  //   ) as SVGSVGElement | null;
+
+  //   if (!svg1 || !svg2) {
+  //     console.log("SVGs nicht gefunden, Abbruch");
+  //     return;
+  //   }
+
+  //   console.log("SVGs gefunden:", { svg1, svg2 });
+
+  //   // Typen für die Callback-Funktion
+  //   type ImageCallback = (img: HTMLImageElement) => void;
+
+  //   // Funktion zum Konvertieren von SVG in ein Bild über Canvas
+  //   const convertSVGToImage = (
+  //     svgElement: SVGSVGElement,
+  //     callback: ImageCallback,
+  //     scaleFactor: number = 3 // Höherer Scale für bessere Auflösung
+  //   ): void => {
+  //     console.log("Start convertSVGToImage für SVG:", svgElement.id);
+
+  //     const svgData = new XMLSerializer().serializeToString(svgElement);
+  //     console.log("SVG serialisiert");
+
+  //     const svgBlob = new Blob([svgData], {
+  //       type: "image/svg+xml;charset=utf-8",
+  //     });
+  //     const url = URL.createObjectURL(svgBlob);
+  //     console.log("Blob erstellt und URL erzeugt:", url);
+
+  //     const img = new Image();
+  //     const { width, height } = svgElement.getBoundingClientRect();
+  //     img.width = width * scaleFactor; // Skalieren für höhere Auflösung
+  //     img.height = height * scaleFactor; // Skalieren für höhere Auflösung
+  //     console.log("Bildgrößen berechnet:", {
+  //       width: img.width,
+  //       height: img.height,
+  //     });
+
+  //     img.onload = () => {
+  //       console.log("Bild geladen für SVG:", svgElement.id);
+
+  //       const canvas = document.createElement("canvas");
+  //       canvas.width = img.width || 1; // Sicherstellen, dass die Breite > 0 ist
+  //       canvas.height = img.height || 1; // Sicherstellen, dass die Höhe > 0 ist
+
+  //       const ctx = canvas.getContext("2d");
+  //       if (ctx) {
+  //         console.log("Canvas Kontext gefunden, Zeichnen des Bildes");
+  //         ctx.fillStyle = "#FFFFFF"; // Hintergrund weiß setzen, falls benötigt
+  //         ctx.fillRect(0, 0, canvas.width, canvas.height);
+  //         ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Skalierte Zeichnung
+
+  //         const imgData = canvas.toDataURL("image/png");
+  //         console.log("Canvas zu PNG konvertiert");
+
+  //         const newImg = new Image();
+  //         newImg.src = imgData;
+  //         callback(newImg);
+  //       }
+
+  //       URL.revokeObjectURL(url); // URL wieder freigeben
+  //       console.log("URL freigegeben");
+  //     };
+
+  //     img.onerror = (error) => {
+  //       console.error("Fehler beim Laden des Bildes:", error);
+  //     };
+
+  //     img.src = url;
+  //   };
+
+  //   // PDF-Instanz erstellen (Hochformat, A4)
+  //   const pdf = new jsPDF({
+  //     orientation: "portrait", // Kann auch auf "landscape" gesetzt werden
+  //     unit: "pt", // Maßeinheit in Punkten
+  //     format: "a4", // A4-Format
+  //   });
+  //   console.log("PDF-Instanz erstellt");
+
+  //   // Plot 1 in die PDF einfügen
+  //   convertSVGToImage(
+  //     svg1,
+  //     (img1: HTMLImageElement) => {
+  //       console.log("Plot 1 wird zur PDF hinzugefügt");
+
+  //       const plot1Width = 500; // Breite des Plots
+  //       const plot1Height = (img1.height / img1.width) * plot1Width || 500; // Höhe des Plots basierend auf der Breite
+  //       console.log("Plot 1 Größe berechnet:", { plot1Width, plot1Height });
+
+  //       // Überprüfen, ob Höhe und Breite gültige Werte haben
+  //       if (plot1Width > 0 && plot1Height > 0) {
+  //         // Überschrift für Plot 1 hinzufügen
+  //         pdf.setFontSize(16);
+  //         pdf.text("Aggregate Plot", 40, 40); // Überschrift für Plot 1
+  //         console.log("Überschrift für Plot 1 hinzugefügt");
+
+  //         // Plot 1 hinzufügen
+  //         pdf.addImage(img1, "PNG", 40, 60, plot1Width, plot1Height); // x, y, width, height
+  //         console.log("Plot 1 zur PDF hinzugefügt");
+  //       }
+
+  //       // Plot 2 in die PDF einfügen
+  //       convertSVGToImage(svg2, (img2: HTMLImageElement, scaleFactor = 3) => {
+  //         console.log("Plot 2 wird zur PDF hinzugefügt");
+
+  //         const plot2Width = 500;
+  //         const plot2Height = (img2.height / img2.width) * plot2Width || 500;
+  //         console.log("Plot 2 Größe berechnet:", { plot2Width, plot2Height });
+
+  //         // Überprüfen, ob Höhe und Breite gültige Werte haben
+  //         if (plot2Width > 0 && plot2Height > 0) {
+  //           // Überschrift für Plot 2 hinzufügen
+  //           pdf.setFontSize(16);
+  //           pdf.text("Timeline Plot", 40, 80 + plot1Height); // Überschrift für Plot 2, unterhalb des ersten Plots
+  //           console.log("Überschrift für Plot 2 hinzugefügt");
+
+  //           // Plot 2 hinzufügen
+  //           pdf.addImage(
+  //             img2,
+  //             "PNG",
+  //             40,
+  //             100 + plot1Height,
+  //             plot2Width,
+  //             plot2Height
+  //           );
+  //           console.log("Plot 2 zur PDF hinzugefügt");
+  //         }
+
+  //         // PDF als Datei speichern
+  //         try {
+  //           pdf.save("plots.pdf");
+  //           console.log("PDF erfolgreich gespeichert");
+  //         } catch (error) {
+  //           console.error("Fehler beim Speichern der PDF:", error);
+  //         }
+  //       });
+  //     },
+  //     3
+  //   ); // Skalierungsfaktor 3 für höhere Auflösung der Bilder
+  // };
 
   return (
     <div
@@ -428,6 +579,20 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
               Apply
             </button>
           </div>
+
+          {/* g) Export to PDF */}
+          {/* <button
+            onClick={exportToPDF}
+            className={`px-4 py-1 h-full text-sm rounded-none border ${
+              darkMode
+                ? "border-white hover:border-white"
+                : "border-black hover:border-black"
+            } w-full ${
+              darkMode ? "bg-gray-700 text-white " : "bg-white text-black "
+            }`}
+          >
+            Export Plot as PNG
+          </button> */}
         </>
       )}
     </div>
