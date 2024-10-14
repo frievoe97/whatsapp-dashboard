@@ -42,9 +42,6 @@ A React application that visually represents WhatsApp chats. Upload your `.txt` 
   <img width="600" alt="screenshot_04" src="https://github.com/user-attachments/assets/d25dac69-886f-4edb-ad3a-73bc5fe1a189">
 </div>
 
-
-
-
 ## Installation
 
 1. **Clone the Repository**
@@ -173,4 +170,4 @@ git push origin feature/YourFeature
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the MIT License with attribution requirement – see the [LICENSE](./LICENSE) file for details.
