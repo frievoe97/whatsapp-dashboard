@@ -53,15 +53,26 @@ const Plot7: React.FC = () => {
   }, [messages, regex]);
 
   // Farbschema basierend auf den Sendern
+
+  // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
     const senders = aggregatedEmojiData.map((d) => d.sender);
-    const colors = d3.schemePaired;
+
+    // Definiere unterschiedliche Farbpaletten für Light- und Dark-Mode
+    const lightColors = d3.schemePaired; // Bestehende Farbschema für Light Mode
+    const darkColors = d3.schemeSet2;
+
+    // Wähle die Farbpalette basierend auf dem Dark Mode Zustand
+    const colors = darkMode ? darkColors : lightColors;
+
+    // Erstelle eine Farbzuteilung für jeden Sender
     const scale = new Map<string, string>();
     senders.forEach((sender, index) => {
       scale.set(sender, colors[index % colors.length]);
     });
+
     return scale;
-  }, [aggregatedEmojiData]);
+  }, [aggregatedEmojiData, darkMode]); // Dark Mode als Dependency hinzufügen
 
   const totalPages = Math.ceil(aggregatedEmojiData.length / ITEMS_PER_PAGE);
 
@@ -147,24 +158,32 @@ const Plot7: React.FC = () => {
                 <button
                   onClick={handlePrevPage}
                   disabled={currentPage === 1}
-                  className={`px-2 py-1 rounded-none border border-black hover:border-black ${
+                  className={`px-2 py-1 rounded-none border ${
+                    darkMode
+                      ? "border-gray-300 text-white hover:border-gray-400"
+                      : "border-black text-black hover:border-black"
+                  } ${
                     currentPage === 1
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-black"
+                      ? "text-gray-400 cursor-not-allowed border-gray-400"
+                      : ""
                   }`}
                 >
                   Previous
                 </button>
-                <span>
+                <span className={darkMode ? "text-white" : "text-black"}>
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
-                  className={`px-2 py-1 rounded-none border border-black hover:border-black ${
+                  className={`px-2 py-1 rounded-none border ${
+                    darkMode
+                      ? "border-gray-300 text-white hover:border-gray-400"
+                      : "border-black text-black hover:border-black"
+                  } ${
                     currentPage === totalPages
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-black"
+                      ? "text-gray-400 cursor-not-allowed border-gray-400"
+                      : ""
                   }`}
                 >
                   Next

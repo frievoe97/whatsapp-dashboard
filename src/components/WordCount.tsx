@@ -61,13 +61,22 @@ const Plot4: React.FC = () => {
   // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
     const senders = aggregatedWordData.map((d) => d.sender);
-    const colors = d3.schemePaired;
+
+    // Definiere unterschiedliche Farbpaletten für Light- und Dark-Mode
+    const lightColors = d3.schemePaired; // Bestehende Farbschema für Light Mode
+    const darkColors = d3.schemeSet2;
+
+    // Wähle die Farbpalette basierend auf dem Dark Mode Zustand
+    const colors = darkMode ? darkColors : lightColors;
+
+    // Erstelle eine Farbzuteilung für jeden Sender
     const scale = new Map<string, string>();
     senders.forEach((sender, index) => {
       scale.set(sender, colors[index % colors.length]);
     });
+
     return scale;
-  }, [aggregatedWordData]);
+  }, [aggregatedWordData, darkMode]); // Dark Mode als Dependency hinzufügen
 
   const totalPages = Math.ceil(aggregatedWordData.length / ITEMS_PER_PAGE);
 

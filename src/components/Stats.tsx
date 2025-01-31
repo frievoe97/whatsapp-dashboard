@@ -114,15 +114,26 @@ const Plot5: React.FC = () => {
   }, [messages]);
 
   // Farbschema basierend auf den Sendern
+
+  // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
     const senders = aggregatedStats.map((d) => d.sender);
-    const colors = d3.schemePaired;
+
+    // Definiere unterschiedliche Farbpaletten für Light- und Dark-Mode
+    const lightColors = d3.schemePaired; // Bestehende Farbschema für Light Mode
+    const darkColors = d3.schemeSet2;
+
+    // Wähle die Farbpalette basierend auf dem Dark Mode Zustand
+    const colors = darkMode ? darkColors : lightColors;
+
+    // Erstelle eine Farbzuteilung für jeden Sender
     const scale = new Map<string, string>();
     senders.forEach((sender, index) => {
       scale.set(sender, colors[index % colors.length]);
     });
+
     return scale;
-  }, [aggregatedStats]);
+  }, [aggregatedStats, darkMode]); // Dark Mode als Dependency hinzufügen
 
   const totalPages = Math.ceil(aggregatedStats.length / ITEMS_PER_PAGE);
 

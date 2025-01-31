@@ -176,7 +176,7 @@ const Plot6: React.FC = () => {
       )
       .attr("y", -10)
       .text((d) => d3.timeFormat("%b")(d))
-      .attr("font-size", "10px")
+      .attr("font-size", "12px")
       .attr("fill", darkMode ? "#ffffff" : "#000000");
 
     const daysOfWeek = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -189,7 +189,7 @@ const Plot6: React.FC = () => {
       .attr("x", -10)
       .attr("y", (d, i) => i * (cellSize + 2) + cellSize / 1.5)
       .text((d) => d)
-      .attr("font-size", "10px")
+      .attr("font-size", "12px")
       .attr("fill", darkMode ? "#ffffff" : "#000000")
       .attr("text-anchor", "end");
 
@@ -218,15 +218,6 @@ const Plot6: React.FC = () => {
       {/* Jahr auswählen */}
       <div className="mb-4">
         <div>
-          <label
-            htmlFor="year-select"
-            className={`block text-sm font-medium ${
-              darkMode ? "text-white" : "text-black"
-            }`}
-          >
-            Year Selection
-          </label>
-
           <select
             id="year-select"
             value={selectedYear}

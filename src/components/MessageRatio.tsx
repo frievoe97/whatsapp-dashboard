@@ -32,8 +32,10 @@ const Plot3: React.FC = () => {
   // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
     const senders = pieData.map((d) => d.sender);
-    return d3.scaleOrdinal<string, string>(d3.schemePaired).domain(senders);
-  }, [pieData]);
+    const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
+
+    return d3.scaleOrdinal<string, string>(colors).domain(senders);
+  }, [pieData, darkMode]); // `darkMode` & `pieData` als Dependencies
 
   useEffect(() => {
     if (!dimensions || pieData.length === 0) return;
@@ -123,7 +125,7 @@ const Plot3: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } min-w-[400px] basis-[400px] flex-grow p-4 h-96 flex flex-col`}
+      } w-full md:min-w-[400px] md:basis-[400px] flex-grow p-4 h-96 flex flex-col`}
       style={{ minHeight: "300px", maxHeight: "550px", overflow: "hidden" }}
     >
       <h2

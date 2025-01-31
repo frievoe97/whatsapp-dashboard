@@ -24,6 +24,16 @@ function App() {
   }, [darkMode]);
 
   useEffect(() => {
+    let metaThemeColor = document.querySelector("meta[name=theme-color]");
+    if (!metaThemeColor) {
+      metaThemeColor = document.createElement("meta");
+      metaThemeColor.setAttribute("name", "theme-color");
+      document.head.appendChild(metaThemeColor);
+    }
+    metaThemeColor.setAttribute("content", darkMode ? "#1f2937" : "#ffffff");
+  }, [darkMode]);
+
+  useEffect(() => {
     function setEqualRowHeights() {
       if (!containerRef.current) return;
 

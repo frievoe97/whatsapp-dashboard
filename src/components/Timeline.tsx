@@ -7,6 +7,7 @@ import useResizeObserver from "../hooks/useResizeObserver";
 import Switch from "react-switch";
 import "./Plot1.css"; // Importiere die CSS-Datei
 import ClipLoader from "react-spinners/ClipLoader";
+import { Hash, Percent } from "lucide-react";
 
 interface TimeAggregatedData {
   sender: string;
@@ -124,9 +125,14 @@ const Plot2: React.FC = () => {
   );
 
   // Definiere das Farbschema basierend auf den Sendern
+
   const colorScale = useMemo(() => {
-    return d3.scaleOrdinal<string, string>(d3.schemePaired).domain(senders);
-  }, [senders]);
+    // Wähle das Farbschema je nach Dark Mode Zustand
+    const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
+
+    // Erstelle die Skala mit dem gewählten Farbschema
+    return d3.scaleOrdinal<string, string>(colors).domain(senders);
+  }, [senders, darkMode]); // Dark Mode als Dependency hinzufügen
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -442,14 +448,11 @@ const Plot2: React.FC = () => {
         </div>
 
         {/* Toggle für Absolute Numbers / Percentages */}
-        <div className="flex items-center">
-          <span
-            className={`text-sm ${
-              darkMode ? "text-white" : "text-gray-700"
-            } mr-2`}
-          >
-            Absolute Numbers
-          </span>
+        <div className="flex items-center w-fit md:w-auto justify-center md:justify-end">
+          <Hash
+            size={20}
+            className={darkMode ? "text-white" : "text-gray-700"}
+          />
           <Switch
             onChange={() => setShowPercentage(!showPercentage)}
             checked={showPercentage}
@@ -461,17 +464,14 @@ const Plot2: React.FC = () => {
             width={48}
             handleDiameter={16}
             borderRadius={20}
-            boxShadow="none" // Schatten entfernen
-            activeBoxShadow="none" // Aktive Schatten entfernen
-            className="custom-switch" // Benutzerdefinierte Klasse hinzufügen
+            boxShadow="none"
+            activeBoxShadow="none"
+            className="custom-switch mx-2"
           />
-          <span
-            className={`text-sm ${
-              darkMode ? "text-white" : "text-gray-700"
-            } ml-2`}
-          >
-            Percentages
-          </span>
+          <Percent
+            size={20}
+            className={darkMode ? "text-white" : "text-gray-700"}
+          />
         </div>
       </div>
 
