@@ -122,7 +122,7 @@ const Plot6: React.FC = () => {
         "class",
         `absolute p-2 text-sm opacity-0 transition-opacity duration-200 ${
           darkMode
-            ? "bg-gray-700 text-white border-white"
+            ? "bg-gray-700 text-white border-gray-300"
             : "bg-white text-black border-black"
         }`
       )
@@ -202,9 +202,10 @@ const Plot6: React.FC = () => {
       ref={containerRef}
       className={`border-[1px] ${
         darkMode
-          ? "border-white bg-gray-800 text-white"
+          ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[800px] md:basis-[800px] flex-grow p-4 h-[460px] flex flex-col`}
+      } w-full md:min-w-[800px] md:basis-[800px] flex-grow p-4 flex flex-col`}
+      style={{ minHeight: "200px", maxHeight: "550px", overflow: "hidden" }}
     >
       <h2
         className={`text-lg font-semibold mb-4 ${
@@ -216,28 +217,41 @@ const Plot6: React.FC = () => {
 
       {/* Jahr auswählen */}
       <div className="mb-4">
-        <label
-          htmlFor="year-select"
-          className={`mr-2 ${darkMode ? "text-white" : "text-black"}`}
-        >
-          Wähle ein Jahr:
-        </label>
-        <select
-          id="year-select"
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className={`p-1 border-[1px] ${
-            darkMode
-              ? "border-white bg-gray-700 text-white"
-              : "border-black bg-white text-black"
-          }`}
-        >
-          {availableYears.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
+        <div>
+          <label
+            htmlFor="year-select"
+            className={`block text-sm font-medium ${
+              darkMode ? "text-white" : "text-black"
+            }`}
+          >
+            Year Selection
+          </label>
+
+          <select
+            id="year-select"
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className={`mt-1.5 w-full border border-[1px] text-sm font-medium outline-none focus:ring-0 appearance-none
+      ${
+        darkMode
+          ? "border-gray-300 bg-black text-white hover:bg-gray-900"
+          : "border-black bg-white text-black hover:bg-gray-200"
+      } 
+      p-2`}
+          >
+            {availableYears.map((year) => (
+              <option
+                key={year}
+                value={year}
+                className={
+                  darkMode ? "bg-black text-white" : "bg-white text-black"
+                }
+              >
+                {year}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Bedingtes Rendering des Inhalts */}

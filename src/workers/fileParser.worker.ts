@@ -54,15 +54,6 @@ self.addEventListener("message", (event: MessageEvent<string>) => {
       // Entferne unerwünschte Unicode-Zeichen und trimme die Zeile
       const cleanedLine = line.replace(unwantedUnicodeRegex, "").trim();
 
-      // Optional: Logge die Original- und bereinigte Zeile, wenn Bereinigung stattgefunden hat
-      if (line !== cleanedLine) {
-        // console.warn(
-        //   `Worker: Unerwünschte Unicode-Zeichen in Zeile ${index + 1} entfernt.`
-        // );
-        console.debug(`Original: "${line}"`);
-        console.debug(`Bereinigt: "${cleanedLine}"`);
-      }
-
       const match = cleanedLine.match(messageRegex);
 
       if (match) {

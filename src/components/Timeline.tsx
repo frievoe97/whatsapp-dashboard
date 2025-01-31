@@ -218,11 +218,14 @@ const Plot2: React.FC = () => {
         .selectAll("line")
         .attr("stroke", darkMode ? "#606060" : "#e0e0e0");
 
-      // Append X-Achse
+      // Entferne alte X-Achse, bevor sie neu erstellt wird
+      chart.select(".x-axis").remove();
+
+      // Neue X-Achse hinzufügen
       chart
         .append("g")
         .attr("class", "x-axis")
-        .attr("transform", `translate(0,${innerHeight})`)
+        .attr("transform", `translate(0,${innerHeight})`) // Muss dynamisch aktualisiert werden!
         .call(xAxis)
         .selectAll("text")
         .attr("transform", "translate(0,5)")
@@ -272,10 +275,12 @@ const Plot2: React.FC = () => {
         .attr("d", (d) => line(d.values) as string);
     } else {
       // Update Grid
+      // Update Grid with updated transform attribute for x-grid
       chart
         .select<SVGGElement>(".x-grid")
         .transition()
         .duration(1000)
+        .attr("transform", `translate(0,${innerHeight})`) // Hier wird der Ursprung neu gesetzt!
         .call(
           d3
             .axisBottom(xScale)
@@ -307,10 +312,12 @@ const Plot2: React.FC = () => {
         .attr("stroke", "none"); // oder setze auf grau, wenn du sie behalten möchtest
 
       // Update Achsen mit Transitionen
+      // Nachher: Update der x-Achse mit aktualisiertem transform-Attribut
       chart
         .select<SVGGElement>(".x-axis")
         .transition()
         .duration(1000)
+        .attr("transform", `translate(0,${innerHeight})`) // Hier wird der Ursprung neu gesetzt!
         .call(xAxis)
         .selectAll("text")
         .attr("transform", "translate(0,5)")
@@ -394,9 +401,10 @@ const Plot2: React.FC = () => {
       ref={containerRef}
       className={`border-[1px] ${
         darkMode
-          ? "border-white bg-gray-800 text-white"
+          ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[800px] md:basis-[800px] flex-grow p-4 h-96 flex flex-col`}
+      } w-full md:min-w-[800px] md:basis-[800px] flex-grow p-4 flex flex-col`}
+      style={{ minHeight: "400px", maxHeight: "550px", overflow: "hidden" }}
     >
       {/* Buttons und Switch in einer Zeile */}
       <div className="flex items-center justify-between mb-2">
@@ -406,10 +414,10 @@ const Plot2: React.FC = () => {
             className={`px-3 py-1 rounded-none ${
               mode === "year"
                 ? darkMode
-                  ? "bg-white text-black border border-white hover:border-white"
+                  ? "bg-white text-black border border-gray-300 hover:border-gray-300"
                   : "bg-black text-white border-none"
                 : darkMode
-                ? "bg-gray-700 text-white border border-white hover:border-white"
+                ? "bg-gray-700 text-white border border-gray-300 hover:border-gray-300"
                 : "bg-white text-gray-700 border border-black hover:border-black"
             }`}
             onClick={() => setMode("year")}
@@ -421,10 +429,10 @@ const Plot2: React.FC = () => {
             className={`px-3 py-1 rounded-none ${
               mode === "month"
                 ? darkMode
-                  ? "bg-white text-black border border-white hover:border-white"
+                  ? "bg-white text-black border border-gray-300 hover:border-gray-300"
                   : "bg-black text-white border-none"
                 : darkMode
-                ? "bg-gray-700 text-white border border-white hover:border-white"
+                ? "bg-gray-700 text-white border border-gray-300 hover:border-gray-300"
                 : "bg-white text-gray-700 border border-black hover:border-black"
             }`}
             onClick={() => setMode("month")}

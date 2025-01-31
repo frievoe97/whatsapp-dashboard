@@ -80,11 +80,12 @@ const Plot7: React.FC = () => {
 
   return (
     <div
-      className={`border border-black bg-white text-black w-full md:min-w-[500px] md:basis-[500px] p-4 min-h-96 overflow-auto flex-grow ${
+      className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 overflow-auto flex-grow ${
         darkMode
-          ? "border-white bg-gray-800 text-white"
+          ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       }`}
+      style={{ minHeight: "550px", maxHeight: "550px", overflow: "hidden" }}
     >
       <h2 className="text-lg font-semibold mb-4">Top 10 Emojis pro Person</h2>
 
@@ -113,7 +114,9 @@ const Plot7: React.FC = () => {
                 return (
                   <div
                     key={senderData.sender}
-                    className="w-full md:w-1/2 border border-black p-4 rounded-none min-w-0"
+                    className={`w-full md:w-1/2 border p-4 rounded-none min-w-0 
+                      ${darkMode ? "border-gray-300" : "border-black"}
+                      `}
                     style={{
                       borderLeft: `4px solid ${colorScale.get(
                         senderData.sender
@@ -190,15 +193,18 @@ const EmojiRow: React.FC<EmojiRowProps> = ({
   maxCount,
   color,
 }) => {
+  const { darkMode } = useChat(); // Dark Mode aus dem Context holen
   const barWidth = (count / maxCount) * 100;
 
   return (
     <div className="flex items-center">
       {/* Rang */}
-      <div className="w-6 text-sm text-black">{rank}.</div>
+      <div className={`w-6 text-sm ${darkMode ? "text-white" : "text-black"}`}>
+        {rank}.
+      </div>
       {/* Emoji */}
       <div
-        className="w-12 text-lg text-black"
+        className={`w-12 text-lg ${darkMode ? "text-white" : "text-black"}`}
         style={{
           fontFamily:
             '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif',
@@ -217,7 +223,9 @@ const EmojiRow: React.FC<EmojiRowProps> = ({
         ></div>
       </div>
       {/* Anzahl */}
-      <div className="w-8 text-sm text-black">{count}</div>
+      <div className={`w-8 text-sm ${darkMode ? "text-white" : "text-black"}`}>
+        {count}
+      </div>
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useChat } from "../context/ChatContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 // import jsPDF from "jspdf";
+import "./FileUpload.css";
 
 interface FileUploadProps {
   onFileUpload: (uploadedFile: File) => void;
@@ -17,6 +18,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isInitialLoad, setIsInitialLoad] = useState(false);
   const [fileName, setFileName] = useState("");
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([
     "Mon",
     "Tue",
@@ -26,6 +28,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     "Sat",
     "Sun",
   ]);
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => !prev);
+  };
 
   const [applyFilters, setApplyFilters] = useState(false);
 
@@ -87,6 +93,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
         }
       };
       reader.readAsText(file, "UTF-8");
+
+      // WICHTIG: Input zurücksetzen, damit bei erneutem Upload der onChange-Event ausgelöst wird
+      event.target.value = "";
     }
   };
 
@@ -124,6 +133,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   };
 
   const handleDeleteFile = () => {
+    setFileName("");
     setMessages([]);
     setStartDate(undefined);
     setEndDate(undefined);
@@ -317,283 +327,306 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   //     3
   //   ); // Skalierungsfaktor 3 für höhere Auflösung der Bilder
   // };
-
   return (
-    <div
-      className={`border ${
-        darkMode ? "border-white" : "border-black"
-      } p-4 file-upload grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 ${
-        darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
-      }`}
-    >
-      {/* a) File Upload + Delete File */}
-      <div className="flex flex-col space-y-2">
-        <div className="flex flex-row space-x-2">
-          <div className="w-full flex flew-row">
-            <label
-              htmlFor="file-upload"
-              className={`cursor-pointer text-sm px-4 py-2 border ${
-                darkMode
-                  ? "border-white bg-gray-700 text-white"
-                  : "border-black bg-white text-black"
-              } hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 inline-block`}
-            >
-              Datei auswählen
-            </label>
-            <input
-              id="file-upload"
-              type="file"
-              accept=".txt"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-            {/* Anzeige des Dateinamens */}
-            {fileName && (
-              <p className="mt-2 text-sm ml-4">
-                {darkMode ? (
-                  <span className="text-white">{fileName}</span>
-                ) : (
-                  <span className="text-black">{fileName}</span>
-                )}
-              </p>
-            )}
-          </div>
-
-          <button
-            onClick={handleDeleteFile}
-            className={`px-4 py-1 text-sm rounded-none border ${
-              darkMode
-                ? "border-white hover:border-white"
-                : "border-black hover:border-black"
-            } w-full ${
-              darkMode ? "bg-gray-700 text-white " : "bg-white text-black "
-            }`}
-          >
-            Delete File
-          </button>
-        </div>
-      </div>
-
-      {/* f) Dark Mode Toggle */}
-      <div className="flex flex-col space-y-2 md:justify-end">
+    <div className="file-upload-wrapper">
+      {/* Toggle Button oben */}
+      <div className="flex justify-end mb-2">
         <button
-          onClick={toggleDarkMode}
-          className={`px-4 py-1 h-full text-sm rounded-none border ${
-            darkMode
-              ? "border-white hover:border-white"
-              : "border-black hover:border-black"
-          } w-full ${
-            darkMode ? "bg-gray-700 text-white " : "bg-white text-black "
-          }`}
+          onClick={toggleCollapse}
+          className={`px-2 py-1 border rounded-none 
+    ${
+      darkMode
+        ? "border-white hover:border-white"
+        : "border-black hover:border-black"
+    } 
+    ${darkMode ? "bg-gray-700 text-white" : "bg-white text-black"}`}
         >
-          Switch to {darkMode ? "Light" : "Dark"} Mode
+          {/* Icons für den Pfeil nach oben/unten */}
+          <i className={`arrow ${isCollapsed ? "down" : "up"}`}></i>
         </button>
       </div>
 
-      {/* Render rest of the filters only if messages.length > 0 */}
-      {messages.length > 0 && (
-        <>
-          {/* b) Select Senders */}
+      {/* Der bisherige Parent-Div, bedingt gerendert */}
+      {!isCollapsed && (
+        <div
+          className={`border ${
+            darkMode ? "border-white" : "border-black"
+          } p-4 file-upload grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 ${
+            darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
+          }`}
+        >
+          {/* ... Hier bleibt dein bisheriger Inhalt unverändert ... */}
+
+          {/* a) File Upload + Delete File */}
           <div className="flex flex-col space-y-2">
-            <h3 className="text-md font-semibold">Select Senders:</h3>
-            <div className="flex flex-wrap gap-2">
-              {senders.map((sender) => (
-                <button
-                  key={sender}
-                  onClick={() => handleSenderChange(sender)}
-                  className={`px-3 py-1 text-sm border rounded-none w-auto ${
+            <div className="flex flex-row space-x-2">
+              <div className="w-full flex flew-row">
+                <label
+                  htmlFor="file-upload"
+                  className={`cursor-pointer text-sm px-4 py-2 border ${
                     darkMode
-                      ? "border-white hover:border-white"
-                      : "border-black hover:border-black"
-                  } ${
-                    selectedSender.includes(sender)
-                      ? darkMode
-                        ? "bg-white text-black"
-                        : "bg-black text-white"
-                      : darkMode
-                      ? "text-white "
-                      : "text-black "
-                  }`}
+                      ? "border-white bg-gray-700 text-white"
+                      : "border-black bg-white text-black"
+                  } hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 inline-block`}
                 >
-                  {sender}
-                </button>
-              ))}
+                  Datei auswählen
+                </label>
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept=".txt"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                {fileName && (
+                  <p className="mt-2 text-sm ml-4">
+                    {darkMode ? (
+                      <span className="text-white">{fileName}</span>
+                    ) : (
+                      <span className="text-black">{fileName}</span>
+                    )}
+                  </p>
+                )}
+              </div>
+
+              <button
+                onClick={handleDeleteFile}
+                className={`px-4 py-1 text-sm rounded-none border ${
+                  darkMode
+                    ? "border-white hover:border-white"
+                    : "border-black hover:border-black"
+                } w-full ${
+                  darkMode ? "bg-gray-700 text-white " : "bg-white text-black "
+                }`}
+              >
+                Delete File
+              </button>
             </div>
           </div>
 
-          {/* c) Select Start and End Date */}
-          <div className="flex flex-col space-y-2">
-            <h3 className="text-md font-semibold">Select Date:</h3>
-            <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-4">
-              <div className="flex flex-col">
-                <label className="text-sm mb-1">Start Date:</label>
-                <DatePicker
-                  selected={startDate}
-                  onChange={(date: Date | null) =>
-                    setStartDate(date || undefined)
-                  }
-                  selectsStart
-                  startDate={startDate}
-                  endDate={endDate}
-                  className={`p-2 border ${
-                    darkMode
-                      ? "border-white hover:border-white"
-                      : "border-black hover:border-black"
-                  } w-full ${
-                    darkMode ? "bg-gray-700 text-white" : "bg-white text-black"
-                  }`}
-                />
-              </div>
-              <div className="flex flex-col">
-                <label className="text-sm mb-1">End Date:</label>
-                <DatePicker
-                  selected={endDate}
-                  onChange={(date: Date | null) =>
-                    setEndDate(date || undefined)
-                  }
-                  selectsEnd
-                  startDate={startDate}
-                  endDate={endDate}
-                  minDate={startDate}
-                  className={`p-2 border ${
-                    darkMode ? "border-white" : "border-black"
-                  } w-full ${
-                    darkMode ? "bg-gray-700 text-white" : "bg-white text-black"
-                  }`}
-                />
-              </div>
-            </div>
+          {/* f) Dark Mode Toggle */}
+          <div className="flex flex-col space-y-2 md:justify-end">
+            <button
+              onClick={toggleDarkMode}
+              className={`px-4 py-1 h-full text-sm rounded-none border ${
+                darkMode
+                  ? "border-white hover:border-white"
+                  : "border-black hover:border-black"
+              } w-full ${
+                darkMode ? "bg-gray-700 text-white " : "bg-white text-black "
+              }`}
+            >
+              Switch to {darkMode ? "Light" : "Dark"} Mode
+            </button>
           </div>
 
-          {/* d) Select Weekdays, Select All, Deselect All */}
-          <div className="flex flex-col space-y-2">
-            <h3 className="text-md font-semibold">Select Weekdays:</h3>
-            <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-4">
-              <div className="flex flex-wrap gap-0">
-                {weekdays.map((day) => (
-                  <label
-                    key={day}
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    {/* Versteckte native Checkbox */}
-                    <input
-                      type="checkbox"
-                      value={day}
-                      checked={selectedWeekdays.includes(day)}
-                      onChange={handleWeekdayChange}
-                      className="hidden"
-                    />
-
-                    {/* Benutzerdefinierte Checkbox */}
-                    <span
-                      className={`flex items-center justify-center w-4 h-4 border ${
-                        darkMode ? "border-white" : "border-black"
-                      } rounded-none relative`}
-                    >
-                      {/* Haken-SVG */}
-                      {selectedWeekdays.includes(day) && (
-                        <svg
-                          className={`w-3 h-3 ${
-                            darkMode ? "text-white" : "text-black"
-                          }`}
-                          viewBox="0 0 16 16"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M2 8L6 12L14 4"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </span>
-
-                    {/* Label-Text */}
-                    <span
-                      className={`text-sm ${
-                        darkMode ? "text-white" : "text-black"
+          {/* Restliche Filter etc. (b, c, d, e) */}
+          {messages.length > 0 && (
+            <>
+              {/* b) Select Senders */}
+              <div className="flex flex-col space-y-2">
+                <h3 className="text-md font-semibold">Select Senders:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {senders.map((sender) => (
+                    <button
+                      key={sender}
+                      onClick={() => handleSenderChange(sender)}
+                      className={`px-3 py-1 text-sm border rounded-none w-auto ${
+                        darkMode
+                          ? "border-white hover:border-white"
+                          : "border-black hover:border-black"
+                      } ${
+                        selectedSender.includes(sender)
+                          ? darkMode
+                            ? "bg-white text-black"
+                            : "bg-black text-white"
+                          : darkMode
+                          ? "text-white "
+                          : "text-black "
                       }`}
                     >
-                      {day}
-                    </span>
-                  </label>
-                ))}
+                      {sender}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="flex space-x-2">
+              {/* c) Select Start and End Date */}
+              <div className="flex flex-col space-y-2">
+                <h3 className="text-md font-semibold">Select Date:</h3>
+                <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-4">
+                  <div className="flex flex-col">
+                    <label className="text-sm mb-1">Start Date:</label>
+                    <DatePicker
+                      selected={startDate}
+                      onChange={(date: Date | null) =>
+                        setStartDate(date || undefined)
+                      }
+                      selectsStart
+                      startDate={startDate}
+                      endDate={endDate}
+                      className={`p-2 border ${
+                        darkMode
+                          ? "border-white hover:border-white"
+                          : "border-black hover:border-black"
+                      } w-full ${
+                        darkMode
+                          ? "bg-gray-700 text-white"
+                          : "bg-white text-black"
+                      }`}
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm mb-1">End Date:</label>
+                    <DatePicker
+                      selected={endDate}
+                      onChange={(date: Date | null) =>
+                        setEndDate(date || undefined)
+                      }
+                      selectsEnd
+                      startDate={startDate}
+                      endDate={endDate}
+                      minDate={startDate}
+                      className={`p-2 border ${
+                        darkMode ? "border-white" : "border-black"
+                      } w-full ${
+                        darkMode
+                          ? "bg-gray-700 text-white"
+                          : "bg-white text-black"
+                      }`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* d) Select Weekdays, Select All, Deselect All */}
+              <div className="flex flex-col space-y-2">
+                <h3 className="text-md font-semibold">Select Weekdays:</h3>
+                <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-4">
+                  <div className="flex flex-wrap gap-0">
+                    {weekdays.map((day) => (
+                      <label
+                        key={day}
+                        className="flex items-center space-x-2 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          value={day}
+                          checked={selectedWeekdays.includes(day)}
+                          onChange={handleWeekdayChange}
+                          className="hidden"
+                        />
+                        <span
+                          className={`flex items-center justify-center w-4 h-4 border ${
+                            darkMode ? "border-white" : "border-black"
+                          } rounded-none relative`}
+                        >
+                          {selectedWeekdays.includes(day) && (
+                            <svg
+                              className={`w-3 h-3 ${
+                                darkMode ? "text-white" : "text-black"
+                              }`}
+                              viewBox="0 0 16 16"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M2 8L6 12L14 4"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                        </span>
+                        <span
+                          className={`text-sm ${
+                            darkMode ? "text-white" : "text-black"
+                          }`}
+                        >
+                          {day}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handleSelectAllWeekdays}
+                      className={`px-3 py-1 text-sm rounded-none border ${
+                        darkMode
+                          ? "border-white hover:border-white"
+                          : "border-black hover:border-black"
+                      } w-auto ${
+                        darkMode
+                          ? "bg-gray-700 text-white"
+                          : "bg-white text-black"
+                      }`}
+                    >
+                      Select All
+                    </button>
+                    <button
+                      onClick={handleDeselectAllWeekdays}
+                      className={`px-3 py-1 text-sm border ${
+                        darkMode
+                          ? "border-white hover:border-white"
+                          : "border-black hover:border-black"
+                      } rounded-none w-auto ${
+                        darkMode
+                          ? "bg-gray-700 text-white"
+                          : "bg-white text-black"
+                      }`}
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* e) Reset and Apply */}
+              <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-4 mt-auto">
                 <button
-                  onClick={handleSelectAllWeekdays}
-                  className={`px-3 py-1 text-sm rounded-none border ${
+                  onClick={handleResetFilters}
+                  className={`px-4 py-2 text-sm border ${
                     darkMode
                       ? "border-white hover:border-white"
                       : "border-black hover:border-black"
-                  } w-auto ${
+                  } rounded-none w-full ${
                     darkMode ? "bg-gray-700 text-white" : "bg-white text-black"
                   }`}
                 >
-                  Select All
+                  Reset
                 </button>
                 <button
-                  onClick={handleDeselectAllWeekdays}
-                  className={`px-3 py-1 text-sm border ${
+                  onClick={handleApplyFilters}
+                  className={`px-4 py-2 text-sm border ${
                     darkMode
                       ? "border-white hover:border-white"
                       : "border-black hover:border-black"
-                  } rounded-none w-auto ${
-                    darkMode ? "bg-gray-700 text-white" : "bg-white text-black"
+                  } rounded-none w-full ${
+                    darkMode ? "bg-white text-black" : "bg-black text-white"
                   }`}
                 >
-                  Deselect All
+                  Apply
                 </button>
               </div>
-            </div>
-          </div>
 
-          {/* e) Reset and Apply */}
-          <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-4 mt-auto">
-            <button
-              onClick={handleResetFilters}
-              className={`px-4 py-2 text-sm border ${
-                darkMode
-                  ? "border-white hover:border-white"
-                  : "border-black hover:border-black"
-              } rounded-none w-full ${
-                darkMode ? "bg-gray-700 text-white" : "bg-white text-black"
-              }`}
-            >
-              Reset
-            </button>
-            <button
-              onClick={handleApplyFilters}
-              className={`px-4 py-2 text-sm border ${
-                darkMode
-                  ? "border-white hover:border-white"
-                  : "border-black hover:border-black"
-              } rounded-none w-full ${
-                darkMode ? "bg-white text-black" : "bg-black text-white"
-              }`}
-            >
-              Apply
-            </button>
-          </div>
-
-          {/* g) Export to PDF */}
-          {/* <button
-            onClick={exportToPDF}
-            className={`px-4 py-1 h-full text-sm rounded-none border ${
-              darkMode
-                ? "border-white hover:border-white"
-                : "border-black hover:border-black"
-            } w-full ${
-              darkMode ? "bg-gray-700 text-white " : "bg-white text-black "
-            }`}
-          >
-            Export Plot as PNG
-          </button> */}
-        </>
+              {/* g) Export to PDF (auskommentiert) */}
+              {/* <button
+                onClick={exportToPDF}
+                className={`px-4 py-1 h-full text-sm rounded-none border ${
+                  darkMode
+                    ? "border-white hover:border-white"
+                    : "border-black hover:border-black"
+                } w-full ${
+                  darkMode ? "bg-gray-700 text-white " : "bg-white text-black "
+                }`}
+              >
+                Export Plot as PNG
+              </button> */}
+            </>
+          )}
+        </div>
       )}
     </div>
   );

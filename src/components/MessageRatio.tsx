@@ -121,9 +121,10 @@ const Plot3: React.FC = () => {
       ref={containerRef}
       className={`border-[1px] ${
         darkMode
-          ? "border-white bg-gray-800 text-white"
+          ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       } min-w-[400px] basis-[400px] flex-grow p-4 h-96 flex flex-col`}
+      style={{ minHeight: "300px", maxHeight: "550px", overflow: "hidden" }}
     >
       <h2
         className={`text-lg font-semibold mb-4 ${

@@ -86,9 +86,9 @@ const Plot4: React.FC = () => {
 
   return (
     <div
-      className={`border border-black bg-white text-black w-full md:min-w-[500px] md:basis-[500px] p-4 min-h-96 overflow-auto flex-grow ${
+      className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 min-h-96 overflow-auto flex-grow ${
         darkMode
-          ? "border-white bg-gray-800 text-white"
+          ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       }`}
     >
@@ -119,7 +119,9 @@ const Plot4: React.FC = () => {
                 return (
                   <div
                     key={senderData.sender}
-                    className="w-full md:w-1/2  border border-black p-4 rounded-none"
+                    className={`w-full md:w-1/2 border  p-4 rounded-none ${
+                      darkMode ? "border-gray-300" : "border-black"
+                    }`}
                     style={{
                       borderLeft: `4px solid ${colorScale.get(
                         senderData.sender
@@ -139,11 +141,19 @@ const Plot4: React.FC = () => {
                             className="flex items-center h-[28px]"
                           >
                             {/* Rank */}
-                            <div className="w-6 text-sm text-black">
+                            <div
+                              className={`w-6 text-sm ${
+                                darkMode ? "text-white" : "text-black"
+                              }`}
+                            >
                               {index + 1}.
                             </div>
                             {/* Word */}
-                            <div className="w-24 text-sm text-black">
+                            <div
+                              className={`w-24 text-sm ${
+                                darkMode ? "text-white" : "text-black"
+                              }`}
+                            >
                               {wordData.word}
                             </div>
                             {/* Bar */}
@@ -159,7 +169,11 @@ const Plot4: React.FC = () => {
                               ></div>
                             </div>
                             {/* Count */}
-                            <div className="w-8 text-sm text-black">
+                            <div
+                              className={`w-8 text-sm ${
+                                darkMode ? "text-white" : "text-black"
+                              }`}
+                            >
                               {wordData.count}
                             </div>
                           </div>
@@ -175,24 +189,32 @@ const Plot4: React.FC = () => {
                 <button
                   onClick={handlePrevPage}
                   disabled={currentPage === 1}
-                  className={`px-2 py-1 rounded-none border border-black hover:border-black ${
+                  className={`px-2 py-1 rounded-none border ${
+                    darkMode
+                      ? "border-gray-300 text-white hover:border-gray-400"
+                      : "border-black text-black hover:border-black"
+                  } ${
                     currentPage === 1
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-black"
+                      ? "text-gray-400 cursor-not-allowed border-gray-400"
+                      : ""
                   }`}
                 >
                   Previous
                 </button>
-                <span>
+                <span className={darkMode ? "text-white" : "text-black"}>
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
-                  className={`px-2 py-1 rounded-none border border-black hover:border-black ${
+                  className={`px-2 py-1 rounded-none border ${
+                    darkMode
+                      ? "border-gray-300 text-white hover:border-gray-400"
+                      : "border-black text-black hover:border-black"
+                  } ${
                     currentPage === totalPages
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-black"
+                      ? "text-gray-400 cursor-not-allowed border-gray-400"
+                      : ""
                   }`}
                 >
                   Next
