@@ -4,7 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 // import jsPDF from "jspdf";
 import "./FileUpload.css";
-import { ChevronDown, ChevronUp, Info } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, Moon, Sun } from "lucide-react";
 
 interface FileUploadProps {
   onFileUpload: (uploadedFile: File) => void;
@@ -20,6 +20,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   const [isInitialLoad, setIsInitialLoad] = useState(false);
   const [fileName, setFileName] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isFileSet, setIsFileSet] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([
     "Mon",
@@ -63,8 +64,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
       if (file) {
         setFileName(file.name);
+        setIsFileSet(true);
+        setIsCollapsed(true);
       } else {
         setFileName("");
+        setIsFileSet(false);
+        setIsCollapsed(false);
       }
 
       onFileUpload(file);
@@ -136,6 +141,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   const handleDeleteFile = () => {
     setFileName("");
+    setIsFileSet(false);
     setMessages([]);
     setStartDate(undefined);
     setEndDate(undefined);
@@ -179,6 +185,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   ]);
 
   const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const borderColor = darkMode ? "border-white" : "border-black";
+  const textColor = darkMode ? "text-white" : "text-black";
+  const bgColor = darkMode ? "bg-gray-700" : "bg-[#ffffff]";
 
   return (
     <div className="file-upload-wrapper">
@@ -226,8 +236,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                 className={`px-4 py-2 border rounded-none 
             ${
               darkMode
-                ? "border-white hover:border-gray-300"
-                : "border-black hover:border-gray-700"
+                ? "border-white hover:border-gray-300 active:bg-gray-600"
+                : "border-black hover:border-gray-700 active:bg-gray-300"
             } 
             ${darkMode ? "bg-gray-700 text-white" : "bg-white text-black"}`}
               >
@@ -247,8 +257,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           className={`px-2 py-1 border rounded-none flex items-center 
     ${
       darkMode
-        ? "border-white hover:border-white"
-        : "border-black hover:border-black"
+        ? "border-white hover:border-white active:bg-gray-600"
+        : "border-black hover:border-black active:bg-gray-300"
     } 
     ${darkMode ? "bg-gray-700 text-white" : "bg-white text-black"}`}
         >
@@ -260,14 +270,26 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           Whatsapp Dashboard
         </div>
 
+        <div>
+          <button
+            onClick={toggleDarkMode}
+            className={`px-2 py-1 mr-4 border rounded-none flex items-center ${borderColor} hover:${borderColor} ${bgColor} ${textColor}`}
+          >
+            {darkMode ? (
+              <Sun size={20} className="text-white " />
+            ) : (
+              <Moon size={20} className="text-black " />
+            )}
+          </button>
+        </div>
         {/* Collapse-Button (rechts) */}
         <button
           onClick={toggleCollapse}
           className={`px-2 py-1 border rounded-none flex items-center 
       ${
         darkMode
-          ? "border-white hover:border-white"
-          : "border-black hover:border-black"
+          ? "border-white hover:border-white active:bg-gray-600"
+          : "border-black hover:border-black active:bg-gray-300"
       } 
       ${darkMode ? "bg-gray-700 text-white" : "bg-white text-black"}`}
         >
@@ -317,36 +339,25 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                   </p>
                 )}
               </div>
+            </div>
+          </div>
 
+          {/* f) Dark Mode Toggle */}
+          <div className="flex flex-col space-y-2 md:justify-end">
+            {isFileSet && (
               <button
                 onClick={handleDeleteFile}
-                className={`px-4 py-1 text-sm rounded-none border ${
+                className={`px-4 py-2 text-sm rounded-none border ${
                   darkMode
-                    ? "border-white hover:border-white"
-                    : "border-black hover:border-black"
+                    ? "border-white hover:border-white active:bg-gray-600"
+                    : "border-black hover:border-black active:bg-gray-300"
                 } w-full ${
                   darkMode ? "bg-gray-700 text-white " : "bg-white text-black "
                 }`}
               >
                 Delete File
               </button>
-            </div>
-          </div>
-
-          {/* f) Dark Mode Toggle */}
-          <div className="flex flex-col space-y-2 md:justify-end">
-            <button
-              onClick={toggleDarkMode}
-              className={`px-4 py-1 h-full text-sm rounded-none border ${
-                darkMode
-                  ? "border-white hover:border-white"
-                  : "border-black hover:border-black"
-              } w-full ${
-                darkMode ? "bg-gray-700 text-white " : "bg-white text-black "
-              }`}
-            >
-              Switch to {darkMode ? "Light" : "Dark"} Mode
-            </button>
+            )}
           </div>
 
           {/* Restliche Filter etc. (b, c, d, e) */}
@@ -484,8 +495,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                       onClick={handleSelectAllWeekdays}
                       className={`px-3 py-1 text-sm rounded-none border ${
                         darkMode
-                          ? "border-white hover:border-white"
-                          : "border-black hover:border-black"
+                          ? "border-white hover:border-white active:bg-gray-600"
+                          : "border-black hover:border-black active:bg-gray-300"
                       } w-auto ${
                         darkMode
                           ? "bg-gray-700 text-white"
@@ -498,8 +509,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                       onClick={handleDeselectAllWeekdays}
                       className={`px-3 py-1 text-sm border ${
                         darkMode
-                          ? "border-white hover:border-white"
-                          : "border-black hover:border-black"
+                          ? "border-white hover:border-white active:bg-gray-600"
+                          : "border-black hover:border-black active:bg-gray-600"
                       } rounded-none w-auto ${
                         darkMode
                           ? "bg-gray-700 text-white"
@@ -518,8 +529,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                   onClick={handleResetFilters}
                   className={`px-4 py-2 text-sm border ${
                     darkMode
-                      ? "border-white hover:border-white"
-                      : "border-black hover:border-black"
+                      ? "border-white hover:border-white active:bg-gray-600"
+                      : "border-black hover:border-black active:bg-gray-300"
                   } rounded-none w-full ${
                     darkMode ? "bg-gray-700 text-white" : "bg-white text-black"
                   }`}
@@ -530,8 +541,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                   onClick={handleApplyFilters}
                   className={`px-4 py-2 text-sm border ${
                     darkMode
-                      ? "border-white hover:border-white"
-                      : "border-black hover:border-black"
+                      ? "border-white hover:border-white active:bg-gray-200"
+                      : "border-black hover:border-black active:bg-gray-700"
                   } rounded-none w-full ${
                     darkMode ? "bg-white text-black" : "bg-black text-white"
                   }`}

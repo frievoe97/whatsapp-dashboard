@@ -88,6 +88,88 @@ const Plot6: React.FC = () => {
   }, [dailyMessages]);
 
   useEffect(() => {
+    if (!containerRef.current) return;
+    const tooltip = d3.select(containerRef.current).select(".tooltip");
+
+    if (tooltip.empty()) {
+      d3.select(containerRef.current)
+        .append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("padding", "6px")
+        .style("border", "1px solid #999")
+        .style("border-radius", "4px")
+        .style("pointer-events", "none")
+        .style("opacity", 0)
+        .style("background", darkMode ? "#333" : "#fff")
+        .style("color", darkMode ? "#fff" : "#000")
+        .style("display", "block"); // Sicherstellen, dass es da ist
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    d3.select(containerRef.current)
+      .select<HTMLDivElement>(".tooltip")
+      .style("background", darkMode ? "#333" : "#fff")
+      .style("color", darkMode ? "#fff" : "#000");
+  }, [darkMode]);
+
+  useEffect(() => {
+    const heatmapElement = document.getElementById("heatmap-plot");
+    if (!heatmapElement || !containerRef.current) return;
+
+    const tooltip = d3
+      .select(containerRef.current)
+      .select<HTMLDivElement>(".tooltip");
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const [mx, my] = [event.pageX, event.pageY];
+
+      // Berechne das nächstgelegene Datum & Nachrichtenanzahl
+      const bisectDate = d3.bisector((d: DailyMessages) => d.date).left;
+      const xScale = d3
+        .scaleTime()
+        .domain(d3.extent(dailyMessages, (d) => d.date) as [Date, Date])
+        .range([0, 100]); // Dummy-Werte für Range
+      const x0 = xScale.invert(mx);
+      const i = bisectDate(dailyMessages, x0);
+      const d0 = dailyMessages[i - 1];
+      const d1 = dailyMessages[i];
+      const nearestDate =
+        !d0 ||
+        (d1 &&
+          x0.getTime() - d0.date.getTime() > d1.date.getTime() - x0.getTime())
+          ? d1
+          : d0;
+
+      if (nearestDate) {
+        tooltip
+          .style("left", `${mx + 15}px`)
+          .style("top", `${my - 10}px`)
+          .style("display", "block")
+          .html(
+            `<strong>${d3.timeFormat("%d.%m.%Y")(
+              nearestDate.date
+            )}</strong><br/>Nachrichten: ${nearestDate.count}`
+          );
+      }
+    };
+
+    const handleMouseLeave = () => {
+      tooltip.style("display", "none");
+    };
+
+    heatmapElement.addEventListener("mousemove", handleMouseMove);
+    heatmapElement.addEventListener("mouseleave", handleMouseLeave);
+
+    return () => {
+      heatmapElement.removeEventListener("mousemove", handleMouseMove);
+      heatmapElement.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, [dailyMessages]);
+
+  useEffect(() => {
     if (!dimensions || !hasData) {
       const svg = d3.select(svgRef.current);
       svg.selectAll("*").remove();
@@ -326,7 +408,7 @@ const Plot6: React.FC = () => {
         ) : !hasData ? (
           <span className="text-lg">No Data Available</span>
         ) : (
-          <svg ref={svgRef} className="w-full h-full"></svg>
+          <svg id="heatmap-plot" ref={svgRef} className="w-full h-full"></svg>
         )}
       </div>
     </div>

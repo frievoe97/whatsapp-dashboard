@@ -4,7 +4,7 @@ import { useChat } from "../context/ChatContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./FileUpload.css"; // Falls du noch weitere CSS-Anpassungen hast
-import { Info, ChevronDown, ChevronUp } from "lucide-react";
+import { Info, ChevronDown, ChevronUp, Moon, Sun } from "lucide-react";
 
 interface FileUploadProps {
   onFileUpload: (uploadedFile: File) => void;
@@ -72,6 +72,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
       setSelectedWeekdays(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
       setApplyFilters(false);
       setIsInitialLoad(true);
+      setIsExpanded(false);
 
       setIsUploading(true);
       const reader = new FileReader();
@@ -175,6 +176,8 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   const borderColor = darkMode ? "border-white" : "border-black";
   const textColor = darkMode ? "text-white" : "text-black";
   const bgColor = darkMode ? "bg-[#1f2937]" : "bg-[#ffffff]";
+  const activeColor = darkMode ? "active:bg-gray-600" : "active:bg-gray-300";
+  const senderSelected = darkMode ? "bg-gray-500" : "bg-gray-200";
 
   return (
     <div
@@ -245,12 +248,23 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           Whatsapp Dashboard
         </div>
 
+        <button
+          onClick={toggleDarkMode}
+          className={`px-2 py-1 mr-4 border rounded-none flex items-center ${borderColor} hover:${borderColor} ${bgColor} ${textColor}`}
+        >
+          {darkMode ? (
+            <Sun size={20} className="text-white " />
+          ) : (
+            <Moon size={20} className="text-black " />
+          )}
+        </button>
+
         {/* Collapse-Button (rechts) */}
         <button
           onClick={toggleExpanded}
           className={`px-2 py-1 border rounded-none flex items-center ${borderColor} hover:${borderColor} ${bgColor} ${textColor}`}
         >
-          {isExpanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </button>
       </div>
 
@@ -295,9 +309,9 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                     <button
                       key={sender}
                       onClick={() => handleSenderChange(sender)}
-                      className={`px-3 py-1 text-sm rounded-none ${borderColor} hover:${borderColor} border ${
+                      className={`px-3 py-1 text-sm rounded-none ${borderColor} ${bgColor} hover:${borderColor} border ${
                         selectedSender.includes(sender)
-                          ? bgColor + " " + textColor
+                          ? senderSelected + " " + textColor
                           : ""
                       } focus:outline-none`}
                     >
@@ -373,29 +387,19 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
               <div className="flex gap-2">
                 <button
                   onClick={handleResetFilters}
-                  className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
+                  className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} ${activeColor} border focus:outline-none`}
                 >
                   Zurücksetzen
                 </button>
                 <button
                   onClick={handleApplyFilters}
-                  className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
+                  className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} ${activeColor} border focus:outline-none`}
                 >
                   Anwenden
                 </button>
               </div>
             </div>
           )}
-
-          {/* Dark Mode Umschalter */}
-          <div className="mt-auto">
-            <button
-              onClick={toggleDarkMode}
-              className={`w-full py-2 ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border rounded-none focus:outline-none`}
-            >
-              Switch to {darkMode ? "Light" : "Dark"} Mode
-            </button>
-          </div>
         </>
       )}
     </div>

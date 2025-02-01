@@ -417,7 +417,7 @@ const Plot2: React.FC = () => {
     }
 
     // Erstelle bzw. update das Overlay-Rechteck per join (statt enter/merge)
-    const overlay = chart
+    chart
       .selectAll<SVGRectElement, null>("rect.overlay")
       .data([null])
       .join((enter) => enter.append("rect").attr("class", "overlay"))
