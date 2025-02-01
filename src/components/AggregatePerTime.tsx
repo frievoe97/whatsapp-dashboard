@@ -233,8 +233,19 @@ const Plot1: React.FC = () => {
       .range([innerHeight, 0]);
 
     // Achsen
-    const xAxis = d3.axisBottom(xScale);
-    const yAxis = d3.axisLeft(yScale).ticks(5);
+    const tickCount = Math.max(2, Math.floor(innerWidth / 20));
+    const filteredCategories = categories.filter(
+      (_, i) => i % Math.ceil(categories.length / tickCount) === 0
+    );
+    const xAxis = d3.axisBottom(xScale).tickValues(filteredCategories);
+
+    // const xAxis = d3.axisBottom(xScale);
+    // const yAxis = d3.axisLeft(yScale).ticks(5);
+
+    const yAxis = d3
+      .axisLeft(yScale)
+      .ticks(5)
+      .tickFormat((d) => (showPercentage ? `${d}%` : `${d}`));
 
     // Linien-Generator
     const line = d3

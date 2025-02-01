@@ -57,7 +57,7 @@ const Plot2: React.FC = () => {
   }, [darkMode]);
 
   // State für Aggregationsmodus und Darstellung
-  const [mode, setMode] = useState<Mode>("month"); // Initial auf "month" setzen
+  const [mode, setMode] = useState<Mode>("year"); // Initial auf "month" setzen
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
 
   // Definiere die Kategorien basierend auf dem Modus
@@ -202,7 +202,12 @@ const Plot2: React.FC = () => {
     // Dynamische Berechnung der maximalen Anzahl der Ticks basierend auf der Breite
     const maxTicks = Math.floor(innerWidth / 80);
     const xAxis = d3.axisBottom(xScale).ticks(maxTicks);
-    const yAxis = d3.axisLeft(yScale).ticks(5);
+    // const yAxis = d3.axisLeft(yScale).ticks(5);
+
+    const yAxis = d3
+      .axisLeft(yScale)
+      .ticks(5)
+      .tickFormat((d) => (showPercentage ? `${d}%` : `${d}`));
 
     // Linien-Generator
     const line = d3

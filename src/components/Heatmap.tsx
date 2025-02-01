@@ -257,7 +257,7 @@ const Plot6: React.FC = () => {
             darkMode ? "text-white" : "text-black"
           }`}
         >
-          Nachrichten-Heatmap Kalender
+          Message Heatmap Calendar
         </h2>
         <button
           className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${

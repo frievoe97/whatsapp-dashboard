@@ -11,14 +11,25 @@ interface FileUploadProps {
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
-  const { messages, setMessages, setIsUploading, darkMode, toggleDarkMode } =
-    useChat();
+  const {
+    fileName,
+    setFileName,
+    endDate,
+    setEndDate,
+    startDate,
+    setStartDate,
+    messages,
+    setMessages,
+    setIsUploading,
+    darkMode,
+    toggleDarkMode,
+  } = useChat();
 
   const [selectedSender, setSelectedSender] = useState<string[]>([]);
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  // const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  // const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isInitialLoad, setIsInitialLoad] = useState(false);
-  const [fileName, setFileName] = useState("");
+  // const [fileName, setFileName] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isFileSet, setIsFileSet] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);

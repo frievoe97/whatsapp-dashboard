@@ -4,23 +4,34 @@ import { useChat } from "../context/ChatContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./FileUpload.css"; // Falls du noch weitere CSS-Anpassungen hast
-import { Info, ChevronDown, ChevronUp, Moon, Sun } from "lucide-react";
+import { Info, ChevronDown, ChevronUp, Moon, Sun, Trash2 } from "lucide-react";
 
 interface FileUploadProps {
   onFileUpload: (uploadedFile: File) => void;
 }
 
 const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
-  const { messages, setMessages, setIsUploading, darkMode, toggleDarkMode } =
-    useChat();
+  const {
+    messages,
+    setMessages,
+    setIsUploading,
+    darkMode,
+    toggleDarkMode,
+    fileName,
+    setFileName,
+    endDate,
+    setEndDate,
+    startDate,
+    setStartDate,
+  } = useChat();
 
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [selectedSender, setSelectedSender] = useState<string[]>([]);
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  // const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  // const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isInitialLoad, setIsInitialLoad] = useState(false);
-  const [fileName, setFileName] = useState("");
+  // const [fileName, setFileName] = useState("");
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([
     "Mon",
     "Tue",
@@ -186,7 +197,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
       {isInfoOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div
-            className={`p-6 rounded-none shadow-lg max-w-md w-full ${
+            className={`p-6 m-4 rounded-none shadow-lg max-w-md w-full ${
               darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
             }`}
           >
@@ -272,28 +283,50 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
       {isExpanded && (
         <>
           {/* File Upload Bereich */}
-          <div className="space-y-2">
-            <label
-              htmlFor="mobile-file-upload"
-              className={`block text-sm font-medium ${textColor}`}
-            >
-              {fileName ? `Ausgewählt: ${fileName}` : "Select File"}
-            </label>
-            <input
-              id="mobile-file-upload"
-              type="file"
-              accept=".txt"
-              onChange={handleFileChange}
-              className={`block w-full rounded-none text-sm text-gray-500 ${borderColor} hover:${borderColor} border focus:outline-none`}
-            />
-            {fileName && (
-              <button
-                onClick={handleDeleteFile}
-                className={`w-full py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
+
+          <div className="w-full flex flew-row items-center justify-between">
+            <div className="flex flex-row items-center">
+              {" "}
+              <label
+                htmlFor="file-upload"
+                className={`cursor-pointer px-4 py-2 border ${
+                  darkMode
+                    ? "border-white bg-gray-700 text-white"
+                    : "border-black bg-white text-black"
+                } hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 inline-block ${bgColor} ${textColor} ${borderColor}`}
               >
-                Datei löschen
-              </button>
-            )}
+                Select File
+              </label>
+              <input
+                id="file-upload"
+                type="file"
+                accept=".txt"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              {fileName && (
+                <p className="mt-2 text-sm ml-4">
+                  {darkMode ? (
+                    <span className="text-white">{fileName}</span>
+                  ) : (
+                    <span className="text-black">{fileName}</span>
+                  )}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              {fileName && (
+                <button
+                  onClick={handleDeleteFile}
+                  className={`w-full py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
+                >
+                  <Trash2
+                    size={20}
+                    className={` ${darkMode ? "text-white" : "text-black"}`}
+                  />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Filter-Bereich */}

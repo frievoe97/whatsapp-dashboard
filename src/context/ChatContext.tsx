@@ -8,6 +8,8 @@ export interface ChatMessage {
   isUsed: boolean;
 }
 
+// const [fileName, setFileName] = useState("");
+
 interface ChatContextType {
   messages: ChatMessage[];
   setMessages: (messages: ChatMessage[]) => void;
@@ -15,6 +17,12 @@ interface ChatContextType {
   setIsUploading: (isUploading: boolean) => void;
   darkMode: boolean;
   toggleDarkMode: () => void;
+  endDate: Date | undefined;
+  setEndDate: (endDate: Date | undefined) => void;
+  startDate: Date | undefined;
+  setStartDate: (startDate: Date | undefined) => void;
+  fileName: string;
+  setFileName: (fileName: string) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -23,6 +31,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [fileName, setFileName] = useState<string>("");
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(
     () => localStorage.getItem("darkMode") === "true"
@@ -44,6 +55,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsUploading,
         darkMode,
         toggleDarkMode,
+        endDate,
+        setEndDate,
+        startDate,
+        setStartDate,
+        fileName,
+        setFileName,
       }}
     >
       {children}
