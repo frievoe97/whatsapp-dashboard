@@ -4,6 +4,7 @@ import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 import useResizeObserver from "../hooks/useResizeObserver";
 import ClipLoader from "react-spinners/ClipLoader";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 interface DailyMessages {
   date: Date;
@@ -15,6 +16,8 @@ const Plot6: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
+
+  const [expanded, setExpanded] = useState(false);
 
   const [selectedYear, setSelectedYear] = useState<number>(() => {
     const currentYear = new Date().getFullYear();
@@ -221,7 +224,15 @@ const Plot6: React.FC = () => {
       .attr("font-size", "12px")
       .attr("fill", darkMode ? "#ffffff" : "#000000")
       .attr("text-anchor", "end");
-  }, [dailyMessages, dimensions, maxCount, selectedYear, darkMode, hasData]);
+  }, [
+    dailyMessages,
+    dimensions,
+    maxCount,
+    selectedYear,
+    darkMode,
+    hasData,
+    expanded,
+  ]);
 
   return (
     <div
@@ -230,17 +241,43 @@ const Plot6: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[750px] md:basis-[1000px] flex-grow p-4 flex flex-col`}
-      style={{ minHeight: "200px", maxHeight: "550px", overflow: "hidden" }}
+      } w-full md:min-w-[750px] ${
+        expanded ? "md:basis-[3000px]" : "md:basis-[1000px]"
+      } flex-grow p-4 flex flex-col`}
+      style={{
+        minHeight: "200px",
+        maxHeight: "550px",
+        overflow: "hidden",
+      }}
     >
-      <h2
-        id="heatmap-title"
-        className={`text-lg font-semibold mb-4 ${
-          darkMode ? "text-white" : "text-black"
-        }`}
-      >
-        Nachrichten-Heatmap Kalender
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2
+          id="heatmap-title"
+          className={`text-lg font-semibold mb-4 ${
+            darkMode ? "text-white" : "text-black"
+          }`}
+        >
+          Nachrichten-Heatmap Kalender
+        </h2>
+        <button
+          className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
+            darkMode ? "text-white" : "text-black"
+          }`}
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            background: "transparent", // Kein Hintergrund
+            outline: "none", // Kein Fokus-Styling
+            boxShadow: "none", // Keine Schatten oder Border beim Klicken/Hovern
+            border: "none", // Entfernt jegliche Border
+          }}
+        >
+          {expanded ? (
+            <Minimize2 className="w-5 h-5" />
+          ) : (
+            <Maximize2 className="w-5 h-5" />
+          )}
+        </button>
+      </div>
 
       {/* Jahr auswählen */}
       <div id="heatmap-year-select" className="mb-4">

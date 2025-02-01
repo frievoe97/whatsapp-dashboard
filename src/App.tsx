@@ -130,8 +130,8 @@ function App() {
             <>
               <AggregatePerTime />
               <Timeline />
-              <MessageRatio />
               <Heatmap />
+              <MessageRatio />
               <Emoji />
               <WordCount />
               <Stats />

@@ -7,7 +7,7 @@ import useResizeObserver from "../hooks/useResizeObserver";
 import Switch from "react-switch";
 import "./Plot1.css"; // Importiere die CSS-Datei
 import ClipLoader from "react-spinners/ClipLoader";
-import { Hash, Percent } from "lucide-react";
+import { Hash, Percent, Maximize2, Minimize2 } from "lucide-react";
 
 interface TimeAggregatedData {
   sender: string;
@@ -25,6 +25,8 @@ const Plot2: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
+
+  const [expanded, setExpanded] = useState(false);
 
   // Tooltip einmalig erstellen
   useEffect(() => {
@@ -499,7 +501,9 @@ const Plot2: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[740px] md:basis-[800px] flex-grow p-4 flex flex-col`}
+      } w-full md:min-w-[740px] ${
+        expanded ? "md:basis-[3000px]" : "md:basis-[800px]"
+      } flex-grow p-4 flex flex-col`}
       style={{
         position: "relative",
         minHeight: "400px",
@@ -567,6 +571,25 @@ const Plot2: React.FC = () => {
               darkMode ? "text-white" : "text-gray-700"
             } w-4 h-4 md:w-5 md:h-5`}
           />
+
+          <button
+            className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
+              darkMode ? "text-white" : "text-black"
+            }`}
+            onClick={() => setExpanded(!expanded)}
+            style={{
+              background: "transparent", // Kein Hintergrund
+              outline: "none", // Kein Fokus-Styling
+              boxShadow: "none", // Keine Schatten oder Border beim Klicken/Hovern
+              border: "none", // Entfernt jegliche Border
+            }}
+          >
+            {expanded ? (
+              <Minimize2 className="w-5 h-5" />
+            ) : (
+              <Maximize2 className="w-5 h-5" />
+            )}
+          </button>
         </div>
       </div>
       {/* Legende */}
