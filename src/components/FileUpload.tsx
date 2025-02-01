@@ -298,7 +298,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                       : "border-black bg-white text-black"
                   } hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 inline-block`}
                 >
-                  Datei auswählen
+                  Select File
                 </label>
                 <input
                   id="file-upload"

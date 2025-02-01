@@ -133,7 +133,7 @@ const Plot3: React.FC = () => {
           darkMode ? "text-white" : "text-black"
         }`}
       >
-        Nachrichtenverhältnis
+        Message Ratio
       </h2>
 
       {/* Bedingtes Rendering des Inhalts */}

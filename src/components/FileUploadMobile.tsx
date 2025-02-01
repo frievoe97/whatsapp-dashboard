@@ -263,7 +263,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
               htmlFor="mobile-file-upload"
               className={`block text-sm font-medium ${textColor}`}
             >
-              {fileName ? `Ausgewählt: ${fileName}` : "Datei auswählen"}
+              {fileName ? `Ausgewählt: ${fileName}` : "Select File"}
             </label>
             <input
               id="mobile-file-upload"

@@ -1,5 +1,5 @@
-// App.tsx
 import { useState, useEffect, useRef } from "react";
+import { Helmet } from "react-helmet-async"; // Import für SEO-Meta-Tags
 import FileUpload from "./components/FileUpload";
 import FileUploadMobile from "./components/FileUploadMobile";
 import AggregatePerTime from "./components/AggregatePerTime";
@@ -35,7 +35,6 @@ function App() {
     metaThemeColor.setAttribute("content", darkMode ? "#1f2937" : "#ffffff");
   }, [darkMode]);
 
-  // Falls du noch die Zeilenhöhe angleichen möchtest:
   useEffect(() => {
     function setEqualRowHeights() {
       if (!containerRef.current) return;
@@ -78,44 +77,69 @@ function App() {
   }, [messages.length]);
 
   return (
-    // Der Container hat auf mobilen Geräten (default) eine automatische Höhe,
-    // auf Desktops (md und höher) wird die volle Bildschirmhöhe genutzt.
-    <div className="p-4 flex flex-col h-auto md:h-screen">
-      {/* Auf größeren Bildschirmen FileUpload anzeigen */}
-      <div className="hidden md:block">
-        <FileUpload onFileUpload={(file) => console.log(file)} />
-      </div>
-      {/* Auf mobilen Geräten FileUploadMobile anzeigen */}
-      <div className="block md:hidden">
-        <FileUploadMobile onFileUpload={(file) => console.log(file)} />
-      </div>
+    <>
+      {/* SEO Meta-Tags */}
+      <Helmet>
+        <title>WhatsApp Dashboard – Visualisiere deine Chats</title>
+        <meta
+          name="description"
+          content="Analysiere deine WhatsApp-Chats mit detaillierten Diagrammen und Statistiken."
+        />
+        <meta property="og:title" content="WhatsApp Dashboard" />
+        <meta
+          property="og:description"
+          content="Visualisiere deine WhatsApp-Chats mit interaktiven Grafiken."
+        />
+        <meta
+          property="og:image"
+          content="https://whatsapp-dashboard.friedrichvoelkers.de/preview.png"
+        />
+        <meta
+          property="og:url"
+          content="https://whatsapp-dashboard.friedrichvoelkers.de"
+        />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
 
-      {/* Überprüfen, ob messages leer ist */}
-      <div
-        ref={containerRef}
-        className="mt-4 flex-1 overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
-      >
-        {messages.length === 0 ? (
-          <div
-            className={`w-full p-4 flex items-center justify-center h-full border border-[1px] rounded-none  ${
-              darkMode ? "border-white" : "border-black"
-            } `}
-          >
-            No Data
-          </div>
-        ) : (
-          <>
-            <AggregatePerTime />
-            <Timeline />
-            <MessageRatio />
-            <Heatmap />
-            <Emoji />
-            <WordCount />
-            <Stats />
-          </>
-        )}
+      {/* Der Container hat auf mobilen Geräten (default) eine automatische Höhe,
+          auf Desktops (md und höher) wird die volle Bildschirmhöhe genutzt. */}
+      <div className="p-4 flex flex-col h-auto md:h-screen">
+        {/* Auf größeren Bildschirmen FileUpload anzeigen */}
+        <div className="hidden md:block">
+          <FileUpload onFileUpload={(file) => console.log(file)} />
+        </div>
+        {/* Auf mobilen Geräten FileUploadMobile anzeigen */}
+        <div className="block md:hidden">
+          <FileUploadMobile onFileUpload={(file) => console.log(file)} />
+        </div>
+
+        {/* Überprüfen, ob messages leer ist */}
+        <div
+          ref={containerRef}
+          className="mt-4 flex-1 overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
+        >
+          {messages.length === 0 ? (
+            <div
+              className={`w-full p-4 flex items-center justify-center h-full border border-[1px] rounded-none ${
+                darkMode ? "border-white" : "border-black"
+              }`}
+            >
+              Please upload a WhatsApp chat using "Select File".
+            </div>
+          ) : (
+            <>
+              <AggregatePerTime />
+              <Timeline />
+              <MessageRatio />
+              <Heatmap />
+              <Emoji />
+              <WordCount />
+              <Stats />
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

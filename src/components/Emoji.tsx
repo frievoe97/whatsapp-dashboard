@@ -135,7 +135,7 @@ const Plot7: React.FC = () => {
       }`}
       style={{ minHeight: "550px", maxHeight: "550px", overflow: "hidden" }}
     >
-      <h2 className="text-lg font-semibold mb-4">Top 10 Emojis pro Person</h2>
+      <h2 className="text-lg font-semibold mb-4">Top 10 Emojis for Person</h2>
 
       {/* Bedingtes Rendering für Ladeanimation und Datenanzeige */}
       <div className="flex-grow flex justify-center items-center flex-col">
