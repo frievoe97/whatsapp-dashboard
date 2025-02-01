@@ -4,6 +4,7 @@ import { useChat } from "../context/ChatContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./FileUpload.css"; // Falls du noch weitere CSS-Anpassungen hast
+import { Info, ChevronDown, ChevronUp } from "lucide-react";
 
 interface FileUploadProps {
   onFileUpload: (uploadedFile: File) => void;
@@ -13,7 +14,8 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   const { messages, setMessages, setIsUploading, darkMode, toggleDarkMode } =
     useChat();
 
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [selectedSender, setSelectedSender] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -34,6 +36,14 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   const senders = useMemo(() => {
     return Array.from(new Set(messages.map((msg) => msg.sender)));
   }, [messages]);
+
+  useEffect(() => {
+    if (isInfoOpen) {
+      document.body.style.overflow = "hidden"; // Scrollen deaktivieren
+    } else {
+      document.body.style.overflow = ""; // Standard wiederherstellen
+    }
+  }, [isInfoOpen]);
 
   // Bei initialem Laden: Filter initialisieren
   useEffect(() => {
@@ -168,15 +178,81 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   return (
     <div
-      className={`p-4 min-h-fit flex flex-col space-y-4 ${bgColor} ${textColor} ${borderColor} border`}
+      className={`p-4 min-h-fit flex flex-col space-y-4 ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border`}
     >
-      {/* Toggle-Button: Immer sichtbar */}
-      <button
-        onClick={toggleExpanded}
-        className={`w-full py-2 ${bgColor} ${textColor} ${borderColor} border rounded-none focus:outline-none`}
-      >
-        {isExpanded ? "Upload schließen" : "Datei Upload öffnen"}
-      </button>
+      {isInfoOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div
+            className={`p-6 rounded-none shadow-lg max-w-md w-full ${
+              darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
+            }`}
+          >
+            <h2 className="text-lg font-semibold mb-8">Info & Disclaimer</h2>
+            <p className="mb-3">
+              This tool <strong>does not store any data on a server</strong>.
+              All information remains only in your browser. No messages or
+              statistics are uploaded.
+            </p>
+            <p className="mb-3">
+              This project is <strong>Open Source</strong>, and the entire
+              source code is publicly available on{" "}
+              <a
+                href="https://github.com/frievoe97/whatsapp-dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`no-underline ${
+                  darkMode ? "text-white" : "text-black"
+                } hover:text-inherit`}
+              >
+                GitHub
+              </a>
+              .
+            </p>
+            <p>
+              This project is licensed under the <strong>MIT License</strong>,
+              one of the most open and permissive licenses available. This means
+              you are <strong>free to use, modify, and distribute</strong> the
+              code, as long as the license is included.
+            </p>
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setIsInfoOpen(false)}
+                className={`px-4 py-2 border rounded-none ${
+                  darkMode
+                    ? "border-white hover:border-gray-300 bg-gray-700 text-white"
+                    : "border-black hover:border-gray-700 bg-white text-black"
+                }`}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header-Bereich */}
+      <div className="flex items-center h-8">
+        {/* Info-Button (links) */}
+        <button
+          onClick={() => setIsInfoOpen(true)}
+          className={`px-2 py-1 border rounded-none flex items-center ${borderColor} hover:${borderColor} ${bgColor} ${textColor}`}
+        >
+          <Info size={20} />
+        </button>
+
+        {/* Titel in der Mitte */}
+        <div className="flex-grow text-center text-lg font-semibold">
+          Whatsapp Dashboard
+        </div>
+
+        {/* Collapse-Button (rechts) */}
+        <button
+          onClick={toggleExpanded}
+          className={`px-2 py-1 border rounded-none flex items-center ${borderColor} hover:${borderColor} ${bgColor} ${textColor}`}
+        >
+          {isExpanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+        </button>
+      </div>
 
       {/* Restlichen Inhalt nur anzeigen, wenn expanded */}
       {isExpanded && (
@@ -194,12 +270,12 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
               type="file"
               accept=".txt"
               onChange={handleFileChange}
-              className={`block w-full rounded-none text-sm text-gray-500 ${borderColor} border focus:outline-none`}
+              className={`block w-full rounded-none text-sm text-gray-500 ${borderColor} hover:${borderColor} border focus:outline-none`}
             />
             {fileName && (
               <button
                 onClick={handleDeleteFile}
-                className={`w-full py-2 rounded-none ${bgColor} ${textColor} ${borderColor} border focus:outline-none`}
+                className={`w-full py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
               >
                 Datei löschen
               </button>
@@ -219,7 +295,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                     <button
                       key={sender}
                       onClick={() => handleSenderChange(sender)}
-                      className={`px-3 py-1 text-sm rounded-none ${borderColor} border ${
+                      className={`px-3 py-1 text-sm rounded-none ${borderColor} hover:${borderColor} border ${
                         selectedSender.includes(sender)
                           ? bgColor + " " + textColor
                           : ""
@@ -248,7 +324,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                     selectsStart
                     startDate={startDate}
                     endDate={endDate}
-                    className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} border focus:outline-none`}
+                    className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
                   />
                 </div>
                 <div>
@@ -264,7 +340,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                     startDate={startDate}
                     endDate={endDate}
                     minDate={startDate}
-                    className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} border focus:outline-none`}
+                    className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
                   />
                 </div>
               </div>
@@ -285,7 +361,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                         value={day}
                         checked={selectedWeekdays.includes(day)}
                         onChange={handleWeekdayChange}
-                        className={`form-checkbox h-4 w-4 text-blue-600 ${borderColor} border focus:outline-none`}
+                        className={`form-checkbox h-4 w-4 text-blue-600 ${borderColor} hover:${borderColor} border focus:outline-none`}
                       />
                       <span className="text-sm">{day}</span>
                     </label>
@@ -297,13 +373,13 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
               <div className="flex gap-2">
                 <button
                   onClick={handleResetFilters}
-                  className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} border focus:outline-none`}
+                  className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
                 >
                   Zurücksetzen
                 </button>
                 <button
                   onClick={handleApplyFilters}
-                  className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} border focus:outline-none`}
+                  className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
                 >
                   Anwenden
                 </button>
@@ -315,7 +391,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           <div className="mt-auto">
             <button
               onClick={toggleDarkMode}
-              className={`w-full py-2 ${bgColor} ${textColor} ${borderColor} border rounded-none focus:outline-none`}
+              className={`w-full py-2 ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border rounded-none focus:outline-none`}
             >
               Switch to {darkMode ? "Light" : "Dark"} Mode
             </button>

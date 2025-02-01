@@ -99,7 +99,7 @@ const Plot6: React.FC = () => {
     const cellSize = Math.min(cellSizeWidth, cellSizeHeight);
 
     const colorScale = d3
-      .scaleSequential(d3.interpolateGnBu)
+      .scaleSequential(darkMode ? d3.interpolateGnBu : d3.interpolateOrRd)
       .domain([0, maxCount]);
 
     svg.selectAll("*").remove();

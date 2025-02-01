@@ -33,6 +33,7 @@ const Plot7: React.FC = () => {
 
   useEffect(() => {
     const handleResize = () => {
+      setCurrentPage(1); // Zur ersten Seite zurückkehren
       if (window.innerWidth < 768) {
         setItemsPerPage(1);
         return;
