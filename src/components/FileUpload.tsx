@@ -256,7 +256,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
         </button>
 
         {/* Titel in der Mitte */}
-        <div className="flex-grow text-center text-lg font-semibold">
+        <div className="flex-grow text-center text-2xl font-semibold">
           Whatsapp Dashboard
         </div>
 

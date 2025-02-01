@@ -71,13 +71,21 @@ const Plot6: React.FC = () => {
     console.log(`Selected Year: ${selectedYear}, Has Data: ${hasData}`);
   }, [selectedYear, hasData]);
 
+  // Neuer useEffect: Dispatch eines Resize-Events, nachdem die Daten geladen wurden
+  useEffect(() => {
+    if (!isUploading && containerRef.current) {
+      setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+      }, 50);
+    }
+  }, [isUploading, messages]);
+
   const maxCount = useMemo(() => {
     return d3.max(dailyMessages, (d) => d.count) || 0;
   }, [dailyMessages]);
 
   useEffect(() => {
     if (!dimensions || !hasData) {
-      // Wenn keine Daten vorhanden sind, entferne alle Elemente außer dem Container
       const svg = d3.select(svgRef.current);
       svg.selectAll("*").remove();
       return;
@@ -85,34 +93,52 @@ const Plot6: React.FC = () => {
 
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
+
+    // === NEU: Berechne die Höhe der zusätzlichen Elemente ===
+    const titleEl = document.getElementById("heatmap-title");
+    const yearSelectEl = document.getElementById("year-select");
+    const titleHeight = titleEl ? titleEl.offsetHeight : 0;
+    const yearSelectHeight = yearSelectEl ? yearSelectEl.offsetHeight : 0;
+    const extraMargin = 10; // optionaler Puffer in Pixeln
+    const adjustedHeight =
+      height - titleHeight - yearSelectHeight - extraMargin;
+    // ============================================================
+
     const padding = { top: 50, right: 20, bottom: 80, left: 40 };
 
+    // Berechne verfügbare Breite und Höhe anhand der adjustierten Höhe:
+    const availableWidth = width - padding.left - padding.right;
+    const availableHeight = adjustedHeight - padding.top - padding.bottom - 30;
+
+    // Beispielsweise für den Jahresanfang und Wochenberechnung:
     const startOfYear = d3.timeYear(new Date(selectedYear, 0, 1));
     const endOfYear = d3.timeYear.offset(startOfYear, 1);
     const weeks = d3.timeWeeks(startOfYear, endOfYear);
     const numberOfWeeks = weeks.length;
 
-    const availableWidth = width - padding.left - padding.right;
-    const availableHeight = height - padding.top - padding.bottom - 30;
+    // Berechne die Zellengrößen:
     const cellSizeWidth = availableWidth / numberOfWeeks - 2;
     const cellSizeHeight = availableHeight / 7 - 2;
     const cellSize = Math.min(cellSizeWidth, cellSizeHeight);
 
+    // Farbskala
     const colorScale = d3
       .scaleSequential(darkMode ? d3.interpolateGnBu : d3.interpolateOrRd)
       .domain([0, maxCount]);
 
+    // Bereite das SVG vor:
     svg.selectAll("*").remove();
     svg.attr("width", width).attr("height", height);
+
+    console.log("Drawing Heatmap...");
+    console.log("Dimensions:", dimensions);
 
     const g = svg
       .append("g")
       .attr("transform", `translate(${padding.left}, ${padding.top})`);
 
-    // Entferne die Tooltip-Logik, wenn keine Daten vorhanden sind
-    const tooltip = d3.select(containerRef.current).select(".tooltip"); // Verwende eine separate Klasse oder ID
-
-    // Entferne vorhandene Tooltips, um Duplikate zu vermeiden
+    // Entferne vorhandenes Tooltip-Element (falls vorhanden) und erstelle ein neues
+    const tooltip = d3.select(containerRef.current).select(".tooltip");
     tooltip.remove();
 
     const newTooltip = d3
@@ -127,8 +153,9 @@ const Plot6: React.FC = () => {
         }`
       )
       .style("pointer-events", "none")
-      .attr("class", "tooltip"); // Füge eine separate Klasse hinzu
+      .attr("class", "tooltip");
 
+    // Zeichne die einzelnen Tage als Rechtecke
     g.selectAll<SVGRectElement, DailyMessages>(".day")
       .data(dailyMessages)
       .enter()
@@ -163,6 +190,7 @@ const Plot6: React.FC = () => {
         newTooltip.style("opacity", 0);
       });
 
+    // Zeichne Monatsnamen
     const months = d3.timeMonths(startOfYear, endOfYear);
 
     g.selectAll<SVGTextElement, Date>(".month")
@@ -179,6 +207,7 @@ const Plot6: React.FC = () => {
       .attr("font-size", "12px")
       .attr("fill", darkMode ? "#ffffff" : "#000000");
 
+    // Zeichne Wochentage
     const daysOfWeek = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
     g.selectAll<SVGTextElement, string>(".weekday")
@@ -192,9 +221,6 @@ const Plot6: React.FC = () => {
       .attr("font-size", "12px")
       .attr("fill", darkMode ? "#ffffff" : "#000000")
       .attr("text-anchor", "end");
-
-    // Entferne die Legende vollständig
-    // Alles, was mit der Legende zu tun hat, wurde entfernt
   }, [dailyMessages, dimensions, maxCount, selectedYear, darkMode, hasData]);
 
   return (
@@ -204,10 +230,11 @@ const Plot6: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[750px] md:basis-[750px] flex-grow p-4 flex flex-col`}
+      } w-full md:min-w-[750px] md:basis-[1000px] flex-grow p-4 flex flex-col`}
       style={{ minHeight: "200px", maxHeight: "550px", overflow: "hidden" }}
     >
       <h2
+        id="heatmap-title"
         className={`text-lg font-semibold mb-4 ${
           darkMode ? "text-white" : "text-black"
         }`}
@@ -216,7 +243,7 @@ const Plot6: React.FC = () => {
       </h2>
 
       {/* Jahr auswählen */}
-      <div className="mb-4">
+      <div id="heatmap-year-select" className="mb-4">
         <div>
           <select
             id="year-select"
@@ -230,7 +257,7 @@ const Plot6: React.FC = () => {
     } 
     p-2`}
             style={{
-              fontFamily: "Arial, sans-serif", // Ändere die Schriftart hier
+              fontFamily: "Arial, sans-serif",
             }}
           >
             {availableYears.map((year) => (
@@ -241,7 +268,7 @@ const Plot6: React.FC = () => {
                   darkMode ? "bg-black text-white" : "bg-white text-black"
                 }
                 style={{
-                  fontFamily: "Arial, sans-serif", // Auch hier für die Options anwenden
+                  fontFamily: "Arial, sans-serif",
                 }}
               >
                 {year}
@@ -254,17 +281,14 @@ const Plot6: React.FC = () => {
       {/* Bedingtes Rendering des Inhalts */}
       <div className="flex-grow flex justify-center items-center">
         {isUploading ? (
-          // Ladeanimation anzeigen, wenn Daten hochgeladen werden
           <ClipLoader
             color={darkMode ? "#ffffff" : "#000000"}
             loading={true}
             size={50}
           />
         ) : !hasData ? (
-          // "No Data" anzeigen, wenn keine Daten vorhanden sind
           <span className="text-lg">No Data Available</span>
         ) : (
-          // Diagramm anzeigen, wenn Daten vorhanden sind
           <svg ref={svgRef} className="w-full h-full"></svg>
         )}
       </div>

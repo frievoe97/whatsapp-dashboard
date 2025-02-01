@@ -18,13 +18,41 @@ interface TimeAggregatedData {
   }>;
 }
 
-type Mode = "year" | "month"; // Entfernt "day"
+type Mode = "year" | "month"; // "day" wurde entfernt
 
 const Plot2: React.FC = () => {
   const { messages, darkMode, isUploading } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
+
+  // Tooltip einmalig erstellen
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const existingTooltip = d3
+      .select(containerRef.current)
+      .select<HTMLDivElement>(".tooltip");
+    if (existingTooltip.empty()) {
+      d3.select(containerRef.current)
+        .append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("padding", "6px")
+        .style("border", "1px solid #999")
+        .style("border-radius", "4px")
+        .style("pointer-events", "none")
+        .style("display", "none");
+    }
+  }, []);
+
+  // Tooltip-Style aktualisieren bei Dark Mode-Wechsel
+  useEffect(() => {
+    if (!containerRef.current) return;
+    d3.select(containerRef.current)
+      .select<HTMLDivElement>(".tooltip")
+      .style("background", darkMode ? "#333" : "#fff")
+      .style("color", darkMode ? "#fff" : "#000");
+  }, [darkMode]);
 
   // State für Aggregationsmodus und Darstellung
   const [mode, setMode] = useState<Mode>("month"); // Initial auf "month" setzen
@@ -97,7 +125,7 @@ const Plot2: React.FC = () => {
         date:
           mode === "year"
             ? new Date(`${category}-01-01`)
-            : new Date(`${category}-01`), // Da "day" entfernt wurde
+            : new Date(`${category}-01`), // "day" wurde entfernt
         count: dataMap[sender][category],
       })),
     }));
@@ -125,14 +153,10 @@ const Plot2: React.FC = () => {
   );
 
   // Definiere das Farbschema basierend auf den Sendern
-
   const colorScale = useMemo(() => {
-    // Wähle das Farbschema je nach Dark Mode Zustand
     const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
-
-    // Erstelle die Skala mit dem gewählten Farbschema
     return d3.scaleOrdinal<string, string>(colors).domain(senders);
-  }, [senders, darkMode]); // Dark Mode als Dependency hinzufügen
+  }, [senders, darkMode]);
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -154,8 +178,7 @@ const Plot2: React.FC = () => {
     // Sammle alle Datenpunkte für die X-Achse
     const allDates = aggregatedData.flatMap((d) => d.values.map((v) => v.date));
     const xExtent = d3.extent(allDates);
-
-    if (!xExtent[0] || !xExtent[1]) return; // Sicherstellen, dass xExtent definiert ist
+    if (!xExtent[0] || !xExtent[1]) return;
 
     // Scales
     const xScale = d3
@@ -175,11 +198,11 @@ const Plot2: React.FC = () => {
       .range([innerHeight, 0]);
 
     // Dynamische Berechnung der maximalen Anzahl der Ticks basierend auf der Breite
-    const maxTicks = Math.floor(innerWidth / 80); // 80px pro Tick als Beispiel
+    const maxTicks = Math.floor(innerWidth / 80);
     const xAxis = d3.axisBottom(xScale).ticks(maxTicks);
     const yAxis = d3.axisLeft(yScale).ticks(5);
 
-    // Linien-Generator mit Glättung und defined-Funktion
+    // Linien-Generator
     const line = d3
       .line<{ date: Date; count: number; percentage?: number }>()
       .defined((d) => d.count !== null && d.count !== undefined)
@@ -187,11 +210,29 @@ const Plot2: React.FC = () => {
       .y((d) => yScale(showPercentage ? d.percentage || 0 : d.count))
       .curve(d3.curveMonotoneX);
 
-    // Check if chart-group exists
+    // Hole bzw. erstelle die Chart-Gruppe
     let chart = svg.select<SVGGElement>(".chart-group");
 
+    // Tooltip-Element aus dem Container holen
+    const tooltip = d3
+      .select(containerRef.current)
+      .select<HTMLDivElement>(".tooltip");
+
+    // Erstelle die horizontale Hilfslinie per join (statt enter/merge)
+    const hoverLine = chart
+      .selectAll<SVGLineElement, null>("line.hover-line")
+      .data([null])
+      .join((enter) =>
+        enter
+          .append("line")
+          .attr("class", "hover-line")
+          .attr("stroke", "gray")
+          .attr("stroke-width", 1)
+          .style("opacity", 0)
+      );
+
+    // Falls noch keine Chart-Gruppe existiert, erstelle sie und zeichne Achsen, Grids und die Linien
     if (chart.empty()) {
-      // Create chart-group
       chart = svg
         .append("g")
         .attr("class", "chart-group")
@@ -224,14 +265,11 @@ const Plot2: React.FC = () => {
         .selectAll("line")
         .attr("stroke", darkMode ? "#606060" : "#e0e0e0");
 
-      // Entferne alte X-Achse, bevor sie neu erstellt wird
-      chart.select(".x-axis").remove();
-
-      // Neue X-Achse hinzufügen
+      // X-Achse
       chart
         .append("g")
         .attr("class", "x-axis")
-        .attr("transform", `translate(0,${innerHeight})`) // Muss dynamisch aktualisiert werden!
+        .attr("transform", `translate(0,${innerHeight})`)
         .call(xAxis)
         .selectAll("text")
         .attr("transform", "translate(0,5)")
@@ -239,7 +277,7 @@ const Plot2: React.FC = () => {
         .style("font-size", "12px")
         .style("fill", darkMode ? "white" : "black");
 
-      // Append Y-Achse
+      // Y-Achse
       chart
         .append("g")
         .attr("class", "y-axis")
@@ -248,7 +286,7 @@ const Plot2: React.FC = () => {
         .style("font-size", "12px")
         .style("fill", darkMode ? "white" : "black");
 
-      // Linien hinzufügen
+      // Linien für jeden Sender (mit initialer Animation)
       chart
         .selectAll<SVGPathElement, TimeAggregatedData>(".line")
         .data(aggregatedData, (d) => d.sender)
@@ -259,17 +297,12 @@ const Plot2: React.FC = () => {
         .attr("stroke", (d) => colorScale(d.sender))
         .attr("stroke-width", 3)
         .attr("d", (d) => {
-          // Initialer Pfad mit y auf innerHeight (vom Boden kommend)
           const initialValues = d.values.map((v) => ({
             ...v,
             y: innerHeight,
           }));
           const initialLine = d3
-            .line<{
-              date: Date;
-              count: number;
-              percentage?: number;
-            }>()
+            .line<{ date: Date; count: number; percentage?: number }>()
             .x((d) => xScale(d.date))
             .y(() => innerHeight)
             .curve(d3.curveMonotoneX);
@@ -280,13 +313,12 @@ const Plot2: React.FC = () => {
         .ease(d3.easeCubic)
         .attr("d", (d) => line(d.values) as string);
     } else {
-      // Update Grid
-      // Update Grid with updated transform attribute for x-grid
+      // Wenn die Chart-Gruppe bereits existiert, aktualisiere Grids und Achsen
       chart
         .select<SVGGElement>(".x-grid")
         .transition()
         .duration(1000)
-        .attr("transform", `translate(0,${innerHeight})`) // Hier wird der Ursprung neu gesetzt!
+        .attr("transform", `translate(0,${innerHeight})`)
         .call(
           d3
             .axisBottom(xScale)
@@ -309,21 +341,16 @@ const Plot2: React.FC = () => {
         .selectAll("line")
         .attr("stroke", darkMode ? "#a0a0a0" : "#e0e0e0");
 
-      // Entferne die letzte Grid-Linie (rechte Kante) durch Filterung
       chart
         .selectAll(".x-grid line")
-        .filter((_, i, nodes) => {
-          return i === nodes.length - 1;
-        })
-        .attr("stroke", "none"); // oder setze auf grau, wenn du sie behalten möchtest
+        .filter((_, i, nodes) => i === nodes.length - 1)
+        .attr("stroke", "none");
 
-      // Update Achsen mit Transitionen
-      // Nachher: Update der x-Achse mit aktualisiertem transform-Attribut
       chart
         .select<SVGGElement>(".x-axis")
         .transition()
         .duration(1000)
-        .attr("transform", `translate(0,${innerHeight})`) // Hier wird der Ursprung neu gesetzt!
+        .attr("transform", `translate(0,${innerHeight})`)
         .call(xAxis)
         .selectAll("text")
         .attr("transform", "translate(0,5)")
@@ -340,12 +367,11 @@ const Plot2: React.FC = () => {
         .style("font-size", "12px")
         .style("fill", darkMode ? "white" : "black");
 
-      // Bind Daten
+      // Linien aktualisieren
       const lines = chart
         .selectAll<SVGPathElement, TimeAggregatedData>(".line")
         .data(aggregatedData, (d) => d.sender);
 
-      // Enter + Update + Exit mit Transitionen
       lines.join(
         (enter) =>
           enter
@@ -355,17 +381,12 @@ const Plot2: React.FC = () => {
             .attr("stroke", (d) => colorScale(d.sender))
             .attr("stroke-width", 3)
             .attr("d", (d) => {
-              // Initialer Pfad mit y auf innerHeight (vom Boden kommend)
               const initialValues = d.values.map((v) => ({
                 ...v,
                 y: innerHeight,
               }));
               const initialLine = d3
-                .line<{
-                  date: Date;
-                  count: number;
-                  percentage?: number;
-                }>()
+                .line<{ date: Date; count: number; percentage?: number }>()
                 .x((d) => xScale(d.date))
                 .y(() => innerHeight)
                 .curve(d3.curveMonotoneX);
@@ -392,6 +413,75 @@ const Plot2: React.FC = () => {
             .remove()
       );
     }
+
+    // Erstelle bzw. update das Overlay-Rechteck per join (statt enter/merge)
+    const overlay = chart
+      .selectAll<SVGRectElement, null>("rect.overlay")
+      .data([null])
+      .join((enter) => enter.append("rect").attr("class", "overlay"))
+      .attr("width", innerWidth)
+      .attr("height", innerHeight)
+      .style("fill", "none")
+      .style("pointer-events", "all")
+      .on("mouseover", () => {
+        hoverLine.style("opacity", 1);
+        tooltip.style("display", "block");
+      })
+      .on("mousemove", function (event) {
+        const [mx, my] = d3.pointer(event);
+        hoverLine
+          .attr("x1", mx)
+          .attr("x2", mx)
+          .attr("y1", 0)
+          .attr("y2", innerHeight);
+
+        // Ermittle anhand des Mauszeigers die nächste Datumskategorie
+        const bisectDate = d3.bisector((d: Date) => d).left;
+        const dates = aggregatedData[0]?.values.map((v) => v.date) || [];
+        const x0 = xScale.invert(mx);
+        const i = bisectDate(dates, x0);
+        const d0 = dates[i - 1];
+        const d1 = dates[i];
+        const nearestDate =
+          !d0 ||
+          (d1 && x0.getTime() - d0.getTime() > d1.getTime() - x0.getTime())
+            ? d1
+            : d0;
+        const dateFormatter =
+          mode === "year" ? d3.timeFormat("%Y") : d3.timeFormat("%Y-%m");
+        const formattedDate = nearestDate ? dateFormatter(nearestDate) : "";
+
+        // Erstelle Tooltip-Daten für jeden Sender
+        const tooltipData = aggregatedData.map((d) => {
+          const point = d.values.find(
+            (v) => dateFormatter(v.date) === formattedDate
+          );
+          const value =
+            showPercentage && point?.percentage !== undefined
+              ? point.percentage.toFixed(2) + "%"
+              : point?.count;
+          return { sender: d.sender, value };
+        });
+
+        tooltip.html(
+          `<strong>${formattedDate}</strong><br>` +
+            tooltipData
+              .map(
+                (d) =>
+                  `<span style="color:${colorScale(d.sender)}">${d.sender}: ${
+                    d.value
+                  }</span>`
+              )
+              .join("<br>")
+        );
+        tooltip
+          .style("left", `${mx + margin.left + 10}px`)
+          .style("top", `${my + margin.top + 10}px`);
+      })
+      .on("mouseleave", () => {
+        hoverLine.style("opacity", 0);
+        tooltip.style("display", "none");
+      });
   }, [
     aggregatedData,
     dimensions,
@@ -410,7 +500,12 @@ const Plot2: React.FC = () => {
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       } w-full md:min-w-[740px] md:basis-[800px] flex-grow p-4 flex flex-col`}
-      style={{ minHeight: "400px", maxHeight: "550px", overflow: "hidden" }}
+      style={{
+        position: "relative",
+        minHeight: "400px",
+        maxHeight: "550px",
+        overflow: "hidden",
+      }}
     >
       {/* Buttons und Switch in einer Zeile */}
       <div className="flex items-center justify-between mb-2">
@@ -430,7 +525,6 @@ const Plot2: React.FC = () => {
           >
             Year
           </button>
-
           <button
             className={`px-3 py-1 md:text-base text-sm rounded-none ${
               mode === "month"
@@ -446,13 +540,12 @@ const Plot2: React.FC = () => {
             Month
           </button>
         </div>
-
         {/* Toggle für Absolute Numbers / Percentages */}
         <div className="flex items-center w-fit md:w-auto justify-center md:justify-end">
           <Hash
             className={`${
               darkMode ? "text-white" : "text-gray-700"
-            } w-4 h-4 md:w-5 md:h-5`} // Icons kleiner auf mobilen Geräten
+            } w-4 h-4 md:w-5 md:h-5`}
           />
           <Switch
             onChange={() => setShowPercentage(!showPercentage)}
@@ -467,17 +560,16 @@ const Plot2: React.FC = () => {
             borderRadius={20}
             boxShadow="none"
             activeBoxShadow="none"
-            className="custom-switch mx-1 md:mx-2" // Weniger Abstand auf kleinen Screens
+            className="custom-switch mx-1 md:mx-2"
           />
           <Percent
             className={`${
               darkMode ? "text-white" : "text-gray-700"
-            } w-4 h-4 md:w-5 md:h-5`} // Icons kleiner auf mobilen Geräten
+            } w-4 h-4 md:w-5 md:h-5`}
           />
         </div>
       </div>
-
-      {/* Legende über dem Diagramm */}
+      {/* Legende */}
       <div className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2">
         {senders.map((sender) => (
           <div key={sender} className="flex items-center mr-4 mb-2">
@@ -494,21 +586,17 @@ const Plot2: React.FC = () => {
           </div>
         ))}
       </div>
-
       {/* Bedingtes Rendering des Inhalts */}
       <div className="flex-grow flex justify-center items-center">
         {isUploading ? (
-          // Ladeanimation anzeigen, wenn Daten hochgeladen werden
           <ClipLoader
             color={darkMode ? "#ffffff" : "#000000"}
             loading={true}
             size={50}
           />
         ) : messages.length === 0 ? (
-          // "No Data" anzeigen, wenn keine Daten vorhanden sind
           <span className="text-lg">No Data Available</span>
         ) : (
-          // Diagramm anzeigen, wenn Daten vorhanden sind
           <svg
             id="timeline_plot"
             ref={svgRef}

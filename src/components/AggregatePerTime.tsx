@@ -5,7 +5,6 @@ import * as d3 from "d3";
 import { ChatMessage } from "../context/ChatContext";
 import useResizeObserver from "../hooks/useResizeObserver";
 import Switch from "react-switch";
-// src/components/Plot1.tsx
 import "./Plot1.css"; // Importiere die CSS-Datei
 import ClipLoader from "react-spinners/ClipLoader";
 import { Hash, Percent } from "lucide-react";
@@ -32,7 +31,7 @@ const Plot1: React.FC = () => {
   const [mode, setMode] = useState<Mode>("hour");
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
 
-  // Definiere die Kategorien basierend auf dem Modus
+  // Kategorien definieren
   const categories: string[] = useMemo(() => {
     switch (mode) {
       case "weekday":
@@ -67,16 +66,15 @@ const Plot1: React.FC = () => {
     }
   }, [mode]);
 
-  // Aggregiere Daten basierend auf dem aktuellen Modus und der Darstellung
+  // Aggregiere Daten
   const aggregatedData: AggregatedData[] = useMemo(() => {
     if (messages.length === 0) return [];
 
-    // Funktion zur Extraktion der Kategorie basierend auf dem Modus
     const getCategory = (msg: ChatMessage): string => {
       const date = new Date(msg.date);
       switch (mode) {
-        case "weekday":
-          const dayIndex = date.getDay(); // 0 (Sunday) to 6 (Saturday)
+        case "weekday": {
+          const dayIndex = date.getDay(); // 0 (Sunday) bis 6 (Saturday)
           return [
             "Monday",
             "Tuesday",
@@ -86,6 +84,7 @@ const Plot1: React.FC = () => {
             "Saturday",
             "Sunday",
           ][(dayIndex + 6) % 7];
+        }
         case "hour":
           return date.getHours().toString();
         case "month":
@@ -108,22 +107,18 @@ const Plot1: React.FC = () => {
       }
     };
 
-    // Aggregiere Nachrichten nach Sender und Kategorie
     const dataMap: { [sender: string]: { [category: string]: number } } = {};
 
     messages.forEach((msg: ChatMessage) => {
       if (!msg.isUsed) return;
-
       const sender = msg.sender;
       const category = getCategory(msg);
-
       if (!dataMap[sender]) {
         dataMap[sender] = {};
         categories.forEach((cat) => {
           dataMap[sender][cat] = 0;
         });
       }
-
       if (dataMap[sender][category] !== undefined) {
         dataMap[sender][category] += 1;
       } else {
@@ -131,7 +126,6 @@ const Plot1: React.FC = () => {
       }
     });
 
-    // Konvertiere das Map in ein Array für D3
     let result: AggregatedData[] = Object.keys(dataMap).map((sender) => ({
       sender,
       values: categories.map((category) => ({
@@ -156,7 +150,7 @@ const Plot1: React.FC = () => {
     return result;
   }, [messages, mode, showPercentage, categories]);
 
-  // Extrahiere die Sender für die Legende
+  // Extrahiere die Sender (für die Legende)
   const senders = useMemo(
     () => aggregatedData.map((d) => d.sender),
     [aggregatedData]
@@ -164,36 +158,61 @@ const Plot1: React.FC = () => {
 
   useEffect(() => {
     if (messages.length === 0) {
-      setMode("hour"); // Standardmodus
-      setShowPercentage(false); // Prozente zurücksetzen
+      setMode("hour");
+      setShowPercentage(false);
     }
   }, [messages]);
 
   useEffect(() => {
-    console.log("Is Uploading changed");
-    console.log(isUploading);
+    console.log("Is Uploading changed", isUploading);
   }, [isUploading]);
 
-  // Definiere die Farbschemen basierend auf den Sendern
+  // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
-    // Wähle das Farbschema je nach Dark Mode Zustand
     const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
-
-    // Erstelle die Skala mit dem gewählten Farbschema
     return d3.scaleOrdinal<string, string>(colors).domain(senders);
-  }, [senders, darkMode]); // Dark Mode als Dependency hinzufügen
+  }, [senders, darkMode]);
 
+  // --- Tooltip einmalig erstellen ---
+  // --- Tooltip einmalig erstellen ---
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const existingTooltip = d3
+      .select(containerRef.current)
+      .select<HTMLDivElement>(".tooltip");
+    if (existingTooltip.empty()) {
+      d3.select(containerRef.current)
+        .append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("z-index", "1000") // NEU: z-index hinzufügen
+        .style("padding", "6px")
+        .style("border", "1px solid #999")
+        .style("border-radius", "4px")
+        .style("pointer-events", "none")
+        .style("display", "none");
+    }
+  }, []);
+
+  // --- Tooltip-Style aktualisieren bei Dark Mode-Wechsel ---
+  useEffect(() => {
+    if (!containerRef.current) return;
+    d3.select(containerRef.current)
+      .select<HTMLDivElement>(".tooltip")
+      .style("background", darkMode ? "#333" : "#fff")
+      .style("color", darkMode ? "#fff" : "#000");
+  }, [darkMode]);
+
+  // --- D3-Diagramm erstellen ---
   useEffect(() => {
     if (!dimensions || aggregatedData.length === 0) return;
-
-    // D3 Diagramm erstellen
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
     const margin = { top: 10, right: 10, bottom: 110, left: 40 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    // Scales
+    // Skalen
     const xScale = d3
       .scalePoint<string>()
       .domain(categories)
@@ -215,7 +234,7 @@ const Plot1: React.FC = () => {
     const xAxis = d3.axisBottom(xScale);
     const yAxis = d3.axisLeft(yScale).ticks(5);
 
-    // Linien-Generator mit Glättung und defined-Funktion
+    // Linien-Generator
     const line = d3
       .line<{ category: string; count: number; percentage?: number }>()
       .defined((d) => d.count !== null && d.count !== undefined)
@@ -223,214 +242,188 @@ const Plot1: React.FC = () => {
       .y((d) => yScale(showPercentage ? d.percentage || 0 : d.count))
       .curve(d3.curveMonotoneX);
 
-    // Check if chart-group exists
+    // Erstelle (oder wähle) die Chart-Gruppe
     let chart = svg.select<SVGGElement>(".chart-group");
-
     if (chart.empty()) {
-      // Create chart-group
       chart = svg
         .append("g")
         .attr("class", "chart-group")
         .attr("transform", `translate(${margin.left},${margin.top})`);
-
-      // Entferne altes X-Grid vor dem Neuzeichnen
-      chart.select(".x-grid").remove();
-
-      // Entferne alte X-Grid-Linien
-      chart.select(".x-grid").remove();
-
-      // Neues X-Grid zeichnen
-      const xGrid = chart
-        .append("g")
-        .attr("class", "x-grid")
-        .attr("transform", `translate(0,${innerHeight})`)
-        .call(
-          d3
-            .axisBottom(xScale)
-            .tickSize(-innerHeight) // Grid-Linien über gesamte Höhe ziehen
-            .tickFormat(() => "") // Labels für das Grid entfernen
-        );
-
-      // Stelle sicher, dass alle Linien die korrekte Breite haben
-      xGrid
-        .selectAll("line")
-        .attr("stroke", darkMode ? "#606060" : "#e0e0e0")
-        .attr("stroke-width", 1);
-
-      // Y-Grid
-      chart
-        .append("g")
-        .attr("class", "y-grid")
-        .call(
-          d3
-            .axisLeft(yScale)
-            .tickSize(-innerWidth)
-            .tickFormat(() => "")
-        )
-        .selectAll("line")
-        .attr("stroke", darkMode ? "#606060" : "#e0e0e0");
-
-      // Append X-Achse
-      chart
-        .append("g")
-        .attr("class", "x-axis")
-        .attr("transform", `translate(0,${innerHeight})`)
-        .call(xAxis)
-        .selectAll("text")
-        .attr("transform", "translate(0,5)")
-        .style("text-anchor", "middle")
-        .style("font-size", "12px")
-        .style("fill", darkMode ? "white" : "black");
-
-      // Append Y-Achse
-      chart
-        .append("g")
-        .attr("class", "y-axis")
-        .call(yAxis)
-        .selectAll("text")
-        .style("font-size", "12px")
-        .style("fill", darkMode ? "white" : "black");
-
-      // Linien hinzufügen
-      chart
-        .selectAll<SVGPathElement, AggregatedData>(".line")
-        .data(aggregatedData, (d) => d.sender)
-        .enter()
-        .append("path")
-        .attr("class", "line")
-        .attr("fill", "none")
-        .attr("stroke", (d) => colorScale(d.sender))
-        .attr("stroke-width", 3)
-        .attr("d", (d) => {
-          // Initialer Pfad mit y auf innerHeight (vom Boden kommend)
-          const initialValues = d.values.map((v) => ({
-            ...v,
-            y: innerHeight,
-          }));
-          const initialLine = d3
-            .line<{ category: string; count: number; percentage?: number }>()
-            .x((d) => xScale(d.category) as number)
-            .y(() => innerHeight)
-            .curve(d3.curveMonotoneX);
-          return initialLine(initialValues) as string;
-        })
-        .transition()
-        .duration(2000)
-        .ease(d3.easeCubic)
-        .attr("d", (d) => line(d.values) as string);
-    } else {
-      // Update Grid
-      chart
-        .select<SVGGElement>(".x-grid")
-        .transition()
-        .duration(1000)
-        .attr("transform", `translate(0,${innerHeight})`) // Hier wird der Ursprung aktualisiert
-        .call(
-          d3
-            .axisBottom(xScale)
-            .tickSize(-innerHeight)
-            .tickFormat(() => "")
-        )
-        .selectAll("line")
-        .attr("stroke", darkMode ? "#a0a0a0" : "#e0e0e0");
-
-      chart
-        .select<SVGGElement>(".y-grid")
-        .transition()
-        .duration(1000)
-        .call(
-          d3
-            .axisLeft(yScale)
-            .tickSize(-innerWidth)
-            .tickFormat(() => "")
-        )
-        .selectAll("line")
-        .attr("stroke", darkMode ? "#a0a0a0" : "#e0e0e0");
-
-      // Entferne die letzte Grid-Linie (rechte Kante) durch Filterung
-      chart
-        .selectAll(".x-grid line")
-        .filter((_, i, nodes) => {
-          return i === nodes.length - 1;
-        })
-        .attr("stroke", "none"); // oder setze auf grau, wenn du sie behalten möchtest
-
-      // Entferne alte X-Achse, bevor sie neu erstellt wird
-      chart.select(".x-axis").remove();
-
-      // Neue X-Achse hinzufügen
-      chart
-        .append("g")
-        .attr("class", "x-axis")
-        .attr("transform", `translate(0,${innerHeight})`) // Muss dynamisch aktualisiert werden!
-        .call(xAxis)
-        .selectAll("text")
-        .attr("transform", "translate(0,5)")
-        .style("text-anchor", "middle")
-        .style("font-size", "12px")
-        .style("fill", darkMode ? "white" : "black");
-
-      chart
-        .select<SVGGElement>(".y-axis")
-        .transition()
-        .duration(1000)
-        .call(yAxis)
-        .selectAll("text")
-        .style("font-size", "12px")
-        .style("fill", darkMode ? "white" : "black");
-
-      // Bind Daten
-      const lines = chart
-        .selectAll<SVGPathElement, AggregatedData>(".line")
-        .data(aggregatedData, (d) => d.sender);
-
-      // Enter + Update + Exit mit Transitionen
-      lines.join(
-        (enter) =>
-          enter
-            .append("path")
-            .attr("class", "line")
-            .attr("fill", "none")
-            .attr("stroke", (d) => colorScale(d.sender))
-            .attr("stroke-width", 3)
-            .attr("d", (d) => {
-              // Initialer Pfad mit y auf innerHeight (vom Boden kommend)
-              const initialValues = d.values.map((v) => ({
-                ...v,
-                y: innerHeight,
-              }));
-              const initialLine = d3
-                .line<{
-                  category: string;
-                  count: number;
-                  percentage?: number;
-                }>()
-                .x((d) => xScale(d.category) as number)
-                .y(() => innerHeight)
-                .curve(d3.curveMonotoneX);
-              return initialLine(initialValues) as string;
-            })
-            .transition()
-            .duration(2000)
-            .ease(d3.easeCubic)
-            .attr("d", (d) => line(d.values) as string),
-        (update) =>
-          update
-            .transition()
-            .duration(1000)
-            .ease(d3.easeCubic)
-            .attr("stroke", (d) => colorScale(d.sender))
-            .attr("d", (d) => line(d.values) as string),
-        (exit) =>
-          exit
-            .transition()
-            .duration(1000)
-            .attr("stroke-dashoffset", function (this: SVGPathElement) {
-              return this.getTotalLength();
-            })
-            .remove()
-      );
     }
+
+    // Tooltip-Element (bereits erstellt)
+    const tooltip = d3
+      .select(containerRef.current)
+      .select<HTMLDivElement>(".tooltip");
+
+    // Overlay-Rechteck zum Abfangen von Mausereignissen
+    const overlay = chart
+      .append("rect")
+      .attr("class", "overlay")
+      .attr("width", innerWidth)
+      .attr("height", innerHeight)
+      .style("fill", "none")
+      .style("pointer-events", "all");
+
+    // Horizontale Hilfslinie
+    const hoverLine = chart
+      .append("line")
+      .attr("class", "hover-line")
+      .attr("stroke", "gray")
+      .attr("stroke-width", 1)
+      .style("opacity", 0);
+
+    // Mausereignisse
+    overlay
+      .on("mouseover", () => {
+        hoverLine.style("opacity", 1);
+        tooltip.style("display", "block");
+      })
+      .on("mousemove", function (event) {
+        const [mx, my] = d3.pointer(event);
+        hoverLine
+          .attr("x1", mx)
+          .attr("x2", mx)
+          .attr("y1", 0)
+          .attr("y2", innerHeight);
+
+        const xPositions = categories.map((cat) => xScale(cat) as number);
+        const distances = xPositions.map((xPos) => Math.abs(xPos - mx));
+        const minIndex = distances.indexOf(Math.min(...distances));
+        const nearestCategory = categories[minIndex];
+
+        const tooltipData = aggregatedData.map((d) => {
+          const point = d.values.find((v) => v.category === nearestCategory);
+          const value =
+            showPercentage && point?.percentage !== undefined
+              ? point.percentage.toFixed(2) + "%"
+              : point?.count;
+          return { sender: d.sender, value };
+        });
+
+        tooltip.html(
+          `<strong>${nearestCategory}</strong><br>` +
+            tooltipData
+              .map(
+                (d) =>
+                  `<span style="color:${colorScale(d.sender)}">${d.sender}: ${
+                    d.value
+                  }</span>`
+              )
+              .join("<br>")
+        );
+        tooltip
+          .style("left", `${mx + margin.left + 10}px`)
+          .style("top", `${my + margin.top + 10}px`);
+      })
+      .on("mouseleave", () => {
+        hoverLine.style("opacity", 0);
+        tooltip.style("display", "none");
+      });
+
+    // Hier folgt der Code für das Zeichnen (bzw. Aktualisieren) des Diagramms
+    // (Grid, Achsen, Linien etc.)
+    // Entferne zuerst ggf. alte Grid-Elemente und Achsen:
+    chart.select(".x-grid").remove();
+    chart.select(".y-grid").remove();
+    chart.select(".x-axis").remove();
+    chart.select(".y-axis").remove();
+
+    // Zeichne das X-Grid
+    const xGrid = chart
+      .append("g")
+      .attr("class", "x-grid")
+      .attr("transform", `translate(0,${innerHeight})`)
+      .call(
+        d3
+          .axisBottom(xScale)
+          .tickSize(-innerHeight)
+          .tickFormat(() => "")
+      );
+    xGrid
+      .selectAll("line")
+      .attr("stroke", darkMode ? "#606060" : "#e0e0e0")
+      .attr("stroke-width", 1);
+
+    // Zeichne das Y-Grid
+    chart
+      .append("g")
+      .attr("class", "y-grid")
+      .call(
+        d3
+          .axisLeft(yScale)
+          .tickSize(-innerWidth)
+          .tickFormat(() => "")
+      )
+      .selectAll("line")
+      .attr("stroke", darkMode ? "#606060" : "#e0e0e0");
+
+    // Zeichne die X-Achse
+    chart
+      .append("g")
+      .attr("class", "x-axis")
+      .attr("transform", `translate(0,${innerHeight})`)
+      .call(xAxis)
+      .selectAll("text")
+      .attr("transform", "translate(0,5)")
+      .style("text-anchor", "middle")
+      .style("font-size", "12px")
+      .style("fill", darkMode ? "white" : "black");
+
+    // Zeichne die Y-Achse
+    chart
+      .append("g")
+      .attr("class", "y-axis")
+      .call(yAxis)
+      .selectAll("text")
+      .style("font-size", "12px")
+      .style("fill", darkMode ? "white" : "black");
+
+    // Linien (für jeden Sender)
+    const lines = chart
+      .selectAll<SVGPathElement, AggregatedData>(".line")
+      .data(aggregatedData, (d) => d.sender);
+
+    lines.join(
+      (enter) =>
+        enter
+          .append("path")
+          .attr("class", "line")
+          .attr("fill", "none")
+          .attr("stroke", (d) => colorScale(d.sender))
+          .attr("stroke-width", 3)
+          .attr("d", (d) => {
+            const initialValues = d.values.map((v) => ({
+              ...v,
+              y: innerHeight,
+            }));
+            const initialLine = d3
+              .line<{ category: string; count: number; percentage?: number }>()
+              .x((d) => xScale(d.category) as number)
+              .y(() => innerHeight)
+              .curve(d3.curveMonotoneX);
+            return initialLine(initialValues) as string;
+          })
+          .transition()
+          .duration(2000)
+          .ease(d3.easeCubic)
+          .attr("d", (d) => line(d.values) as string),
+      (update) =>
+        update
+          .transition()
+          .duration(1000)
+          .ease(d3.easeCubic)
+          .attr("stroke", (d) => colorScale(d.sender))
+          .attr("d", (d) => line(d.values) as string),
+      (exit) =>
+        exit
+          .transition()
+          .duration(1000)
+          .attr("stroke-dashoffset", function (this: SVGPathElement) {
+            return this.getTotalLength();
+          })
+          .remove()
+    );
   }, [
     aggregatedData,
     dimensions,
@@ -449,11 +442,15 @@ const Plot1: React.FC = () => {
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       } w-full md:min-w-[740px] md:basis-[800px] flex-grow p-4 flex flex-col`}
-      style={{ minHeight: "400px", maxHeight: "550px", overflow: "hidden" }}
+      style={{
+        position: "relative",
+        minHeight: "400px",
+        maxHeight: "550px",
+        overflow: "hidden",
+      }}
     >
-      {/* Buttons and switch in one row */}
+      {/* Buttons und Switch */}
       <div className="flex items-center justify-between mb-2">
-        {/* Buttons für verschiedene Modi */}
         <div className="flex space-x-2">
           <button
             className={`px-3 py-1 md:text-base text-sm rounded-none ${
@@ -483,7 +480,6 @@ const Plot1: React.FC = () => {
           >
             Weekday
           </button>
-
           <button
             className={`px-3 py-1 md:text-base text-sm rounded-none ${
               mode === "month"
@@ -499,13 +495,11 @@ const Plot1: React.FC = () => {
             Month
           </button>
         </div>
-
-        {/* Toggle für Absolute Numbers / Percentages */}
         <div className="flex items-center w-fit md:w-auto justify-center md:justify-end">
           <Hash
             className={`${
               darkMode ? "text-white" : "text-gray-700"
-            } w-4 h-4 md:w-5 md:h-5`} // Icons kleiner auf mobilen Geräten
+            } w-4 h-4 md:w-5 md:h-5`}
           />
           <Switch
             onChange={() => setShowPercentage(!showPercentage)}
@@ -520,17 +514,16 @@ const Plot1: React.FC = () => {
             borderRadius={20}
             boxShadow="none"
             activeBoxShadow="none"
-            className="custom-switch mx-1 md:mx-2" // Weniger Abstand auf kleinen Screens
+            className="custom-switch mx-1 md:mx-2"
           />
           <Percent
             className={`${
               darkMode ? "text-white" : "text-gray-700"
-            } w-4 h-4 md:w-5 md:h-5`} // Icons kleiner auf mobilen Geräten
+            } w-4 h-4 md:w-5 md:h-5`}
           />
         </div>
       </div>
-
-      {/* Legende über dem Diagramm */}
+      {/* Legende */}
       <div className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2">
         {senders.map((sender) => (
           <div key={sender} className="flex items-center mr-4 mb-2">
@@ -547,21 +540,17 @@ const Plot1: React.FC = () => {
           </div>
         ))}
       </div>
-
-      {/* Bedingtes Rendering des Inhalts */}
+      {/* Inhalt / Diagramm oder Ladeanimation */}
       <div className="flex-grow flex justify-center items-center">
         {isUploading ? (
-          // Ladeanimation anzeigen, wenn Daten hochgeladen werden
           <ClipLoader
             color={darkMode ? "#ffffff" : "#000000"}
             loading={true}
             size={50}
           />
         ) : messages.length === 0 ? (
-          // "No Data" anzeigen, wenn keine Daten vorhanden sind
           <span className="text-lg">No Data Available</span>
         ) : (
-          // Diagramm anzeigen, wenn Daten vorhanden sind
           <svg
             id="aggregate_plot"
             ref={svgRef}
