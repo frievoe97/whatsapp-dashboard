@@ -350,7 +350,7 @@ const Plot1: React.FC = () => {
       // Entferne die letzte Grid-Linie (rechte Kante) durch Filterung
       chart
         .selectAll(".x-grid line")
-        .filter((d, i, nodes) => {
+        .filter((_, i, nodes) => {
           return i === nodes.length - 1;
         })
         .attr("stroke", "none"); // oder setze auf grau, wenn du sie behalten möchtest

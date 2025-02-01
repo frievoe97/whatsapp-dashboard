@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async"; // Import für SEO-Meta-Tags
 import FileUpload from "./components/FileUpload";
 import FileUploadMobile from "./components/FileUploadMobile";
@@ -14,7 +14,7 @@ import "./index.css";
 
 function App() {
   const { darkMode, messages } = useChat();
-  const [file, setFile] = useState<File | null>(null);
+  // const [file, setFile] = useState<File | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {

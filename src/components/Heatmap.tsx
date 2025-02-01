@@ -187,7 +187,7 @@ const Plot6: React.FC = () => {
       .append("text")
       .attr("class", "weekday")
       .attr("x", -10)
-      .attr("y", (d, i) => i * (cellSize + 2) + cellSize / 1.5)
+      .attr("y", (_, i) => i * (cellSize + 2) + cellSize / 1.5)
       .text((d) => d)
       .attr("font-size", "12px")
       .attr("fill", darkMode ? "#ffffff" : "#000000")
