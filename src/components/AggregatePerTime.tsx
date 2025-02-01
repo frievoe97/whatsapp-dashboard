@@ -448,7 +448,7 @@ const Plot1: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[800px] md:basis-[800px] flex-grow p-4 flex flex-col`}
+      } w-full md:min-w-[740px] md:basis-[800px] flex-grow p-4 flex flex-col`}
       style={{ minHeight: "400px", maxHeight: "550px", overflow: "hidden" }}
     >
       {/* Buttons and switch in one row */}
@@ -456,7 +456,7 @@ const Plot1: React.FC = () => {
         {/* Buttons für verschiedene Modi */}
         <div className="flex space-x-2">
           <button
-            className={`px-3 py-1 rounded-none ${
+            className={`px-3 py-1 md:text-base text-sm rounded-none ${
               mode === "hour"
                 ? darkMode
                   ? "bg-white text-black border border-gray-300 hover:border-gray-300"
@@ -470,7 +470,7 @@ const Plot1: React.FC = () => {
             Hour
           </button>
           <button
-            className={`px-3 py-1 rounded-none ${
+            className={`px-3 py-1 md:text-base text-sm rounded-none ${
               mode === "weekday"
                 ? darkMode
                   ? "bg-white text-black border border-gray-300 hover:border-gray-300"
@@ -485,7 +485,7 @@ const Plot1: React.FC = () => {
           </button>
 
           <button
-            className={`px-3 py-1 rounded-none ${
+            className={`px-3 py-1 md:text-base text-sm rounded-none ${
               mode === "month"
                 ? darkMode
                   ? "bg-white text-black border border-gray-300 hover:border-gray-300"
@@ -503,8 +503,9 @@ const Plot1: React.FC = () => {
         {/* Toggle für Absolute Numbers / Percentages */}
         <div className="flex items-center w-fit md:w-auto justify-center md:justify-end">
           <Hash
-            size={20}
-            className={darkMode ? "text-white" : "text-gray-700"}
+            className={`${
+              darkMode ? "text-white" : "text-gray-700"
+            } w-4 h-4 md:w-5 md:h-5`} // Icons kleiner auf mobilen Geräten
           />
           <Switch
             onChange={() => setShowPercentage(!showPercentage)}
@@ -519,11 +520,12 @@ const Plot1: React.FC = () => {
             borderRadius={20}
             boxShadow="none"
             activeBoxShadow="none"
-            className="custom-switch mx-2"
+            className="custom-switch mx-1 md:mx-2" // Weniger Abstand auf kleinen Screens
           />
           <Percent
-            size={20}
-            className={darkMode ? "text-white" : "text-gray-700"}
+            className={`${
+              darkMode ? "text-white" : "text-gray-700"
+            } w-4 h-4 md:w-5 md:h-5`} // Icons kleiner auf mobilen Geräten
           />
         </div>
       </div>

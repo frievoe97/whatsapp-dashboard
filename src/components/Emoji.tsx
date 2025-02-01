@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 import emojiRegex from "emoji-regex";
@@ -14,11 +14,43 @@ interface AggregatedEmojiData {
   topEmojis: EmojiCount[];
 }
 
-const ITEMS_PER_PAGE = 2;
+const MIN_WIDTH_PER_ITEM = 600;
 
 const Plot7: React.FC = () => {
   const { messages, darkMode, isUploading } = useChat();
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    if (window.innerWidth < 768) return 1;
+    const plotWidth =
+      document.getElementById("plot-emoji-count")?.offsetWidth || 0;
+    if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) return 1;
+    if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) return 2;
+    if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) return 3;
+    if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) return 4;
+    return 5;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setItemsPerPage(1);
+        return;
+      }
+
+      const plotWidth =
+        document.getElementById("plot-emoji-count")?.offsetWidth || 0;
+      if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) setItemsPerPage(1);
+      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) setItemsPerPage(2);
+      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) setItemsPerPage(3);
+      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) setItemsPerPage(4);
+      else setItemsPerPage(5);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Initial setzen
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Verwende emoji-regex für eine umfassendere Emoji-Erkennung
   const regex = emojiRegex();
@@ -74,12 +106,15 @@ const Plot7: React.FC = () => {
     return scale;
   }, [aggregatedEmojiData, darkMode]); // Dark Mode als Dependency hinzufügen
 
-  const totalPages = Math.ceil(aggregatedEmojiData.length / ITEMS_PER_PAGE);
+  const totalPages = useMemo(
+    () => Math.ceil(aggregatedEmojiData.length / itemsPerPage),
+    [aggregatedEmojiData, itemsPerPage]
+  );
 
   const currentData = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return aggregatedEmojiData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [aggregatedEmojiData, currentPage]);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return aggregatedEmojiData.slice(startIndex, startIndex + itemsPerPage);
+  }, [aggregatedEmojiData, currentPage, itemsPerPage]);
 
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -91,6 +126,7 @@ const Plot7: React.FC = () => {
 
   return (
     <div
+      id="plot-emoji-count"
       className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 overflow-auto flex-grow ${
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
@@ -125,10 +161,12 @@ const Plot7: React.FC = () => {
                 return (
                   <div
                     key={senderData.sender}
-                    className={`w-full md:w-1/2 border p-4 rounded-none min-w-0 
-                      ${darkMode ? "border-gray-300" : "border-black"}
-                      `}
+                    className={`border p-4 rounded-none ${
+                      darkMode ? "border-gray-300" : "border-black"
+                    }`}
                     style={{
+                      flex: `1 1 calc(${100 / itemsPerPage}% - 16px)`,
+
                       borderLeft: `4px solid ${colorScale.get(
                         senderData.sender
                       )}`,

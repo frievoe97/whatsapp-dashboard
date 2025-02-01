@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 import ClipLoader from "react-spinners/ClipLoader";
@@ -17,11 +17,43 @@ interface SenderStats {
   averageCharactersPerMessage: number; // Neue Statistik
 }
 
-const ITEMS_PER_PAGE = 2;
+const MIN_WIDTH_PER_ITEM = 600;
 
 const Plot5: React.FC = () => {
   const { messages, darkMode, isUploading } = useChat();
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    if (window.innerWidth < 768) return 1;
+    const plotWidth =
+      document.getElementById("plot-message-stats")?.offsetWidth || 0;
+    if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) return 1;
+    if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) return 2;
+    if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) return 3;
+    if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) return 4;
+    return 5;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setItemsPerPage(1);
+        return;
+      }
+
+      const plotWidth =
+        document.getElementById("plot-message-stats")?.offsetWidth || 0;
+      if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) setItemsPerPage(1);
+      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) setItemsPerPage(2);
+      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) setItemsPerPage(3);
+      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) setItemsPerPage(4);
+      else setItemsPerPage(5);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Initial setzen
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Aggregiere Statistiken pro Sender
   const aggregatedStats: SenderStats[] = useMemo(() => {
@@ -135,12 +167,15 @@ const Plot5: React.FC = () => {
     return scale;
   }, [aggregatedStats, darkMode]); // Dark Mode als Dependency hinzufügen
 
-  const totalPages = Math.ceil(aggregatedStats.length / ITEMS_PER_PAGE);
+  const totalPages = useMemo(
+    () => Math.ceil(aggregatedStats.length / itemsPerPage),
+    [aggregatedStats, itemsPerPage]
+  );
 
   const currentStats = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return aggregatedStats.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [aggregatedStats, currentPage]);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return aggregatedStats.slice(startIndex, startIndex + itemsPerPage);
+  }, [aggregatedStats, currentPage, itemsPerPage]);
 
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -152,6 +187,7 @@ const Plot5: React.FC = () => {
 
   return (
     <div
+      id="plot-message-stats"
       className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 min-h-96 overflow-auto flex-grow ${
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
@@ -177,14 +213,17 @@ const Plot5: React.FC = () => {
         ) : (
           // Statistiken und Paginierung anzeigen
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div className="flex flex-wrap gap-4 w-full justify-center">
               {currentStats.map((stat) => (
                 <div
                   key={stat.sender}
-                  className={`border  p-4 rounded-none ${
+                  className={`border p-4 rounded-none ${
                     darkMode ? "border-gray-300" : "border-black"
                   }`}
                   style={{
+                    flex: `1 1 calc(${100 / itemsPerPage}% - 16px)`, // Flexible Breite mit Abstand berücksichtigt
+                    minWidth: "250px", // Mindestbreite für bessere Darstellung
+
                     borderLeft: `4px solid ${colorScale.get(stat.sender)}`,
                   }}
                 >

@@ -1,5 +1,7 @@
+// App.tsx
 import { useState, useEffect, useRef } from "react";
 import FileUpload from "./components/FileUpload";
+import FileUploadMobile from "./components/FileUploadMobile";
 import AggregatePerTime from "./components/AggregatePerTime";
 import Timeline from "./components/Timeline";
 import MessageRatio from "./components/MessageRatio";
@@ -33,10 +35,10 @@ function App() {
     metaThemeColor.setAttribute("content", darkMode ? "#1f2937" : "#ffffff");
   }, [darkMode]);
 
+  // Falls du noch die Zeilenhöhe angleichen möchtest:
   useEffect(() => {
     function setEqualRowHeights() {
       if (!containerRef.current) return;
-
       const items = Array.from(
         containerRef.current.children
       ) as HTMLDivElement[];
@@ -44,12 +46,10 @@ function App() {
       let currentRow: HTMLDivElement[] = [];
       let lastTop: number | null = null;
 
-      // Höhe zurücksetzen, damit die richtige Höhe gemessen wird
       items.forEach((item) => {
         item.style.height = "auto";
       });
 
-      // Elemente nach Zeilen gruppieren
       items.forEach((item) => {
         const top = item.offsetTop;
         if (lastTop === null || top === lastTop) {
@@ -65,7 +65,6 @@ function App() {
         rows.push(currentRow);
       }
 
-      // Höchste Höhe pro Zeile bestimmen und setzen
       rows.forEach((row) => {
         let maxHeight = Math.max(...row.map((item) => item.offsetHeight));
         row.forEach((item) => {
@@ -73,27 +72,48 @@ function App() {
         });
       });
     }
-
     setEqualRowHeights();
     window.addEventListener("resize", setEqualRowHeights);
     return () => window.removeEventListener("resize", setEqualRowHeights);
   }, [messages.length]);
 
   return (
-    <div className="p-4 h-screen flex flex-col">
-      <FileUpload onFileUpload={(uploadedFile) => setFile(uploadedFile)} />
+    // Der Container hat auf mobilen Geräten (default) eine automatische Höhe,
+    // auf Desktops (md und höher) wird die volle Bildschirmhöhe genutzt.
+    <div className="p-4 flex flex-col h-auto md:h-screen">
+      {/* Auf größeren Bildschirmen FileUpload anzeigen */}
+      <div className="hidden md:block">
+        <FileUpload onFileUpload={(file) => console.log(file)} />
+      </div>
+      {/* Auf mobilen Geräten FileUploadMobile anzeigen */}
+      <div className="block md:hidden">
+        <FileUploadMobile onFileUpload={(file) => console.log(file)} />
+      </div>
 
+      {/* Überprüfen, ob messages leer ist */}
       <div
         ref={containerRef}
         className="mt-4 flex-1 overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
       >
-        <AggregatePerTime />
-        <Timeline />
-        <MessageRatio />
-        <Heatmap />
-        <Emoji />
-        <WordCount />
-        <Stats />
+        {messages.length === 0 ? (
+          <div
+            className={`w-full p-4 flex items-center justify-center h-full border border-[1px] rounded-none  ${
+              darkMode ? "border-white" : "border-black"
+            } `}
+          >
+            No Data
+          </div>
+        ) : (
+          <>
+            <AggregatePerTime />
+            <Timeline />
+            <MessageRatio />
+            <Heatmap />
+            <Emoji />
+            <WordCount />
+            <Stats />
+          </>
+        )}
       </div>
     </div>
   );

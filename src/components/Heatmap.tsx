@@ -204,7 +204,7 @@ const Plot6: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[800px] md:basis-[800px] flex-grow p-4 flex flex-col`}
+      } w-full md:min-w-[750px] md:basis-[750px] flex-grow p-4 flex flex-col`}
       style={{ minHeight: "200px", maxHeight: "550px", overflow: "hidden" }}
     >
       <h2
@@ -222,13 +222,16 @@ const Plot6: React.FC = () => {
             id="year-select"
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className={`mt-1.5 w-full border border-[1px] text-sm font-medium outline-none focus:ring-0 appearance-none
-      ${
-        darkMode
-          ? "border-gray-300 bg-black text-white hover:bg-gray-900"
-          : "border-black bg-white text-black hover:bg-gray-200"
-      } 
-      p-2`}
+            className={`mt-1.5 w-fit border border-[1px] text-sm font-medium outline-none focus:ring-0 appearance-none
+    ${
+      darkMode
+        ? "border-gray-300 bg-black text-white"
+        : "border-black bg-white text-black"
+    } 
+    p-2`}
+            style={{
+              fontFamily: "Arial, sans-serif", // Ändere die Schriftart hier
+            }}
           >
             {availableYears.map((year) => (
               <option
@@ -237,6 +240,9 @@ const Plot6: React.FC = () => {
                 className={
                   darkMode ? "bg-black text-white" : "bg-white text-black"
                 }
+                style={{
+                  fontFamily: "Arial, sans-serif", // Auch hier für die Options anwenden
+                }}
               >
                 {year}
               </option>

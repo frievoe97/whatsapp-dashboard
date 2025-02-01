@@ -4,6 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 // import jsPDF from "jspdf";
 import "./FileUpload.css";
+import { ChevronDown, ChevronUp, Info } from "lucide-react";
 
 interface FileUploadProps {
   onFileUpload: (uploadedFile: File) => void;
@@ -19,6 +20,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   const [isInitialLoad, setIsInitialLoad] = useState(false);
   const [fileName, setFileName] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([
     "Mon",
     "Tue",
@@ -178,162 +180,71 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  // const exportToPDF = (): void => {
-  //   console.log("Start exportToPDF");
-
-  //   // Hole beide SVGs
-  //   const svg1 = document.getElementById(
-  //     "aggregate_plot"
-  //   ) as SVGSVGElement | null;
-  //   const svg2 = document.getElementById(
-  //     "timeline_plot"
-  //   ) as SVGSVGElement | null;
-
-  //   if (!svg1 || !svg2) {
-  //     console.log("SVGs nicht gefunden, Abbruch");
-  //     return;
-  //   }
-
-  //   console.log("SVGs gefunden:", { svg1, svg2 });
-
-  //   // Typen für die Callback-Funktion
-  //   type ImageCallback = (img: HTMLImageElement) => void;
-
-  //   // Funktion zum Konvertieren von SVG in ein Bild über Canvas
-  //   const convertSVGToImage = (
-  //     svgElement: SVGSVGElement,
-  //     callback: ImageCallback,
-  //     scaleFactor: number = 3 // Höherer Scale für bessere Auflösung
-  //   ): void => {
-  //     console.log("Start convertSVGToImage für SVG:", svgElement.id);
-
-  //     const svgData = new XMLSerializer().serializeToString(svgElement);
-  //     console.log("SVG serialisiert");
-
-  //     const svgBlob = new Blob([svgData], {
-  //       type: "image/svg+xml;charset=utf-8",
-  //     });
-  //     const url = URL.createObjectURL(svgBlob);
-  //     console.log("Blob erstellt und URL erzeugt:", url);
-
-  //     const img = new Image();
-  //     const { width, height } = svgElement.getBoundingClientRect();
-  //     img.width = width * scaleFactor; // Skalieren für höhere Auflösung
-  //     img.height = height * scaleFactor; // Skalieren für höhere Auflösung
-  //     console.log("Bildgrößen berechnet:", {
-  //       width: img.width,
-  //       height: img.height,
-  //     });
-
-  //     img.onload = () => {
-  //       console.log("Bild geladen für SVG:", svgElement.id);
-
-  //       const canvas = document.createElement("canvas");
-  //       canvas.width = img.width || 1; // Sicherstellen, dass die Breite > 0 ist
-  //       canvas.height = img.height || 1; // Sicherstellen, dass die Höhe > 0 ist
-
-  //       const ctx = canvas.getContext("2d");
-  //       if (ctx) {
-  //         console.log("Canvas Kontext gefunden, Zeichnen des Bildes");
-  //         ctx.fillStyle = "#FFFFFF"; // Hintergrund weiß setzen, falls benötigt
-  //         ctx.fillRect(0, 0, canvas.width, canvas.height);
-  //         ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Skalierte Zeichnung
-
-  //         const imgData = canvas.toDataURL("image/png");
-  //         console.log("Canvas zu PNG konvertiert");
-
-  //         const newImg = new Image();
-  //         newImg.src = imgData;
-  //         callback(newImg);
-  //       }
-
-  //       URL.revokeObjectURL(url); // URL wieder freigeben
-  //       console.log("URL freigegeben");
-  //     };
-
-  //     img.onerror = (error) => {
-  //       console.error("Fehler beim Laden des Bildes:", error);
-  //     };
-
-  //     img.src = url;
-  //   };
-
-  //   // PDF-Instanz erstellen (Hochformat, A4)
-  //   const pdf = new jsPDF({
-  //     orientation: "portrait", // Kann auch auf "landscape" gesetzt werden
-  //     unit: "pt", // Maßeinheit in Punkten
-  //     format: "a4", // A4-Format
-  //   });
-  //   console.log("PDF-Instanz erstellt");
-
-  //   // Plot 1 in die PDF einfügen
-  //   convertSVGToImage(
-  //     svg1,
-  //     (img1: HTMLImageElement) => {
-  //       console.log("Plot 1 wird zur PDF hinzugefügt");
-
-  //       const plot1Width = 500; // Breite des Plots
-  //       const plot1Height = (img1.height / img1.width) * plot1Width || 500; // Höhe des Plots basierend auf der Breite
-  //       console.log("Plot 1 Größe berechnet:", { plot1Width, plot1Height });
-
-  //       // Überprüfen, ob Höhe und Breite gültige Werte haben
-  //       if (plot1Width > 0 && plot1Height > 0) {
-  //         // Überschrift für Plot 1 hinzufügen
-  //         pdf.setFontSize(16);
-  //         pdf.text("Aggregate Plot", 40, 40); // Überschrift für Plot 1
-  //         console.log("Überschrift für Plot 1 hinzugefügt");
-
-  //         // Plot 1 hinzufügen
-  //         pdf.addImage(img1, "PNG", 40, 60, plot1Width, plot1Height); // x, y, width, height
-  //         console.log("Plot 1 zur PDF hinzugefügt");
-  //       }
-
-  //       // Plot 2 in die PDF einfügen
-  //       convertSVGToImage(svg2, (img2: HTMLImageElement, scaleFactor = 3) => {
-  //         console.log("Plot 2 wird zur PDF hinzugefügt");
-
-  //         const plot2Width = 500;
-  //         const plot2Height = (img2.height / img2.width) * plot2Width || 500;
-  //         console.log("Plot 2 Größe berechnet:", { plot2Width, plot2Height });
-
-  //         // Überprüfen, ob Höhe und Breite gültige Werte haben
-  //         if (plot2Width > 0 && plot2Height > 0) {
-  //           // Überschrift für Plot 2 hinzufügen
-  //           pdf.setFontSize(16);
-  //           pdf.text("Timeline Plot", 40, 80 + plot1Height); // Überschrift für Plot 2, unterhalb des ersten Plots
-  //           console.log("Überschrift für Plot 2 hinzugefügt");
-
-  //           // Plot 2 hinzufügen
-  //           pdf.addImage(
-  //             img2,
-  //             "PNG",
-  //             40,
-  //             100 + plot1Height,
-  //             plot2Width,
-  //             plot2Height
-  //           );
-  //           console.log("Plot 2 zur PDF hinzugefügt");
-  //         }
-
-  //         // PDF als Datei speichern
-  //         try {
-  //           pdf.save("plots.pdf");
-  //           console.log("PDF erfolgreich gespeichert");
-  //         } catch (error) {
-  //           console.error("Fehler beim Speichern der PDF:", error);
-  //         }
-  //       });
-  //     },
-  //     3
-  //   ); // Skalierungsfaktor 3 für höhere Auflösung der Bilder
-  // };
   return (
     <div className="file-upload-wrapper">
+      {isInfoOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div
+            className={`p-6 rounded-none shadow-lg max-w-md w-full ${
+              darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
+            }`}
+          >
+            <h2 className="text-lg font-semibold mb-8">Info & Disclaimer</h2>
+
+            <p className=" mb-3">
+              This tool <strong>does not store any data on a server</strong>.
+              All information remains only in your browser. No messages or
+              statistics are uploaded.
+            </p>
+
+            <p className=" mb-3">
+              This project is <strong>Open Source</strong>, and the entire
+              source code is publicly available on{" "}
+              <a
+                href="https://github.com/frievoe97/whatsapp-dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`no-underline ${
+                  darkMode ? "text-white" : "text-black"
+                } hover:text-inherit`}
+              >
+                GitHub
+              </a>
+              .
+            </p>
+
+            <p className="">
+              This project is licensed under the <strong>MIT License</strong>,
+              one of the most open and permissive licenses available. This means
+              you are <strong>free to use, modify, and distribute</strong> the
+              code, as long as the license is included.
+            </p>
+
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setIsInfoOpen(false)} // Close modal
+                className={`px-4 py-2 border rounded-none 
+            ${
+              darkMode
+                ? "border-white hover:border-gray-300"
+                : "border-black hover:border-gray-700"
+            } 
+            ${darkMode ? "bg-gray-700 text-white" : "bg-white text-black"}`}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toggle Button oben */}
-      <div className="flex justify-end mb-2">
+
+      <div className="flex items-center h-8">
+        {/* Info-Button (links) */}
         <button
-          onClick={toggleCollapse}
-          className={`px-2 py-1 border rounded-none 
+          onClick={() => setIsInfoOpen(true)} // Modal öffnen
+          className={`px-2 py-1 border rounded-none flex items-center 
     ${
       darkMode
         ? "border-white hover:border-white"
@@ -341,15 +252,33 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     } 
     ${darkMode ? "bg-gray-700 text-white" : "bg-white text-black"}`}
         >
-          {/* Icons für den Pfeil nach oben/unten */}
-          <i className={`arrow ${isCollapsed ? "down" : "up"}`}></i>
+          <Info size={20} />
+        </button>
+
+        {/* Titel in der Mitte */}
+        <div className="flex-grow text-center text-lg font-semibold">
+          Whatsapp Dashboard
+        </div>
+
+        {/* Collapse-Button (rechts) */}
+        <button
+          onClick={toggleCollapse}
+          className={`px-2 py-1 border rounded-none flex items-center 
+      ${
+        darkMode
+          ? "border-white hover:border-white"
+          : "border-black hover:border-black"
+      } 
+      ${darkMode ? "bg-gray-700 text-white" : "bg-white text-black"}`}
+        >
+          {isCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
         </button>
       </div>
 
       {/* Der bisherige Parent-Div, bedingt gerendert */}
       {!isCollapsed && (
         <div
-          className={`border ${
+          className={`mt-4 border ${
             darkMode ? "border-white" : "border-black"
           } p-4 file-upload grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 ${
             darkMode ? "bg-gray-800 text-white" : "bg-white text-black"

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 import { removeStopwords, deu } from "stopword";
@@ -14,11 +14,41 @@ interface AggregatedWordData {
   topWords: WordCount[];
 }
 
-const ITEMS_PER_PAGE = 2;
-
 const Plot4: React.FC = () => {
   const { messages, darkMode, isUploading } = useChat();
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    if (window.innerWidth < 768) return 1;
+    const plotWidth =
+      document.getElementById("plot-word-count")?.offsetWidth || 0;
+    if (plotWidth <= 670) return 1;
+    if (plotWidth <= 1340) return 2;
+    if (plotWidth <= 2010) return 3;
+    if (plotWidth <= 2680) return 4;
+    return 5;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setItemsPerPage(1);
+        return;
+      }
+
+      const plotWidth =
+        document.getElementById("plot-word-count")?.offsetWidth || 0;
+      if (plotWidth <= 670) setItemsPerPage(1);
+      else if (plotWidth <= 1340) setItemsPerPage(2);
+      else if (plotWidth <= 2010) setItemsPerPage(3);
+      else if (plotWidth <= 2680) setItemsPerPage(4);
+      else setItemsPerPage(5);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Initial setzen
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Aggregiere die Top 10 Wörter pro Sender
   const aggregatedWordData: AggregatedWordData[] = useMemo(() => {
@@ -78,12 +108,15 @@ const Plot4: React.FC = () => {
     return scale;
   }, [aggregatedWordData, darkMode]); // Dark Mode als Dependency hinzufügen
 
-  const totalPages = Math.ceil(aggregatedWordData.length / ITEMS_PER_PAGE);
+  const totalPages = useMemo(
+    () => Math.ceil(aggregatedWordData.length / itemsPerPage),
+    [aggregatedWordData, itemsPerPage]
+  );
 
   const currentData = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return aggregatedWordData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [aggregatedWordData, currentPage]);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return aggregatedWordData.slice(startIndex, startIndex + itemsPerPage);
+  }, [aggregatedWordData, currentPage, itemsPerPage]);
 
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -95,6 +128,7 @@ const Plot4: React.FC = () => {
 
   return (
     <div
+      id="plot-word-count"
       className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 min-h-96 overflow-auto flex-grow ${
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
@@ -128,10 +162,12 @@ const Plot4: React.FC = () => {
                 return (
                   <div
                     key={senderData.sender}
-                    className={`w-full md:w-1/2 border  p-4 rounded-none ${
+                    className={`border p-4 rounded-none ${
                       darkMode ? "border-gray-300" : "border-black"
                     }`}
                     style={{
+                      flex: `1 1 calc(${100 / itemsPerPage}% - 16px)`,
+
                       borderLeft: `4px solid ${colorScale.get(
                         senderData.sender
                       )}`,
