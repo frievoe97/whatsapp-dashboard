@@ -27,6 +27,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
+  const [hasFileBeenSet, setHasFileBeenSet] = useState(false);
   const [selectedSender, setSelectedSender] = useState<string[]>([]);
   // const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   // const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -49,6 +50,16 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   }, [messages]);
 
   useEffect(() => {
+    if (fileName !== "" && !hasFileBeenSet) {
+      setIsExpanded(false);
+      setHasFileBeenSet(true);
+    }
+    if (fileName === "") {
+      setHasFileBeenSet(false);
+    }
+  }, [fileName]);
+
+  useEffect(() => {
     if (isInfoOpen) {
       document.body.style.overflow = "hidden"; // Scrollen deaktivieren
     } else {
@@ -69,6 +80,8 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   }, [messages, senders, isInitialLoad]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    console.log("Is Expanded: ", isExpanded);
+
     setMessages([]);
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
@@ -83,7 +96,10 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
       setSelectedWeekdays(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
       setApplyFilters(false);
       setIsInitialLoad(true);
+
+      console.log("Is Expanded: ", isExpanded);
       setIsExpanded(false);
+      console.log("Is Expanded: ", isExpanded);
 
       setIsUploading(true);
       const reader = new FileReader();
@@ -139,6 +155,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   const handleDeleteFile = () => {
     setFileName("");
     setMessages([]);
+    setIsExpanded(true);
     setStartDate(undefined);
     setEndDate(undefined);
     setSelectedSender([]);
