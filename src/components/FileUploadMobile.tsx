@@ -5,9 +5,18 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./FileUpload.css"; // Falls du noch weitere CSS-Anpassungen hast
 import { Info, ChevronDown, ChevronUp, Moon, Sun, Trash2 } from "lucide-react";
+import FilterWorker from "../workers/filterMessages.worker?worker";
 
 interface FileUploadProps {
   onFileUpload: (uploadedFile: File) => void;
+}
+
+export interface ChatMessage {
+  date: Date;
+  time: string;
+  sender: string;
+  message: string;
+  isUsed: boolean;
 }
 
 const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
@@ -165,24 +174,46 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   useEffect(() => {
     if (applyFilters) {
-      const filteredMessages = messages.map((msg) => {
-        const messageDate = new Date(msg.date);
-        const messageDay = messageDate.toLocaleString("en-US", {
-          weekday: "short",
+      if (window.Worker) {
+        const worker = new FilterWorker();
+        worker.postMessage({
+          messages,
+          filters: {
+            startDate: startDate?.toISOString(),
+            endDate: endDate?.toISOString(),
+            selectedSenders: selectedSender,
+            selectedWeekdays,
+          },
         });
-        const isWithinDateRange =
-          (!startDate || messageDate >= startDate) &&
-          (!endDate || messageDate <= endDate);
-        const isSenderSelected = selectedSender.includes(msg.sender);
-        const isWeekdaySelected = selectedWeekdays.includes(messageDay);
-        return {
-          ...msg,
-          isUsed: isWithinDateRange && isSenderSelected && isWeekdaySelected,
-        };
-      });
 
-      setMessages(filteredMessages);
-      setApplyFilters(false);
+        worker.onmessage = (event: MessageEvent<ChatMessage[]>) => {
+          setMessages(event.data);
+          setApplyFilters(false);
+          worker.terminate();
+        };
+      } else {
+        // Fallback falls Worker nicht unterstützt wird (z. B. ältere Browser)
+        const filteredMessages = messages.map((msg) => {
+          const messageDate = new Date(msg.date);
+          const messageDay = messageDate.toLocaleString("en-US", {
+            weekday: "short",
+          });
+
+          const isWithinDateRange =
+            (!startDate || messageDate >= startDate) &&
+            (!endDate || messageDate <= endDate);
+          const isSenderSelected = selectedSender.includes(msg.sender);
+          const isWeekdaySelected = selectedWeekdays.includes(messageDay);
+
+          return {
+            ...msg,
+            isUsed: isWithinDateRange && isSenderSelected && isWeekdaySelected,
+          };
+        });
+
+        setMessages(filteredMessages);
+        setApplyFilters(false);
+      }
     }
   }, [
     applyFilters,
