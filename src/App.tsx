@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Helmet } from "react-helmet-async"; // Import für SEO-Meta-Tags
+import { Helmet } from "react-helmet-async";
 import FileUpload from "./components/FileUpload";
 import FileUploadMobile from "./components/FileUploadMobile";
 import AggregatePerTime from "./components/AggregatePerTime";
@@ -14,17 +14,18 @@ import "./index.css";
 
 function App() {
   const { darkMode, messages } = useChat();
-  // const [file, setFile] = useState<File | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  /**
+   * Updates the dark mode class on the document root.
+   */
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
+  /**
+   * Updates the theme color meta tag based on the dark mode state.
+   */
   useEffect(() => {
     let metaThemeColor = document.querySelector("meta[name=theme-color]");
     if (!metaThemeColor) {
@@ -35,6 +36,9 @@ function App() {
     metaThemeColor.setAttribute("content", darkMode ? "#1f2937" : "#ffffff");
   }, [darkMode]);
 
+  /**
+   * Ensures all elements in the same row have equal height for better UI consistency.
+   */
   useEffect(() => {
     function setEqualRowHeights() {
       if (!containerRef.current) return;
@@ -45,9 +49,7 @@ function App() {
       let currentRow: HTMLDivElement[] = [];
       let lastTop: number | null = null;
 
-      items.forEach((item) => {
-        item.style.height = "auto";
-      });
+      items.forEach((item) => (item.style.height = "auto"));
 
       items.forEach((item) => {
         const top = item.offsetTop;
@@ -59,18 +61,14 @@ function App() {
         }
         lastTop = top;
       });
-
-      if (currentRow.length) {
-        rows.push(currentRow);
-      }
+      if (currentRow.length) rows.push(currentRow);
 
       rows.forEach((row) => {
-        let maxHeight = Math.max(...row.map((item) => item.offsetHeight));
-        row.forEach((item) => {
-          item.style.height = `${maxHeight}px`;
-        });
+        const maxHeight = Math.max(...row.map((item) => item.offsetHeight));
+        row.forEach((item) => (item.style.height = `${maxHeight}px`));
       });
     }
+
     setEqualRowHeights();
     window.addEventListener("resize", setEqualRowHeights);
     return () => window.removeEventListener("resize", setEqualRowHeights);
@@ -80,15 +78,15 @@ function App() {
     <>
       {/* SEO Meta-Tags */}
       <Helmet>
-        <title>WhatsApp Dashboard – Visualisiere deine Chats</title>
+        <title>WhatsApp Dashboard – Visualize your Chats</title>
         <meta
           name="description"
-          content="Analysiere deine WhatsApp-Chats mit detaillierten Diagrammen und Statistiken."
+          content="Analyze your WhatsApp chats with detailed charts and statistics."
         />
         <meta property="og:title" content="WhatsApp Dashboard" />
         <meta
           property="og:description"
-          content="Visualisiere deine WhatsApp-Chats mit interaktiven Grafiken."
+          content="Visualize your WhatsApp chats with interactive graphics."
         />
         <meta
           property="og:image"
@@ -101,26 +99,24 @@ function App() {
         <meta name="robots" content="index, follow" />
       </Helmet>
 
-      {/* Der Container hat auf mobilen Geräten (default) eine automatische Höhe,
-          auf Desktops (md und höher) wird die volle Bildschirmhöhe genutzt. */}
+      {/* Main Container */}
       <div className="p-4 flex flex-col h-auto md:h-screen">
-        {/* Auf größeren Bildschirmen FileUpload anzeigen */}
+        {/* File Upload Components (Desktop & Mobile) */}
         <div className="hidden md:block">
           <FileUpload onFileUpload={(file) => console.log(file)} />
         </div>
-        {/* Auf mobilen Geräten FileUploadMobile anzeigen */}
         <div className="block md:hidden">
           <FileUploadMobile onFileUpload={(file) => console.log(file)} />
         </div>
 
-        {/* Überprüfen, ob messages leer ist */}
+        {/* Chat Analysis Components */}
         <div
           ref={containerRef}
           className="mt-4 flex-1 overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
         >
           {messages.length === 0 ? (
             <div
-              className={`w-full p-4 flex items-center justify-center h-full border border-[1px] rounded-none ${
+              className={`w-full p-4 flex items-center justify-center h-full border rounded-none ${
                 darkMode ? "border-white" : "border-black"
               }`}
             >

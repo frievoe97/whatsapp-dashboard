@@ -1,14 +1,20 @@
-// src/workers/filterMessages.worker.ts
+/**
+ * Web Worker for filtering chat messages based on selected criteria.
+ *
+ * This worker listens for incoming messages containing chat data and filtering options,
+ * processes them asynchronously, and returns the filtered results.
+ */
 
-// Nachrichtentyp
-interface Message {
-  date: string;
-  time: string; // Füge das fehlende Feld hinzu
+// Define the structure of a chat message
+export interface ChatMessage {
+  date: Date;
+  time: string;
   sender: string;
   message: string;
   isUsed: boolean;
 }
 
+// Define the filtering criteria
 interface FilterCriteria {
   startDate?: string;
   endDate?: string;
@@ -16,12 +22,19 @@ interface FilterCriteria {
   selectedWeekdays: string[];
 }
 
+/**
+ * Event listener for messages received by the worker.
+ * Filters chat messages based on the provided criteria and sends the results back.
+ */
 self.addEventListener(
   "message",
-  (event: MessageEvent<{ messages: Message[]; filters: FilterCriteria }>) => {
+  (
+    event: MessageEvent<{ messages: ChatMessage[]; filters: FilterCriteria }>
+  ) => {
     const { messages, filters } = event.data;
 
     try {
+      // Process each message and determine if it matches the filtering criteria
       const filteredMessages = messages.map((msg) => {
         const messageDate = new Date(msg.date);
         const messageDay = messageDate.toLocaleString("en-US", {
@@ -41,9 +54,10 @@ self.addEventListener(
         };
       });
 
+      // Send the filtered messages back to the main thread
       self.postMessage(filteredMessages);
     } catch (error) {
-      console.error("FilterWorker: Fehler beim Filtern", error);
+      console.error("FilterWorker: Error while filtering messages", error);
       self.postMessage([]);
     }
   }

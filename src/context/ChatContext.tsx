@@ -1,5 +1,16 @@
-import React, { createContext, useContext, useState } from "react";
+/**
+ * Chat Context Provider for managing chat-related state globally in a React application.
+ *
+ * This context stores chat messages, file upload status, date filters,
+ * dark mode preferences, and allows state updates through provided setter functions.
+ * Only small data is persisted in localStorage to avoid quota errors.
+ */
 
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+/**
+ * Interface defining the structure of a chat message.
+ */
 export interface ChatMessage {
   date: Date;
   time: string;
@@ -8,8 +19,9 @@ export interface ChatMessage {
   isUsed: boolean;
 }
 
-// const [fileName, setFileName] = useState("");
-
+/**
+ * Interface defining the shape of the chat context state and actions.
+ */
 interface ChatContextType {
   messages: ChatMessage[];
   setMessages: (messages: ChatMessage[]) => void;
@@ -25,20 +37,73 @@ interface ChatContextType {
   setFileName: (fileName: string) => void;
 }
 
+/**
+ * Create a React context with an undefined initial value.
+ * The context will be provided by `ChatProvider`.
+ */
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
+/**
+ * ChatProvider component that wraps around components needing access to chat state.
+ *
+ * @param {React.ReactNode} children - Components that will consume the chat context.
+ */
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [fileName, setFileName] = useState<string>("");
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [darkMode, setDarkMode] = useState<boolean>(
-    () => localStorage.getItem("darkMode") === "true"
-  );
+  const MAX_STORAGE_SIZE = 5000000; // Approx. 5MB limit to avoid quota issues
 
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const storedMessages = localStorage.getItem("messages");
+    return storedMessages ? JSON.parse(storedMessages) : [];
+  });
+  const [endDate, setEndDate] = useState<Date | undefined>(() => {
+    return undefined;
+  });
+  const [startDate, setStartDate] = useState<Date | undefined>(() => {
+    return undefined;
+  });
+  const [fileName, setFileName] = useState<string>("");
+  const [isUploading, setIsUploading] = useState<boolean>(() => {
+    return localStorage.getItem("isUploading") === "true";
+  });
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem("darkMode") === "true";
+  });
+
+  /**
+   * Effect to store messages and other related data in localStorage if they do not exceed the storage limit.
+   */
+  useEffect(() => {
+    try {
+      const jsonData = JSON.stringify(messages);
+      if (jsonData.length < MAX_STORAGE_SIZE) {
+        localStorage.setItem("messages", jsonData);
+        localStorage.setItem("fileName", fileName);
+        if (endDate) localStorage.setItem("endDate", endDate.toISOString());
+        if (startDate)
+          localStorage.setItem("startDate", startDate.toISOString());
+      } else {
+        console.warn(
+          "Message data is too large to store in localStorage. Skipping storage of messages, fileName, and date filters."
+        );
+      }
+    } catch (e) {
+      console.error("Failed to store messages in localStorage", e);
+    }
+  }, [messages, fileName, endDate, startDate]);
+
+  useEffect(() => {
+    localStorage.setItem("isUploading", isUploading.toString());
+  }, [isUploading]);
+
+  useEffect(() => {
+    localStorage.setItem("darkMode", darkMode.toString());
+  }, [darkMode]);
+
+  /**
+   * Toggles dark mode and stores preference in localStorage.
+   */
   const toggleDarkMode = () => {
     setDarkMode((prevMode) => {
       localStorage.setItem("darkMode", (!prevMode).toString());
@@ -68,6 +133,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
+/**
+ * Custom hook for consuming the chat context.
+ *
+ * @throws {Error} If used outside of `ChatProvider`.
+ * @returns {ChatContextType} - The chat context state and actions.
+ */
 export const useChat = (): ChatContextType => {
   const context = useContext(ChatContext);
   if (!context) {

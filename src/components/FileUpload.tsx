@@ -5,9 +5,18 @@ import "react-datepicker/dist/react-datepicker.css";
 // import jsPDF from "jspdf";
 import "./FileUpload.css";
 import { ChevronDown, ChevronUp, Info, Moon, Sun } from "lucide-react";
+import FilterWorker from "../workers/filterMessages.worker?worker";
 
 interface FileUploadProps {
   onFileUpload: (uploadedFile: File) => void;
+}
+
+export interface ChatMessage {
+  date: Date;
+  time: string;
+  sender: string;
+  message: string;
+  isUsed: boolean;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
@@ -163,35 +172,53 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   useEffect(() => {
     if (applyFilters) {
-      console.log("Applying filters...");
-      console.log("Sender:", selectedSender);
-      const filteredMessages = messages.map((msg) => {
-        const messageDate = new Date(msg.date);
-        const messageDay = messageDate.toLocaleString("en-US", {
-          weekday: "short",
+      if (window.Worker) {
+        const worker = new FilterWorker();
+        worker.postMessage({
+          messages,
+          filters: {
+            startDate: startDate?.toISOString(),
+            endDate: endDate?.toISOString(),
+            selectedSenders: selectedSender,
+            selectedWeekdays,
+          },
         });
 
-        const isWithinDateRange =
-          (!startDate || messageDate >= startDate) &&
-          (!endDate || messageDate <= endDate);
-        const isSenderSelected = selectedSender.includes(msg.sender);
-        const isWeekdaySelected = selectedWeekdays.includes(messageDay);
+        worker.onmessage = (event: MessageEvent<ChatMessage[]>) => {
+          setMessages(event.data);
+          setApplyFilters(false);
+          worker.terminate();
+        };
+      } else {
+        const filteredMessages = messages.map((msg) => {
+          const messageDate = new Date(msg.date);
+          const messageDay = messageDate.toLocaleString("en-US", {
+            weekday: "short",
+          });
 
-        const isUsed =
-          isWithinDateRange && isSenderSelected && isWeekdaySelected;
-        return { ...msg, isUsed };
-      });
+          const isWithinDateRange =
+            (!startDate || messageDate >= startDate) &&
+            (!endDate || messageDate <= endDate);
+          const isSenderSelected = selectedSender.includes(msg.sender);
+          const isWeekdaySelected = selectedWeekdays.includes(messageDay);
 
-      setMessages(filteredMessages);
-      setApplyFilters(false);
+          return {
+            ...msg,
+            isUsed: isWithinDateRange && isSenderSelected && isWeekdaySelected,
+          };
+        });
+
+        setMessages(filteredMessages);
+        setApplyFilters(false);
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     applyFilters,
     startDate,
     endDate,
     selectedSender,
     selectedWeekdays,
+    messages,
     setMessages,
   ]);
 
