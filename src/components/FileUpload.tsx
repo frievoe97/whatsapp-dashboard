@@ -154,7 +154,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     );
   };
 
-  const handleApplyFilters = () => setApplyFilters(true);
+  const handleApplyFilters = () => {
+    setApplyFilters(true);
+    setIsCollapsed(true);
+  };
 
   const handleSelectAllWeekdays = () =>
     setSelectedWeekdays(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);

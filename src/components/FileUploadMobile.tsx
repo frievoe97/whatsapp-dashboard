@@ -187,7 +187,10 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     );
   };
 
-  const handleApplyFilters = () => setApplyFilters(true);
+  const handleApplyFilters = () => {
+    setApplyFilters(true);
+    setIsExpanded(false);
+  };
 
   const handleResetFilters = () => {
     setSelectedSender(senders);
