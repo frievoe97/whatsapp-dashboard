@@ -5,21 +5,58 @@ import useResizeObserver from "../hooks/useResizeObserver";
 import Sentiment from "sentiment";
 
 const SentimentAnalysis: React.FC = () => {
-  const { messages, darkMode } = useChat();
+  const { messages, darkMode, language } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
   const sentiment = useMemo(() => new Sentiment(), []);
-  const [afinnDe, setAfinnDe] = useState<Record<string, number>>({});
-  sentiment.registerLanguage("de", { labels: afinnDe });
+  const [isLanguageRegistered, setIsLanguageRegistered] = useState(false);
+
+  const [afinn, setAfinn] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    import("../assets/AFINN-de.json")
-      .then((data) => setAfinnDe(data.default)) // Zugriff auf .default!
-      .catch((error) => console.error("Fehler beim Laden der JSON:", error));
-  }, []);
+    if (!language) return;
+
+    const validLanguages = ["de", "en", "fr"];
+    const langToLoad = validLanguages.includes(language) ? language : "en"; // Fallback auf "en"
+
+    console.log(`Lade AFINN-${langToLoad}.json`);
+
+    import(`../assets/AFINN-${langToLoad}.json`)
+      .then((data) => {
+        setAfinn(data.default);
+        console.log(`AFINN-${langToLoad} geladen.`);
+      })
+      .catch((error) =>
+        console.error(`Fehler beim Laden von AFINN-${langToLoad}:`, error)
+      );
+  }, [language]);
+
+  useEffect(() => {
+    if (!language || Object.keys(afinn).length === 0) return;
+
+    const validLanguages = ["de", "en", "fr"];
+    const langToUse = validLanguages.includes(language) ? language : "en"; // Fallback auf "en"
+
+    console.log("Registriere Sprache:", langToUse);
+    sentiment.registerLanguage(langToUse, { labels: afinn });
+
+    try {
+      sentiment.analyze("Test", { language: langToUse });
+      console.log(`Sprache ${langToUse} erfolgreich registriert.`);
+      setIsLanguageRegistered(true); // WICHTIG: Jetzt ist die Sprache registriert
+    } catch (error) {
+      console.error(`Fehler bei der Registrierung von ${langToUse}:`, error);
+      setIsLanguageRegistered(false); // Falls ein Fehler passiert, setze auf false
+    }
+  }, [language, afinn]);
 
   const sentimentData = useMemo(() => {
+    if (!language || !isLanguageRegistered) return []; // WICHTIG: Erst analysieren, wenn Sprache registriert ist
+
+    const validLanguages = ["de", "en", "fr"];
+    const langToUse = validLanguages.includes(language) ? language : "en"; // Fallback auf "en"
+
     const dataMap: {
       [date: string]: {
         positive: number;
@@ -32,24 +69,28 @@ const SentimentAnalysis: React.FC = () => {
     messages.forEach((msg) => {
       if (!msg.isUsed) return;
 
-      const dateKey = new Date(msg.date).toISOString().split("T")[0]; // Format: YYYY-MM-DD
+      const dateKey = new Date(msg.date).toISOString().split("T")[0];
 
-      const result = sentiment.analyze(msg.message, { language: "de" });
+      try {
+        const result = sentiment.analyze(msg.message, { language: langToUse });
+        const score = result.score;
 
-      const score = result.score;
+        if (!dataMap[dateKey]) {
+          dataMap[dateKey] = { positive: 0, neutral: 0, negative: 0, count: 0 };
+        }
 
-      if (!dataMap[dateKey]) {
-        dataMap[dateKey] = { positive: 0, neutral: 0, negative: 0, count: 0 };
-      }
+        dataMap[dateKey].count += 1;
 
-      dataMap[dateKey].count += 1; // Nachrichtenanzahl erhöhen
-
-      if (score > 0) {
-        dataMap[dateKey].positive += score;
-      } else if (score < 0) {
-        dataMap[dateKey].negative += Math.abs(score);
-      } else {
-        // dataMap[dateKey].neutral += 1;
+        if (score > 0) {
+          dataMap[dateKey].positive += score;
+        } else if (score < 0) {
+          dataMap[dateKey].negative += Math.abs(score);
+        }
+      } catch (error) {
+        console.error(
+          `Fehler bei der Sentiment-Analyse (${langToUse}):`,
+          error
+        );
       }
     });
 
@@ -60,16 +101,14 @@ const SentimentAnalysis: React.FC = () => {
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    // Bestimme `x` für den gleitenden Durchschnitt (z. B. 10% der Datenmenge)
     const x = Math.max(1, Math.floor(rawData.length / 10));
 
-    // Berechne gleitenden Durchschnitt unter Berücksichtigung der Nachrichtenanzahl
     const smoothedData = rawData.map((_, i, arr) => {
       const start = Math.max(0, i - x);
       const end = Math.min(arr.length - 1, i + x);
       const slice = arr.slice(start, end + 1);
 
-      const totalCount = d3.sum(slice, (d) => d.count) || 1; // Verhindert Division durch 0
+      const totalCount = d3.sum(slice, (d) => d.count) || 1;
 
       return {
         date: arr[i].date,
@@ -80,7 +119,7 @@ const SentimentAnalysis: React.FC = () => {
     });
 
     return smoothedData;
-  }, [messages, sentiment]);
+  }, [messages, sentiment, language, isLanguageRegistered]); // language ist nun eine Abhängigkeit
 
   useEffect(() => {
     if (!dimensions || sentimentData.length === 0) return;
@@ -175,7 +214,7 @@ const SentimentAnalysis: React.FC = () => {
 
       legendX += 80; // Abstand zwischen den Elementen
     });
-  }, [dimensions, sentimentData, darkMode]);
+  }, [dimensions, sentimentData, darkMode, language]);
 
   return (
     <div

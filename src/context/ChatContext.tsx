@@ -34,6 +34,8 @@ interface ChatContextType {
   setStartDate: (startDate: Date | undefined) => void;
   fileName: string;
   setFileName: (fileName: string) => void;
+  language: string;
+  setLanguage: (fileName: string) => void;
   selectedSender: string[];
   setSelectedSender: React.Dispatch<React.SetStateAction<string[]>>;
   minMessagePercentage: number;
@@ -58,6 +60,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [fileName, setFileName] = useState<string>("");
+  const [language, setLanguage] = useState<string>("");
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [selectedSender, setSelectedSender] = useState<string[]>([]);
@@ -89,6 +92,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         setSelectedSender,
         minMessagePercentage,
         setMinMessagePercentage,
+        language,
+        setLanguage,
       }}
     >
       {children}
