@@ -273,7 +273,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           onClick={() => setIsInfoOpen(true)}
           className={`px-2 py-1 border rounded-none flex items-center ${borderColor} hover:${borderColor} ${bgColor} ${textColor}`}
         >
-          <Info size={20} />
+          <Info size={16} className="md:size-20" />
         </button>
 
         {/* Titel in der Mitte */}
@@ -286,9 +286,9 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           className={`px-2 py-1 mr-4 border rounded-none flex items-center ${borderColor} hover:${borderColor} ${bgColor} ${textColor}`}
         >
           {darkMode ? (
-            <Sun size={20} className="text-white " />
+            <Sun size={16} className="text-white md:size-20" />
           ) : (
-            <Moon size={20} className="text-black " />
+            <Moon size={16} className="text-black md:size-20" />
           )}
         </button>
 
@@ -297,7 +297,11 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           onClick={toggleExpanded}
           className={`px-2 py-1 border rounded-none flex items-center ${borderColor} hover:${borderColor} ${bgColor} ${textColor}`}
         >
-          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          {isExpanded ? (
+            <ChevronUp size={16} className="md:size-20" />
+          ) : (
+            <ChevronDown size={16} className="md:size-20" />
+          )}
         </button>
       </div>
 
@@ -311,7 +315,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
               {" "}
               <label
                 htmlFor="file-upload"
-                className={`cursor-pointer px-4 py-2 border ${
+                className={`cursor-pointer px-4 py-1 md:py-2 border ${
                   darkMode
                     ? "border-white bg-gray-700 text-white"
                     : "border-black bg-white text-black"
@@ -343,8 +347,10 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                   className={`w-full py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
                 >
                   <Trash2
-                    size={20}
-                    className={` ${darkMode ? "text-white" : "text-black"}`}
+                    size={16}
+                    className={`md:size-20 ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
                   />
                 </button>
               )}
