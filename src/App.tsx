@@ -103,7 +103,7 @@ function App() {
       </Helmet>
 
       {/* Main Container */}
-      <div className="p-4 flex flex-col h-screen md:h-screen">
+      <div className="p-4 flex flex-col h-full md:h-screen">
         {/* File Upload Components (Desktop & Mobile) */}
         <div className="hidden md:block">
           <FileUpload onFileUpload={(file) => console.log(file)} />
@@ -115,11 +115,11 @@ function App() {
         {/* Chat Analysis Components */}
         <div
           ref={containerRef}
-          className="mt-4 h-screen flex-1 overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
+          className="mt-4 h-full flex-1 overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
         >
           {messages.length === 0 ? (
             <div
-              className={`w-full p-4 flex text-lg items-center justify-center h-screen border rounded-none text-center ${
+              className={`w-full p-4 flex text-lg items-center justify-center h-full border rounded-none text-center ${
                 darkMode ? "border-white" : "border-black"
               }`}
             >
