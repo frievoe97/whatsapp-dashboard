@@ -8,6 +8,7 @@ import MessageRatio from "./components/MessageRatio";
 import WordCount from "./components/WordCount";
 import Stats from "./components/Stats";
 import Heatmap from "./components/Heatmap";
+import HeatmapDayHour from "./components/HeatmapDayHour";
 import Emoji from "./components/Emoji";
 import { useChat } from "./context/ChatContext";
 import "./index.css";
@@ -131,6 +132,7 @@ function App() {
               <Emoji />
               <WordCount />
               <Stats />
+              <HeatmapDayHour />
             </>
           )}
         </div>
