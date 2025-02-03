@@ -95,8 +95,6 @@ self.addEventListener("message", (event: MessageEvent<string>) => {
       }
     }
 
-    console.log("Worker: Parsing complete.");
-
     const weggelassenMessages = messages.filter((msg) =>
       msg.message.toLowerCase().includes("weggelassen")
     );

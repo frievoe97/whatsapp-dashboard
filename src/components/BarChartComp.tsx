@@ -190,7 +190,12 @@ const SenderComparisonBarChart: React.FC = () => {
       .style("text-anchor", "end")
       .style("font-size", "12px");
 
-    chart.append("g").call(d3.axisLeft(yScale)).style("font-size", "12px");
+    const yTicks = Math.max(5, Math.floor(innerHeight / 40)); // Mindestens 3, sonst nach Höhe berechnen
+
+    chart
+      .append("g")
+      .call(d3.axisLeft(yScale).ticks(yTicks).tickFormat(d3.format(".2s")))
+      .style("font-size", "14px");
 
     chart
       .selectAll(".bar")

@@ -243,6 +243,9 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   const toggleExpanded = () => {
     setIsExpanded((prev) => !prev);
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+    }, 50);
   };
 
   // Festlegen der Farben basierend auf darkMode

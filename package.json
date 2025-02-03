@@ -13,6 +13,7 @@
     "compromise": "^14.14.4",
     "d3": "^7.9.0",
     "emoji-regex": "^10.4.0",
+    "franc-min": "^6.2.0",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.474.0",
     "multilang-sentiment": "^2.0.0",

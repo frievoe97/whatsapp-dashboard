@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./FileUpload.css";
 import { ChevronDown, ChevronUp, Info, Moon, Sun } from "lucide-react";
 import FilterWorker from "../workers/filterMessages.worker?worker";
+import { franc } from "franc-min";
 
 interface FileUploadProps {
   onFileUpload: (uploadedFile: File) => void;
@@ -61,6 +62,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   const toggleCollapse = () => {
     setIsCollapsed((prev) => !prev);
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+    }, 50);
   };
 
   const [applyFilters, setApplyFilters] = useState(false);
@@ -70,6 +74,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
       new Set(messages.map((msg) => msg.sender))
     );
     return uniqueSenders;
+  }, [messages]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const allText = messages.map((msg) => msg.message).join(" ");
+      const detectedLanguage = franc(allText, { minLength: 3 });
+      console.log(`Erkannte Sprache für alle Nachrichten: ${detectedLanguage}`);
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -196,6 +208,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
         });
 
         worker.onmessage = (event: MessageEvent<ChatMessage[]>) => {
+          if (event.data.length > 0) {
+            const allText = event.data.map((msg) => msg.message).join(" ");
+            const detectedLanguage = franc(allText, { minLength: 3 });
+            console.log(
+              `Erkannte Sprache für alle Nachrichten: ${detectedLanguage}`
+            );
+          }
+
           setMessages(event.data);
           setApplyFilters(false);
           worker.terminate();
