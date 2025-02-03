@@ -3,7 +3,6 @@ import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 import useResizeObserver from "../hooks/useResizeObserver";
 import Sentiment from "sentiment";
-import afinnDe from "../assets/AFINN-de.json";
 
 const SentimentAnalysis: React.FC = () => {
   const { messages, darkMode } = useChat();
