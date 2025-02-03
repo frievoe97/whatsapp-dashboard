@@ -96,7 +96,7 @@ const Plot3: React.FC = () => {
       .innerRadius(radius * 0.7)
       .outerRadius(radius * 1.5); // Position der Labels außerhalb des Pie-Charts
 
-    const labelPositions = pieData.map((d, i) => {
+    const labelPositions = pieData.map((_, i) => {
       const centroid = outerArc.centroid(pie(pieData)[i]);
       return { x: centroid[0], y: centroid[1] };
     });
@@ -116,7 +116,7 @@ const Plot3: React.FC = () => {
       .append("text")
       .attr(
         "transform",
-        (d, i) =>
+        (_, i) =>
           `translate(${simulation.nodes()[i].x}, ${simulation.nodes()[i].y})`
       )
       .attr("text-anchor", (d) =>

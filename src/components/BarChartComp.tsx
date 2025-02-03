@@ -176,7 +176,7 @@ const SenderComparisonBarChart: React.FC = () => {
     chart
       .append("g")
       .attr("transform", `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(xScale).tickFormat((d, i) => currentSenders[i] || "")) // ← Sender korrekt setzen!
+      .call(d3.axisBottom(xScale).tickFormat((_, i) => currentSenders[i] || "")) // ← Sender korrekt setzen!
       .selectAll("text")
       .attr("transform", "rotate(-45)")
       .style("text-anchor", "end")

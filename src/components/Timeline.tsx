@@ -87,31 +87,6 @@ const Plot2: React.FC = () => {
     }
   }, [mode, messages]);
 
-  const fallbackDate = new Date(2000, 0, 1); // Falls keine Daten vorhanden sind
-
-  const computedStartDate = useMemo(() => {
-    if (startDate) {
-      return mode === "year"
-        ? new Date(new Date(startDate).getFullYear(), 0, 1) // 1. Januar des Jahres setzen
-        : new Date(startDate); // Exaktes Startdatum für Monate
-    }
-
-    // Falls kein Startdatum gesetzt ist, nehme das früheste Datum aus den Nachrichten
-    const minDate =
-      d3.min(messages.map((m) => new Date(m.date))) || fallbackDate;
-
-    return mode === "year"
-      ? new Date(minDate.getFullYear(), 0, 1)
-      : new Date(minDate); // Hier KEIN 1. Januar setzen!
-  }, [startDate, mode, messages]);
-
-  const computedEndDate = useMemo(() => {
-    if (endDate) {
-      return new Date(endDate);
-    }
-    return d3.max(messages.map((m) => new Date(m.date))) || new Date();
-  }, [endDate, messages]);
-
   // Aggregiere Daten basierend auf dem aktuellen Modus und der Darstellung
   const aggregatedData: TimeAggregatedData[] = useMemo(() => {
     if (messages.length === 0) return [];
