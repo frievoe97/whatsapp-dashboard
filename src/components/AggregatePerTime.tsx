@@ -212,16 +212,15 @@ const Plot1: React.FC = () => {
     if (!dimensions || aggregatedData.length === 0) return;
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
-    const margin = { top: 10, right: 10, bottom: 110, left: 40 };
+    const margin = { top: 10, right: 20, bottom: 110, left: 40 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    // Skalen
     const xScale = d3
       .scalePoint<string>()
       .domain(categories)
       .range([0, innerWidth])
-      .padding(0.5);
+      .padding(0); // Kein Padding mehr, damit der Graph genau bei der ersten und letzten Kategorie beginnt
 
     const yMax = showPercentage
       ? d3.max(aggregatedData, (d) => d3.max(d.values, (v) => v.percentage)) ||
@@ -234,15 +233,15 @@ const Plot1: React.FC = () => {
       .nice()
       .range([innerHeight, 0]);
 
-    // Achsen
-    const tickCount = Math.max(2, Math.floor(innerWidth / 20));
-    const filteredCategories = categories.filter(
-      (_, i) => i % Math.ceil(categories.length / tickCount) === 0
-    );
-    const xAxis = d3.axisBottom(xScale).tickValues(filteredCategories);
+    const maxTicks = mode === "hour" ? 30 : mode === "weekday" ? 30 : 10;
 
-    // const xAxis = d3.axisBottom(xScale);
-    // const yAxis = d3.axisLeft(yScale).ticks(5);
+    const xAxis = d3
+      .axisBottom(xScale)
+      .tickValues(
+        categories.filter(
+          (_, i) => i % Math.ceil(categories.length / maxTicks) === 0
+        )
+      );
 
     const yAxis = d3
       .axisLeft(yScale)
@@ -394,7 +393,6 @@ const Plot1: React.FC = () => {
       .style("font-size", "12px")
       .style("fill", darkMode ? "white" : "black");
 
-    // Linien (für jeden Sender)
     const lines = chart
       .selectAll<SVGPathElement, AggregatedData>(".line")
       .data(aggregatedData, (d) => d.sender);
@@ -405,6 +403,7 @@ const Plot1: React.FC = () => {
           .append("path")
           .attr("class", "line")
           .attr("fill", "none")
+          .style("z-index", "500") // NEU: z-index hinzufügen
           .attr("stroke", (d) => colorScale(d.sender))
           .attr("stroke-width", 3)
           .attr("d", (d) => {
@@ -439,6 +438,8 @@ const Plot1: React.FC = () => {
           })
           .remove()
     );
+
+    // Linien (für jeden Sender)
   }, [
     aggregatedData,
     dimensions,

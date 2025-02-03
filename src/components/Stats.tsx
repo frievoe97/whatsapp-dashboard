@@ -20,7 +20,7 @@ interface SenderStats {
 const MIN_WIDTH_PER_ITEM = 600;
 
 const Plot5: React.FC = () => {
-  const { messages, darkMode, isUploading } = useChat();
+  const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
   const [currentPage, setCurrentPage] = useState(1);
 
   const [itemsPerPage, setItemsPerPage] = useState(() => {
@@ -61,27 +61,36 @@ const Plot5: React.FC = () => {
 
   // Aggregiere Statistiken pro Sender
   const aggregatedStats: SenderStats[] = useMemo(() => {
+    const totalMessages = messages.filter((msg) => msg.isUsed).length;
+    const minMessages = (minMessagePercentage / 100) * totalMessages;
+
+    const senderMessageCount: { [sender: string]: number } = {};
     const dataMap: {
       [sender: string]: {
         messages: string[];
         wordCounts: number[];
         totalWords: number;
         dates: Date[];
-        uniqueWords: Set<string>; // Für einzigartige Wörter
-        totalCharacters: number; // Für durchschnittliche Zeichen
+        uniqueWords: Set<string>;
+        totalCharacters: number;
       };
     } = {};
 
     messages.forEach((msg) => {
       if (!msg.isUsed) return;
+      senderMessageCount[msg.sender] =
+        (senderMessageCount[msg.sender] || 0) + 1;
+    });
+
+    messages.forEach((msg) => {
+      if (!msg.isUsed || senderMessageCount[msg.sender] < minMessages) return;
       const sender = msg.sender;
       const date = new Date(msg.date);
       const words = msg.message
         .toLowerCase()
-        .replace(/[^a-zA-Z\s]/g, "")
+        .replace(/[^a-zA-ZäöüßÄÖÜ\s]/g, "")
         .split(/\s+/)
         .filter((word) => word.length > 0);
-
       const characters = msg.message.length;
 
       if (!dataMap[sender]) {
@@ -109,7 +118,6 @@ const Plot5: React.FC = () => {
       const averageWordsPerMessage =
         messageCount > 0 ? senderData.totalWords / messageCount : 0;
 
-      // Median Wörter pro Nachricht
       const sortedWordCounts = [...senderData.wordCounts].sort((a, b) => a - b);
       const mid = Math.floor(sortedWordCounts.length / 2);
       const medianWordsPerMessage =
@@ -117,16 +125,11 @@ const Plot5: React.FC = () => {
           ? sortedWordCounts[mid]
           : (sortedWordCounts[mid - 1] + sortedWordCounts[mid]) / 2;
 
-      // Maximale Wörter in einer Nachricht
       const maxWordsInMessage = d3.max(senderData.wordCounts) || 0;
-
-      // Aktive Tage
       const uniqueDays = new Set(
         senderData.dates.map((date) => d3.timeDay(date).getTime())
       );
       const activeDays = uniqueDays.size;
-
-      // Neue Statistiken
       const uniqueWordsCount = senderData.uniqueWords.size;
       const averageCharactersPerMessage =
         messageCount > 0 ? senderData.totalCharacters / messageCount : 0;
@@ -141,13 +144,13 @@ const Plot5: React.FC = () => {
         activeDays,
         firstMessageDate: d3.min(senderData.dates) as Date,
         lastMessageDate: d3.max(senderData.dates) as Date,
-        uniqueWordsCount, // Hinzugefügt
+        uniqueWordsCount,
         averageCharactersPerMessage: parseFloat(
           averageCharactersPerMessage.toFixed(2)
-        ), // Hinzugefügt
+        ),
       };
     });
-  }, [messages]);
+  }, [messages, minMessagePercentage]);
 
   // Farbschema basierend auf den Sendern
 

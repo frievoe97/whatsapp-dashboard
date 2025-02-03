@@ -15,7 +15,7 @@ interface AggregatedWordData {
 }
 
 const Plot4: React.FC = () => {
-  const { messages, darkMode, isUploading } = useChat();
+  const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
   const [currentPage, setCurrentPage] = useState(1);
 
   const [itemsPerPage, setItemsPerPage] = useState(() => {
@@ -53,23 +53,30 @@ const Plot4: React.FC = () => {
 
   // Aggregiere die Top 10 Wörter pro Sender
   const aggregatedWordData: AggregatedWordData[] = useMemo(() => {
+    const totalMessages = messages.filter((msg) => msg.isUsed).length;
+    const minMessages = (minMessagePercentage / 100) * totalMessages;
+
+    const senderMessageCount: { [sender: string]: number } = {};
     const dataMap: { [sender: string]: { [word: string]: number } } = {};
 
     messages.forEach((msg) => {
       if (!msg.isUsed) return;
+      senderMessageCount[msg.sender] =
+        (senderMessageCount[msg.sender] || 0) + 1;
+    });
+
+    messages.forEach((msg) => {
+      if (!msg.isUsed || senderMessageCount[msg.sender] < minMessages) return;
       const sender = msg.sender;
       if (!dataMap[sender]) {
         dataMap[sender] = {};
       }
 
-      // Tokenize und bereinige den Text
       const words = msg.message
         .toLowerCase()
-        // Angepasste Regex zum Beibehalten von Umlauten
         .replace(/[^a-zA-ZäöüßÄÖÜ\s]/g, "")
         .split(/\s+/);
 
-      // Entferne Stopwörter und kurze Wörter
       const filteredWords = removeStopwords(words, deu).filter(
         (word) => word.length > 2
       );
@@ -79,7 +86,6 @@ const Plot4: React.FC = () => {
       });
     });
 
-    // Finde die Top 10 Wörter pro Sender
     return Object.keys(dataMap).map((sender) => {
       const wordCounts = Object.entries(dataMap[sender])
         .map(([word, count]) => ({ word, count }))
@@ -87,7 +93,7 @@ const Plot4: React.FC = () => {
         .slice(0, 10);
       return { sender, topWords: wordCounts };
     });
-  }, [messages]);
+  }, [messages, minMessagePercentage]);
 
   // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {

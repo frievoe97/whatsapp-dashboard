@@ -61,7 +61,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [selectedSender, setSelectedSender] = useState<string[]>([]);
-  const [minMessagePercentage, setMinMessagePercentage] = useState<number>(0);
+  const [minMessagePercentage, setMinMessagePercentage] = useState<number>(3);
 
   /**
    * Toggles dark mode.

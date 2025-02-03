@@ -128,15 +128,13 @@ function App() {
             <>
               <AggregatePerTime />
               <Timeline />
-
               <BarChartComp />
-
-              <MessageRatio />
+              {/*<MessageRatio />*/}
               <Emoji />
               <WordCount />
               <Stats />
               <HeatmapDayHour />
-              <Heatmap />
+              {/*<Heatmap />*/}
             </>
           )}
         </div>

@@ -422,59 +422,59 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                   <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
                     Zeitraum auswählen
                   </h3>
-                  <div>
-                    <label className={`text-sm block ${textColor}`}>
-                      Startdatum:
-                    </label>
-                    <DatePicker
-                      selected={startDate}
-                      onChange={(date: Date | null) =>
-                        setStartDate(date || undefined)
-                      }
-                      selectsStart
-                      startDate={startDate}
-                      endDate={endDate}
-                      className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
-                    />
-                  </div>
-                  <div>
-                    <label className={`text-sm block ${textColor}`}>
-                      Enddatum:
-                    </label>
-                    <DatePicker
-                      selected={endDate}
-                      onChange={(date: Date | null) =>
-                        setEndDate(date || undefined)
-                      }
-                      selectsEnd
-                      startDate={startDate}
-                      endDate={endDate}
-                      minDate={startDate}
-                      className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
-                    />
+                  <div className="flex flex-row gap-2">
+                    <div>
+                      <label className={`text-sm block ${textColor}`}>
+                        Startdatum:
+                      </label>
+                      <DatePicker
+                        selected={startDate}
+                        onChange={(date: Date | null) =>
+                          setStartDate(date || undefined)
+                        }
+                        selectsStart
+                        startDate={startDate}
+                        endDate={endDate}
+                        className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`text-sm block ${textColor}`}>
+                        Enddatum:
+                      </label>
+                      <DatePicker
+                        selected={endDate}
+                        onChange={(date: Date | null) =>
+                          setEndDate(date || undefined)
+                        }
+                        selectsEnd
+                        startDate={startDate}
+                        endDate={endDate}
+                        minDate={startDate}
+                        className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col w-fit">
-                  <h3 className={`text-md font-semibold mb-8 ${textColor}`}>
-                    Minimum Message Share (%):
-                  </h3>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={tempMinMessagePercentage}
-                    onChange={(e) =>
-                      setTempMinMessagePercentage(Number(e.target.value))
-                    }
-                    className={`p-2 border ${
-                      darkMode ? "border-white" : "border-black"
-                    } w-full ${
-                      darkMode
-                        ? "bg-gray-700 text-white"
-                        : "bg-white text-black"
-                    }`}
-                  />
-                </div>
+              </div>
+              <div className="flex flex-col w-fit">
+                <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
+                  Minimum Message Share (%):
+                </h3>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={tempMinMessagePercentage}
+                  onChange={(e) =>
+                    setTempMinMessagePercentage(Number(e.target.value))
+                  }
+                  className={`p-2 border ${
+                    darkMode ? "border-white" : "border-black"
+                  } w-full ${
+                    darkMode ? "bg-gray-700 text-white" : "bg-white text-black"
+                  }`}
+                />
               </div>
 
               {/* Wochentage auswählen */}

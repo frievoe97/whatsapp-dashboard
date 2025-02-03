@@ -144,6 +144,14 @@ const SenderComparisonBarChart: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+      }, 200); // Kleine Verzögerung für reflow
+    }
+  }, [messages]);
+
+  useEffect(() => {
     if (!dimensions || aggregatedStats.length === 0) return;
 
     const svg = d3.select(svgRef.current);
@@ -206,7 +214,7 @@ const SenderComparisonBarChart: React.FC = () => {
     <div
       id="plot-sender-comparison"
       ref={containerRef}
-      className={`border-[1px] ${
+      className={`border-[1px] min-h-96 ${
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
