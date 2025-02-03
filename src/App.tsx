@@ -4,10 +4,11 @@ import FileUpload from "./components/FileUpload";
 import FileUploadMobile from "./components/FileUploadMobile";
 import AggregatePerTime from "./components/AggregatePerTime";
 import Timeline from "./components/Timeline";
-import MessageRatio from "./components/MessageRatio";
+// import MessageRatio from "./components/MessageRatio";
 import WordCount from "./components/WordCount";
 import Stats from "./components/Stats";
-import Heatmap from "./components/Heatmap";
+// import Heatmap from "./components/Heatmap";
+import Sentiment from "./components/Sentiment";
 import HeatmapDayHour from "./components/HeatmapDayHour";
 import Emoji from "./components/Emoji";
 import BarChartComp from "./components/BarChartComp";
@@ -135,6 +136,7 @@ function App() {
               <Stats />
               <HeatmapDayHour />
               {/*<Heatmap />*/}
+              <Sentiment />
             </>
           )}
         </div>

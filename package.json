@@ -10,16 +10,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "compromise": "^14.14.4",
     "d3": "^7.9.0",
     "emoji-regex": "^10.4.0",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.474.0",
+    "multilang-sentiment": "^2.0.0",
     "react": "^18.3.1",
     "react-datepicker": "^7.4.0",
     "react-dom": "^18.3.1",
     "react-helmet-async": "^2.0.5",
     "react-spinners": "^0.14.1",
     "react-switch": "^7.0.0",
+    "sentiment": "^5.0.2",
     "stopword": "^3.1.1"
   },
   "devDependencies": {
@@ -27,6 +30,7 @@
     "@types/d3": "^7.4.3",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
+    "@types/sentiment": "^5.0.4",
     "@types/stopword": "^2.0.3",
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
