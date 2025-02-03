@@ -34,11 +34,15 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     setStartDate,
     selectedSender,
     setSelectedSender,
+    minMessagePercentage,
+    setMinMessagePercentage,
   } = useChat();
 
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [hasFileBeenSet, setHasFileBeenSet] = useState(false);
+  const [tempMinMessagePercentage, setTempMinMessagePercentage] =
+    useState(minMessagePercentage);
   // const [selectedSender, setSelectedSender] = useState<string[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(false);
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([
@@ -79,51 +83,23 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     }
   }, [isInfoOpen]);
 
-  // LOGS
-  useEffect(() => {
-    console.log("Selected Sender: ", selectedSender);
-  }, [selectedSender]);
-
-  useEffect(() => {
-    console.log("Selected Weekdays: ", selectedWeekdays);
-  }, [selectedWeekdays]);
-
   // Bei initialem Laden: Filter initialisieren
   useEffect(() => {
-    console.log("Messages: ", messages);
-    console.log("Is Initial Load: ", isInitialLoad);
     if (messages.length > 0 && isInitialLoad) {
       const firstMessageDate = new Date(messages[0].date);
       const lastMessageDate = new Date(messages[messages.length - 1].date);
       setStartDate(firstMessageDate);
       setEndDate(lastMessageDate);
-
-      console.log("Messages: ", messages);
-      console.log("Start Date: ", startDate);
-      console.log("End Date: ", endDate);
-
       setSelectedSender(senders);
       setIsInitialLoad(false);
     }
   }, [messages, senders, isInitialLoad]);
 
-  useEffect(() => {
-    console.log("Start Date:", startDate);
-    console.log("End Date:", endDate);
-  }, [startDate, endDate]);
-
-  useEffect(() => {
-    console.log("File Name: ", fileName);
-  }, [fileName]);
-
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    console.log("Is Expanded: ", isExpanded);
-
     setMessages([]);
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
 
-      console.log("Moin");
       if (file) {
         setFileName(file.name);
         // setIsFileSet(true);
@@ -142,9 +118,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
       setApplyFilters(false);
       setIsInitialLoad(true);
 
-      console.log("Is Expanded: ", isExpanded);
       setIsExpanded(false);
-      console.log("Is Expanded: ", isExpanded);
 
       setIsUploading(true);
       const reader = new FileReader();
@@ -170,9 +144,6 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   };
 
   const handleSenderChange = (sender: string) => {
-    console.log("Sender: ", sender);
-    console.log("Selected Sender: ", selectedSender);
-
     setSelectedSender((prev) =>
       prev.includes(sender)
         ? prev.filter((s) => s !== sender)
@@ -188,6 +159,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   };
 
   const handleApplyFilters = () => {
+    setMinMessagePercentage(tempMinMessagePercentage); // Speichern des Werts beim Anwenden
     setApplyFilters(true);
     setIsExpanded(false);
   };
@@ -445,39 +417,62 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
               </div>
 
               {/* Datumsauswahl */}
-              <div>
-                <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
-                  Zeitraum auswählen
-                </h3>
+              <div className="flex flex-row gap-4">
                 <div>
-                  <label className={`text-sm block ${textColor}`}>
-                    Startdatum:
-                  </label>
-                  <DatePicker
-                    selected={startDate}
-                    onChange={(date: Date | null) =>
-                      setStartDate(date || undefined)
-                    }
-                    selectsStart
-                    startDate={startDate}
-                    endDate={endDate}
-                    className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
-                  />
+                  <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
+                    Zeitraum auswählen
+                  </h3>
+                  <div>
+                    <label className={`text-sm block ${textColor}`}>
+                      Startdatum:
+                    </label>
+                    <DatePicker
+                      selected={startDate}
+                      onChange={(date: Date | null) =>
+                        setStartDate(date || undefined)
+                      }
+                      selectsStart
+                      startDate={startDate}
+                      endDate={endDate}
+                      className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`text-sm block ${textColor}`}>
+                      Enddatum:
+                    </label>
+                    <DatePicker
+                      selected={endDate}
+                      onChange={(date: Date | null) =>
+                        setEndDate(date || undefined)
+                      }
+                      selectsEnd
+                      startDate={startDate}
+                      endDate={endDate}
+                      minDate={startDate}
+                      className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className={`text-sm block ${textColor}`}>
-                    Enddatum:
-                  </label>
-                  <DatePicker
-                    selected={endDate}
-                    onChange={(date: Date | null) =>
-                      setEndDate(date || undefined)
+                <div className="flex flex-col w-fit">
+                  <h3 className={`text-md font-semibold mb-8 ${textColor}`}>
+                    Minimum Message Share (%):
+                  </h3>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={tempMinMessagePercentage}
+                    onChange={(e) =>
+                      setTempMinMessagePercentage(Number(e.target.value))
                     }
-                    selectsEnd
-                    startDate={startDate}
-                    endDate={endDate}
-                    minDate={startDate}
-                    className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
+                    className={`p-2 border ${
+                      darkMode ? "border-white" : "border-black"
+                    } w-full ${
+                      darkMode
+                        ? "bg-gray-700 text-white"
+                        : "bg-white text-black"
+                    }`}
                   />
                 </div>
               </div>
@@ -487,6 +482,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                 <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
                   Wochentage auswählen
                 </h3>
+
                 <div className="flex flex-wrap gap-2">
                   {weekdays.map((day) => (
                     <label

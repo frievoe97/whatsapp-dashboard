@@ -36,6 +36,8 @@ interface ChatContextType {
   setFileName: (fileName: string) => void;
   selectedSender: string[];
   setSelectedSender: React.Dispatch<React.SetStateAction<string[]>>;
+  minMessagePercentage: number;
+  setMinMessagePercentage: React.Dispatch<React.SetStateAction<number>>;
 }
 
 /**
@@ -59,6 +61,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [selectedSender, setSelectedSender] = useState<string[]>([]);
+  const [minMessagePercentage, setMinMessagePercentage] = useState<number>(0);
 
   /**
    * Toggles dark mode.
@@ -84,6 +87,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         setFileName,
         selectedSender,
         setSelectedSender,
+        minMessagePercentage,
+        setMinMessagePercentage,
       }}
     >
       {children}

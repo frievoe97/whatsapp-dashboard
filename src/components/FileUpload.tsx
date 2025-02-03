@@ -34,7 +34,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     toggleDarkMode,
     selectedSender,
     setSelectedSender,
+    minMessagePercentage,
+    setMinMessagePercentage,
   } = useChat();
+
+  const [tempMinMessagePercentage, setTempMinMessagePercentage] =
+    useState(minMessagePercentage);
 
   // const [selectedSender, setSelectedSender] = useState<string[]>([]);
   // const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -78,17 +83,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     }
     // Abhängigkeiten: messages und senders
   }, [messages, senders, isInitialLoad]);
-
-  console.log("Is Initial Load: ", isInitialLoad);
-
-  // LOGS
-  useEffect(() => {
-    console.log("Selected Sender: ", selectedSender);
-  }, [selectedSender]);
-
-  useEffect(() => {
-    console.log("Selected Weekdays: ", selectedWeekdays);
-  }, [selectedWeekdays]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     setMessages([]);
@@ -155,6 +149,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   };
 
   const handleApplyFilters = () => {
+    setMinMessagePercentage(tempMinMessagePercentage); // Speichern des Werts beim Anwenden
     setApplyFilters(true);
     setIsCollapsed(true);
   };
@@ -490,6 +485,27 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                       }`}
                     />
                   </div>
+                </div>
+                <div className="flex flex-col w-fit">
+                  <label className="text-sm mb-1">
+                    Minimum Message Share (%):
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={tempMinMessagePercentage}
+                    onChange={(e) =>
+                      setTempMinMessagePercentage(Number(e.target.value))
+                    }
+                    className={`p-2 border ${
+                      darkMode ? "border-white" : "border-black"
+                    } w-full ${
+                      darkMode
+                        ? "bg-gray-700 text-white"
+                        : "bg-white text-black"
+                    }`}
+                  />
                 </div>
               </div>
 

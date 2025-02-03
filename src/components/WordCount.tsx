@@ -130,11 +130,12 @@ const Plot4: React.FC = () => {
   return (
     <div
       id="plot-word-count"
-      className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 min-h-96 overflow-auto flex-grow ${
+      className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 overflow-auto flex-grow ${
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       }`}
+      style={{ minHeight: "550px", maxHeight: "550px", overflow: "hidden" }}
     >
       <h2 className="text-lg font-semibold mb-4">Top 10 Words per Person</h2>
 

@@ -17,7 +17,7 @@ interface AggregatedEmojiData {
 const MIN_WIDTH_PER_ITEM = 600;
 
 const Plot7: React.FC = () => {
-  const { messages, darkMode, isUploading } = useChat();
+  const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
   const [currentPage, setCurrentPage] = useState(1);
 
   const [itemsPerPage, setItemsPerPage] = useState(() => {
@@ -58,18 +58,33 @@ const Plot7: React.FC = () => {
 
   // Aggregiere die Top 10 Emojis pro Sender
   const aggregatedEmojiData: AggregatedEmojiData[] = useMemo(() => {
+    // Berechne die Gesamtanzahl der Nachrichten pro Sender
+    const senderMessageCount: { [sender: string]: number } = {};
+    messages.forEach((msg) => {
+      if (!msg.isUsed) return;
+      senderMessageCount[msg.sender] =
+        (senderMessageCount[msg.sender] || 0) + 1;
+    });
+
+    const totalMessages = messages.filter((msg) => msg.isUsed).length;
+    const minMessages = (minMessagePercentage / 100) * totalMessages;
+
+    // Datenstruktur für die Emojis
     const dataMap: { [sender: string]: { [emoji: string]: number } } = {};
 
     messages.forEach((msg) => {
       if (!msg.isUsed) return;
       const sender = msg.sender;
+
+      // Falls der Sender die Mindestanzahl an Nachrichten nicht erreicht, überspringen
+      if ((senderMessageCount[sender] || 0) < minMessages) return;
+
       if (!dataMap[sender]) {
         dataMap[sender] = {};
       }
 
       // Extrahiere Emojis aus der Nachricht
       const emojis = msg.message.match(regex) || [];
-
       emojis.forEach((emoji) => {
         dataMap[sender][emoji] = (dataMap[sender][emoji] || 0) + 1;
       });
@@ -83,7 +98,7 @@ const Plot7: React.FC = () => {
         .slice(0, 10);
       return { sender, topEmojis: emojiCounts };
     });
-  }, [messages, regex]);
+  }, [messages, regex, minMessagePercentage]);
 
   // Farbschema basierend auf den Sendern
 

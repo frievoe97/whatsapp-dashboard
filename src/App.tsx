@@ -10,6 +10,7 @@ import Stats from "./components/Stats";
 import Heatmap from "./components/Heatmap";
 import HeatmapDayHour from "./components/HeatmapDayHour";
 import Emoji from "./components/Emoji";
+import BarChartComp from "./components/BarChartComp";
 import { useChat } from "./context/ChatContext";
 import "./index.css";
 
@@ -127,12 +128,15 @@ function App() {
             <>
               <AggregatePerTime />
               <Timeline />
-              <Heatmap />
+
+              <BarChartComp />
+
               <MessageRatio />
               <Emoji />
               <WordCount />
               <Stats />
               <HeatmapDayHour />
+              <Heatmap />
             </>
           )}
         </div>

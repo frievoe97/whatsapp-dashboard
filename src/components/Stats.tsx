@@ -44,6 +44,9 @@ const Plot5: React.FC = () => {
 
       const plotWidth =
         document.getElementById("plot-message-stats")?.offsetWidth || 0;
+
+      console.log("Plot Width", plotWidth);
+
       if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) setItemsPerPage(1);
       else if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) setItemsPerPage(2);
       else if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) setItemsPerPage(3);
@@ -189,11 +192,12 @@ const Plot5: React.FC = () => {
   return (
     <div
       id="plot-message-stats"
-      className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 min-h-96 overflow-auto flex-grow ${
+      className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 overflow-auto flex-grow ${
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       }`}
+      style={{ minHeight: "550px", maxHeight: "550px", overflow: "hidden" }}
     >
       <h2 className="text-lg font-semibold mb-4">
         Message Statistics per Person

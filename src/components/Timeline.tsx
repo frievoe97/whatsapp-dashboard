@@ -21,7 +21,14 @@ interface TimeAggregatedData {
 type Mode = "year" | "month"; // "day" wurde entfernt
 
 const Plot2: React.FC = () => {
-  const { messages, darkMode, isUploading, startDate, endDate } = useChat();
+  const {
+    messages,
+    darkMode,
+    isUploading,
+    startDate,
+    endDate,
+    minMessagePercentage,
+  } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
@@ -109,17 +116,15 @@ const Plot2: React.FC = () => {
   const aggregatedData: TimeAggregatedData[] = useMemo(() => {
     if (messages.length === 0) return [];
 
+    const totalMessages = messages.filter((msg) => msg.isUsed).length;
+    const minMessages = (minMessagePercentage / 100) * totalMessages;
+
     // Funktion zur Extraktion der Kategorie basierend auf dem Modus
     const getCategory = (msg: ChatMessage): string => {
       const date = new Date(msg.date);
-      switch (mode) {
-        case "year":
-          return date.getFullYear().toString();
-        case "month":
-          return d3.timeFormat("%Y-%m")(date);
-        default:
-          return "";
-      }
+      return mode === "year"
+        ? date.getFullYear().toString()
+        : d3.timeFormat("%Y-%m")(date);
     };
 
     // Aggregiere Nachrichten nach Sender und Kategorie
@@ -127,39 +132,33 @@ const Plot2: React.FC = () => {
 
     messages.forEach((msg: ChatMessage) => {
       if (!msg.isUsed) return;
-
       const sender = msg.sender;
       const category = getCategory(msg);
 
       if (!dataMap[sender]) {
         dataMap[sender] = {};
-        categories.forEach((cat) => {
-          dataMap[sender][cat] = 0;
-        });
+        categories.forEach((cat) => (dataMap[sender][cat] = 0));
       }
-
-      if (dataMap[sender][category] !== undefined) {
-        dataMap[sender][category] += 1;
-      } else {
-        dataMap[sender][category] = 1;
-      }
+      dataMap[sender][category] = (dataMap[sender][category] || 0) + 1;
     });
 
-    // Konvertiere das Map in ein Array für D3
-    let result: TimeAggregatedData[] = Object.keys(dataMap).map((sender) => ({
-      sender,
-      values: categories
-        .map((category) => ({
+    let result: TimeAggregatedData[] = Object.keys(dataMap)
+      .map((sender) => ({
+        sender,
+        total: Object.values(dataMap[sender]).reduce(
+          (sum, count) => sum + count,
+          0
+        ),
+        values: categories.map((category) => ({
           date:
             mode === "year"
-              ? new Date(parseInt(category), 0, 1) // 1. Januar des Jahres setzen
+              ? new Date(parseInt(category), 0, 1)
               : new Date(`${category}-01`),
           count: dataMap[sender][category],
-        }))
-        .filter(
-          (d) => d.date >= computedStartDate && d.date <= computedEndDate
-        ),
-    }));
+        })),
+      }))
+      .filter((d) => d.total >= minMessages) // Filtere Sender nach minMessagePercentage
+      .map(({ sender, values }) => ({ sender, values }));
 
     if (showPercentage) {
       result = result.map((senderData) => {
@@ -175,7 +174,7 @@ const Plot2: React.FC = () => {
     }
 
     return result;
-  }, [messages, mode, showPercentage, categories]);
+  }, [messages, mode, showPercentage, categories, minMessagePercentage]);
 
   // Extrahiere die Sender für die Legende
   const senders = useMemo(
@@ -197,11 +196,24 @@ const Plot2: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
-    console.log("Dimensions changed:", dimensions);
-  }, [dimensions]);
-
-  useEffect(() => {
     if (!dimensions || aggregatedData.length === 0) return;
+
+    if (mode === "year") {
+      // Alle einzigartigen Jahre ermitteln
+      const uniqueYears = Array.from(
+        new Set(
+          aggregatedData.flatMap((d) =>
+            d.values.map((v) => v.date.getFullYear())
+          )
+        )
+      );
+
+      // Falls weniger als 3 Jahre vorhanden sind, auf "month" umstellen
+      if (uniqueYears.length < 3) {
+        setMode("month");
+        return; // Verhindert unnötige Berechnungen mit dem falschen Mode
+      }
+    }
 
     // D3 Diagramm erstellen
     const svg = d3.select(svgRef.current);
@@ -215,13 +227,13 @@ const Plot2: React.FC = () => {
 
     const fallbackDate = new Date(2000, 0, 1); // Ein sinnvolles Standard-Datum
 
-    const computedStartDate = startDate
+    let computedStartDate = startDate
       ? mode === "year"
         ? new Date(new Date(startDate).getFullYear(), 0, 1) // Immer 1. Januar setzen
         : new Date(startDate) // Falls "month", bleibt das Datum erhalten
       : d3.min(allDates) || fallbackDate;
 
-    const computedEndDate = endDate
+    let computedEndDate = endDate
       ? new Date(endDate)
       : d3.max(allDates) || new Date();
 
@@ -232,6 +244,18 @@ const Plot2: React.FC = () => {
         (v) => v.date >= computedStartDate && v.date <= computedEndDate
       ),
     }));
+
+    // Falls der Modus "month" ist, setze computedStartDate und computedEndDate auf den ersten/letzten existierenden Datenpunkt
+    if (mode === "month") {
+      const filteredDates = allDates.filter(
+        (date) => date >= computedStartDate && date <= computedEndDate
+      );
+
+      if (filteredDates.length > 0) {
+        computedStartDate = d3.min(filteredDates) || computedStartDate;
+        computedEndDate = d3.max(filteredDates) || computedEndDate;
+      }
+    }
 
     // Falls keine Daten nach dem Filtern vorhanden sind, nichts rendern
     if (filteredData.every((d) => d.values.length === 0)) return;

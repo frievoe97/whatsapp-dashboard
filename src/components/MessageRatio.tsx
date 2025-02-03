@@ -11,23 +11,29 @@ interface PieData {
 }
 
 const Plot3: React.FC = () => {
-  const { messages, darkMode, isUploading } = useChat();
+  const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
 
   // Aggregiere die Anzahl der Nachrichten pro Sender
   const pieData: PieData[] = useMemo(() => {
+    const totalMessages = messages.filter((msg) => msg.isUsed).length;
+    const minMessages = (minMessagePercentage / 100) * totalMessages;
+
     const dataMap: { [sender: string]: number } = {};
     messages.forEach((msg) => {
       if (!msg.isUsed) return;
       dataMap[msg.sender] = (dataMap[msg.sender] || 0) + 1;
     });
-    return Object.keys(dataMap).map((sender) => ({
-      sender,
-      count: dataMap[sender],
-    }));
-  }, [messages]);
+
+    return Object.keys(dataMap)
+      .map((sender) => ({
+        sender,
+        count: dataMap[sender],
+      }))
+      .filter((d) => d.count >= minMessages);
+  }, [messages, minMessagePercentage]);
 
   // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
@@ -42,7 +48,7 @@ const Plot3: React.FC = () => {
 
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
-    const radius = Math.min(width, height) / 2 - 50; // Padding für Labels
+    const radius = Math.min(width, height) / 2 - 100; // Padding für Labels
 
     svg.selectAll("*").remove(); // Clear previous contents
 
@@ -84,38 +90,58 @@ const Plot3: React.FC = () => {
       });
 
     // Add labels
+    // Add external labels with lines
+    const outerArc = d3
+      .arc<d3.PieArcDatum<PieData>>()
+      .innerRadius(radius * 0.7)
+      .outerRadius(radius * 1.5); // Position der Labels außerhalb des Pie-Charts
+
+    const labelPositions = pieData.map((d, i) => {
+      const centroid = outerArc.centroid(pie(pieData)[i]);
+      return { x: centroid[0], y: centroid[1] };
+    });
+
+    // Verwende eine Simulation zur automatischen Positionierung
+    const simulation = d3
+      .forceSimulation(labelPositions)
+      .force("y", d3.forceY((d) => d.y).strength(0.5)) // Vertikale Verteilung
+      .force("collide", d3.forceCollide(18)) // Abstand zwischen Labels erhöhen
+      .stop();
+
+    // Starte Simulation
+    for (let i = 0; i < 100; i++) simulation.tick();
+
+    // Labels korrekt positionieren
     arcs
       .append("text")
-      .attr("transform", (d) => `translate(${arc.centroid(d)})`)
-      .attr("text-anchor", "middle")
+      .attr(
+        "transform",
+        (d, i) =>
+          `translate(${simulation.nodes()[i].x}, ${simulation.nodes()[i].y})`
+      )
+      .attr("text-anchor", (d) =>
+        (d.startAngle + d.endAngle) / 2 > Math.PI ? "end" : "start"
+      )
       .attr("font-size", "12px")
-      .text((d) => `${d.data.sender}: ${d.data.count}`);
+      .style("fill", darkMode ? "white" : "black")
+      .text((d) => d.data.sender);
+
+    // Linien zu den Labels hinzufügen
+    arcs
+      .append("polyline")
+      .attr("points", (d, i) => {
+        const posA = arc.centroid(d); // Punkt in der Mitte des Segments
+        const posB = outerArc.centroid(d); // Punkt außerhalb des Segments
+        const posC = [simulation.nodes()[i].x, simulation.nodes()[i].y]; // Automatische Position des Labels
+        return [posA, posB, posC].map((p) => p.join(",")).join(" ");
+      })
+      .attr("fill", "none")
+      .attr("stroke", "gray")
+      .attr("stroke-width", 1);
+
+    // Verwende eine Simulation zur automatischen Positionierung
 
     // Add a legend
-    const legend = svg
-      .append("g")
-      .attr("transform", `translate(${width - 150}, 20)`);
-
-    pieData.forEach((d, i) => {
-      const legendRow = legend
-        .append("g")
-        .attr("transform", `translate(0, ${i * 20})`);
-
-      legendRow
-        .append("rect")
-        .attr("width", 15)
-        .attr("height", 15)
-        .attr("fill", colorScale(d.sender) as string);
-
-      legendRow
-        .append("text")
-        .attr("x", 20)
-        .attr("y", 12)
-        .attr("text-anchor", "start")
-        .style("text-transform", "capitalize")
-        .style("fill", darkMode ? "white" : "black") // Textfarbe basierend auf darkMode
-        .text(d.sender);
-    });
   }, [pieData, dimensions, colorScale, darkMode]); // darkMode hinzugefügt
 
   return (

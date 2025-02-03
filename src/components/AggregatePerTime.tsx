@@ -21,7 +21,7 @@ interface AggregatedData {
 type Mode = "weekday" | "hour" | "month";
 
 const Plot1: React.FC = () => {
-  const { messages, darkMode, isUploading } = useChat();
+  const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -72,11 +72,13 @@ const Plot1: React.FC = () => {
   const aggregatedData: AggregatedData[] = useMemo(() => {
     if (messages.length === 0) return [];
 
+    const totalMessages = messages.filter((msg) => msg.isUsed).length;
+    const minMessages = (minMessagePercentage / 100) * totalMessages;
+
     const getCategory = (msg: ChatMessage): string => {
       const date = new Date(msg.date);
       switch (mode) {
-        case "weekday": {
-          const dayIndex = date.getDay(); // 0 (Sunday) bis 6 (Saturday)
+        case "weekday":
           return [
             "Monday",
             "Tuesday",
@@ -85,8 +87,7 @@ const Plot1: React.FC = () => {
             "Friday",
             "Saturday",
             "Sunday",
-          ][(dayIndex + 6) % 7];
-        }
+          ][(date.getDay() + 6) % 7];
         case "hour":
           return date.getHours().toString();
         case "month":
@@ -117,24 +118,25 @@ const Plot1: React.FC = () => {
       const category = getCategory(msg);
       if (!dataMap[sender]) {
         dataMap[sender] = {};
-        categories.forEach((cat) => {
-          dataMap[sender][cat] = 0;
-        });
+        categories.forEach((cat) => (dataMap[sender][cat] = 0));
       }
-      if (dataMap[sender][category] !== undefined) {
-        dataMap[sender][category] += 1;
-      } else {
-        dataMap[sender][category] = 1;
-      }
+      dataMap[sender][category] = (dataMap[sender][category] || 0) + 1;
     });
 
-    let result: AggregatedData[] = Object.keys(dataMap).map((sender) => ({
-      sender,
-      values: categories.map((category) => ({
-        category,
-        count: dataMap[sender][category],
-      })),
-    }));
+    let result: AggregatedData[] = Object.keys(dataMap)
+      .map((sender) => ({
+        sender,
+        total: Object.values(dataMap[sender]).reduce(
+          (sum, count) => sum + count,
+          0
+        ),
+        values: categories.map((category) => ({
+          category,
+          count: dataMap[sender][category],
+        })),
+      }))
+      .filter((d) => d.total >= minMessages) // Nur Sender mit ausreichend Nachrichten behalten
+      .map(({ sender, values }) => ({ sender, values }));
 
     if (showPercentage) {
       result = result.map((senderData) => {
@@ -150,7 +152,7 @@ const Plot1: React.FC = () => {
     }
 
     return result;
-  }, [messages, mode, showPercentage, categories]);
+  }, [messages, mode, showPercentage, categories, minMessagePercentage]);
 
   // Extrahiere die Sender (für die Legende)
   const senders = useMemo(
