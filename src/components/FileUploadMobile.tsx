@@ -32,16 +32,15 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     setEndDate,
     startDate,
     setStartDate,
+    selectedSender,
+    setSelectedSender,
   } = useChat();
 
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [hasFileBeenSet, setHasFileBeenSet] = useState(false);
-  const [selectedSender, setSelectedSender] = useState<string[]>([]);
-  // const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  // const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  // const [selectedSender, setSelectedSender] = useState<string[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(false);
-  // const [fileName, setFileName] = useState("");
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([
     "Mon",
     "Tue",
@@ -52,6 +51,10 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     "Sun",
   ]);
   const [applyFilters, setApplyFilters] = useState(false);
+
+  // const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  // const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  // const [fileName, setFileName] = useState("");
 
   // Berechne eindeutige Sender aus den Nachrichten
   const senders = useMemo(() => {
@@ -76,17 +79,42 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     }
   }, [isInfoOpen]);
 
+  // LOGS
+  useEffect(() => {
+    console.log("Selected Sender: ", selectedSender);
+  }, [selectedSender]);
+
+  useEffect(() => {
+    console.log("Selected Weekdays: ", selectedWeekdays);
+  }, [selectedWeekdays]);
+
   // Bei initialem Laden: Filter initialisieren
   useEffect(() => {
+    console.log("Messages: ", messages);
+    console.log("Is Initial Load: ", isInitialLoad);
     if (messages.length > 0 && isInitialLoad) {
       const firstMessageDate = new Date(messages[0].date);
       const lastMessageDate = new Date(messages[messages.length - 1].date);
       setStartDate(firstMessageDate);
       setEndDate(lastMessageDate);
+
+      console.log("Messages: ", messages);
+      console.log("Start Date: ", startDate);
+      console.log("End Date: ", endDate);
+
       setSelectedSender(senders);
       setIsInitialLoad(false);
     }
   }, [messages, senders, isInitialLoad]);
+
+  useEffect(() => {
+    console.log("Start Date:", startDate);
+    console.log("End Date:", endDate);
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    console.log("File Name: ", fileName);
+  }, [fileName]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     console.log("Is Expanded: ", isExpanded);
@@ -95,7 +123,15 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
 
-      setFileName(file.name);
+      console.log("Moin");
+      if (file) {
+        setFileName(file.name);
+        // setIsFileSet(true);
+      } else {
+        setFileName("");
+        // setIsFileSet(false);
+      }
+
       onFileUpload(file);
 
       // Filter und Einstellungen zurücksetzen
@@ -134,6 +170,9 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   };
 
   const handleSenderChange = (sender: string) => {
+    console.log("Sender: ", sender);
+    console.log("Selected Sender: ", selectedSender);
+
     setSelectedSender((prev) =>
       prev.includes(sender)
         ? prev.filter((s) => s !== sender)

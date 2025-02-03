@@ -166,7 +166,7 @@ const Plot1: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
-    console.log("Is Uploading changed", isUploading);
+    // console.log("Is Uploading changed", isUploading);
   }, [isUploading]);
 
   // Farbschema basierend auf den Sendern

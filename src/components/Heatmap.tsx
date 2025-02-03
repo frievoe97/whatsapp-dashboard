@@ -71,7 +71,7 @@ const Plot6: React.FC = () => {
 
   // Debugging: Überprüfe den Wert von hasData
   useEffect(() => {
-    console.log(`Selected Year: ${selectedYear}, Has Data: ${hasData}`);
+    // console.log(`Selected Year: ${selectedYear}, Has Data: ${hasData}`);
   }, [selectedYear, hasData]);
 
   // Neuer useEffect: Dispatch eines Resize-Events, nachdem die Daten geladen wurden
@@ -133,8 +133,8 @@ const Plot6: React.FC = () => {
     svg.selectAll("*").remove();
     svg.attr("width", width).attr("height", height);
 
-    console.log("Drawing Heatmap...");
-    console.log("Dimensions:", dimensions);
+    // console.log("Drawing Heatmap...");
+    // console.log("Dimensions:", dimensions);
 
     const g = svg
       .append("g")

@@ -32,9 +32,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     setIsUploading,
     darkMode,
     toggleDarkMode,
+    selectedSender,
+    setSelectedSender,
   } = useChat();
 
-  const [selectedSender, setSelectedSender] = useState<string[]>([]);
+  // const [selectedSender, setSelectedSender] = useState<string[]>([]);
   // const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   // const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isInitialLoad, setIsInitialLoad] = useState(false);
@@ -76,6 +78,17 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     }
     // Abhängigkeiten: messages und senders
   }, [messages, senders, isInitialLoad]);
+
+  console.log("Is Initial Load: ", isInitialLoad);
+
+  // LOGS
+  useEffect(() => {
+    console.log("Selected Sender: ", selectedSender);
+  }, [selectedSender]);
+
+  useEffect(() => {
+    console.log("Selected Weekdays: ", selectedWeekdays);
+  }, [selectedWeekdays]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     setMessages([]);
@@ -127,11 +140,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   };
 
   const handleSenderChange = (sender: string) => {
-    setSelectedSender((prev) =>
-      prev.includes(sender)
+    setSelectedSender((prev: string[]) => {
+      return prev.includes(sender)
         ? prev.filter((s) => s !== sender)
-        : [...prev, sender]
-    );
+        : [...prev, sender];
+    });
   };
 
   const handleWeekdayChange = (event: ChangeEvent<HTMLInputElement>) => {
