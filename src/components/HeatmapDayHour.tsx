@@ -91,11 +91,15 @@ const Heatmap: React.FC = () => {
       .call(d3.axisBottom(xScale).tickSize(0))
       .attr("transform", `translate(0, ${innerHeight})`)
       .selectAll("text")
-      .style("font-size", "12px");
+      .style("display", (_, i) =>
+        width < 768 && i % 2 !== 0 ? "none" : "block"
+      )
+      .style("font-size", "14px"); // Erhöhe Schriftgröße auf 14px
+
     g.append("g")
       .call(d3.axisLeft(yScale).tickSize(0))
       .selectAll("text")
-      .style("font-size", "12px");
+      .style("font-size", "14px");
   }, [aggregatedData, dimensions, darkMode]);
 
   return (

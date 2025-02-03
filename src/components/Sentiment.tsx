@@ -122,6 +122,7 @@ const SentimentAnalysis: React.FC = () => {
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
     const maxTicks = Math.floor(innerWidth / 80); // Dynamische Anzahl der Ticks basierend auf Breite
+    const yTicks = 5;
     g.append("g")
       .attr("transform", `translate(0,${innerHeight})`)
       .call(
@@ -133,7 +134,9 @@ const SentimentAnalysis: React.FC = () => {
       .style("text-anchor", "middle") // Kein Drehen oder Verschieben
       .attr("transform", null); // Entfernt Rotation
 
-    g.append("g").call(d3.axisLeft(yScale)).style("font-size", "12px");
+    g.append("g")
+      .call(d3.axisLeft(yScale).ticks(yTicks))
+      .style("font-size", "14px");
 
     Object.entries(colors).forEach(([key, color]) => {
       g.append("path")
