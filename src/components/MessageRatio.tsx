@@ -104,7 +104,7 @@ const Plot3: React.FC = () => {
     // Verwende eine Simulation zur automatischen Positionierung
     const simulation = d3
       .forceSimulation(labelPositions)
-      .force("y", d3.forceY((d) => d.y).strength(0.5)) // Vertikale Verteilung
+      .force("y", d3.forceY((d) => (d.y !== undefined ? d.y : 0)).strength(0.5))
       .force("collide", d3.forceCollide(18)) // Abstand zwischen Labels erhöhen
       .stop();
 
