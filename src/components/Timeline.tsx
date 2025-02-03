@@ -21,7 +21,7 @@ interface TimeAggregatedData {
 type Mode = "year" | "month"; // "day" wurde entfernt
 
 const Plot2: React.FC = () => {
-  const { messages, darkMode, isUploading } = useChat();
+  const { messages, darkMode, isUploading, startDate, endDate } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
@@ -80,6 +80,31 @@ const Plot2: React.FC = () => {
     }
   }, [mode, messages]);
 
+  const fallbackDate = new Date(2000, 0, 1); // Falls keine Daten vorhanden sind
+
+  const computedStartDate = useMemo(() => {
+    if (startDate) {
+      return mode === "year"
+        ? new Date(new Date(startDate).getFullYear(), 0, 1) // 1. Januar des Jahres setzen
+        : new Date(startDate); // Exaktes Startdatum für Monate
+    }
+
+    // Falls kein Startdatum gesetzt ist, nehme das früheste Datum aus den Nachrichten
+    const minDate =
+      d3.min(messages.map((m) => new Date(m.date))) || fallbackDate;
+
+    return mode === "year"
+      ? new Date(minDate.getFullYear(), 0, 1)
+      : new Date(minDate); // Hier KEIN 1. Januar setzen!
+  }, [startDate, mode, messages]);
+
+  const computedEndDate = useMemo(() => {
+    if (endDate) {
+      return new Date(endDate);
+    }
+    return d3.max(messages.map((m) => new Date(m.date))) || new Date();
+  }, [endDate, messages]);
+
   // Aggregiere Daten basierend auf dem aktuellen Modus und der Darstellung
   const aggregatedData: TimeAggregatedData[] = useMemo(() => {
     if (messages.length === 0) return [];
@@ -123,13 +148,17 @@ const Plot2: React.FC = () => {
     // Konvertiere das Map in ein Array für D3
     let result: TimeAggregatedData[] = Object.keys(dataMap).map((sender) => ({
       sender,
-      values: categories.map((category) => ({
-        date:
-          mode === "year"
-            ? new Date(`${category}-01-01`)
-            : new Date(`${category}-01`), // "day" wurde entfernt
-        count: dataMap[sender][category],
-      })),
+      values: categories
+        .map((category) => ({
+          date:
+            mode === "year"
+              ? new Date(parseInt(category), 0, 1) // 1. Januar des Jahres setzen
+              : new Date(`${category}-01`),
+          count: dataMap[sender][category],
+        }))
+        .filter(
+          (d) => d.date >= computedStartDate && d.date <= computedEndDate
+        ),
     }));
 
     if (showPercentage) {
@@ -168,6 +197,10 @@ const Plot2: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
+    console.log("Dimensions changed:", dimensions);
+  }, [dimensions]);
+
+  useEffect(() => {
     if (!dimensions || aggregatedData.length === 0) return;
 
     // D3 Diagramm erstellen
@@ -179,13 +212,37 @@ const Plot2: React.FC = () => {
 
     // Sammle alle Datenpunkte für die X-Achse
     const allDates = aggregatedData.flatMap((d) => d.values.map((v) => v.date));
-    const xExtent = d3.extent(allDates);
-    if (!xExtent[0] || !xExtent[1]) return;
 
-    // Scales
+    const fallbackDate = new Date(2000, 0, 1); // Ein sinnvolles Standard-Datum
+
+    const computedStartDate = startDate
+      ? mode === "year"
+        ? new Date(new Date(startDate).getFullYear(), 0, 1) // Immer 1. Januar setzen
+        : new Date(startDate) // Falls "month", bleibt das Datum erhalten
+      : d3.min(allDates) || fallbackDate;
+
+    const computedEndDate = endDate
+      ? new Date(endDate)
+      : d3.max(allDates) || new Date();
+
+    // Filtere Datenpunkte, um sicherzustellen, dass sie nur innerhalb des Zeitraums liegen
+    const filteredData = aggregatedData.map((d) => ({
+      sender: d.sender,
+      values: d.values.filter(
+        (v) => v.date >= computedStartDate && v.date <= computedEndDate
+      ),
+    }));
+
+    // Falls keine Daten nach dem Filtern vorhanden sind, nichts rendern
+    if (filteredData.every((d) => d.values.length === 0)) return;
+
+    // Aktualisiere die X-Skala
     const xScale = d3
       .scaleTime()
-      .domain(xExtent as [Date, Date])
+      .domain([
+        computedStartDate, // 🟢 Jetzt startet es beim richtigen Jahr/Monat
+        computedEndDate,
+      ])
       .range([0, innerWidth]);
 
     const yMax = showPercentage
@@ -212,7 +269,7 @@ const Plot2: React.FC = () => {
     // Linien-Generator
     const line = d3
       .line<{ date: Date; count: number; percentage?: number }>()
-      .defined((d) => d.count !== null && d.count !== undefined)
+      .defined((d) => d.date >= computedStartDate && d.date <= computedEndDate)
       .x((d) => xScale(d.date))
       .y((d) => yScale(showPercentage ? d.percentage || 0 : d.count))
       .curve(d3.curveMonotoneX);
@@ -276,7 +333,7 @@ const Plot2: React.FC = () => {
       chart
         .append("g")
         .attr("class", "x-axis")
-        .attr("transform", `translate(0,${innerHeight})`)
+        .attr("transform", `translate(${margin.left},${innerHeight})`)
         .call(xAxis)
         .selectAll("text")
         .attr("transform", "translate(0,5)")
@@ -358,7 +415,7 @@ const Plot2: React.FC = () => {
         .transition()
         .duration(1000)
         .attr("transform", `translate(0,${innerHeight})`)
-        .call(xAxis)
+        .call(d3.axisBottom(xScale).ticks(maxTicks))
         .selectAll("text")
         .attr("transform", "translate(0,5)")
         .style("text-anchor", "middle")
@@ -581,12 +638,17 @@ const Plot2: React.FC = () => {
             className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
               darkMode ? "text-white" : "text-black"
             }`}
-            onClick={() => setExpanded(!expanded)}
+            onClick={() => {
+              setExpanded(!expanded);
+              setTimeout(() => {
+                window.dispatchEvent(new Event("resize"));
+              }, 200); // Kleine Verzögerung für reflow
+            }}
             style={{
-              background: "transparent", // Kein Hintergrund
-              outline: "none", // Kein Fokus-Styling
-              boxShadow: "none", // Keine Schatten oder Border beim Klicken/Hovern
-              border: "none", // Entfernt jegliche Border
+              background: "transparent",
+              outline: "none",
+              boxShadow: "none",
+              border: "none",
             }}
           >
             {expanded ? (

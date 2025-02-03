@@ -263,12 +263,17 @@ const Plot6: React.FC = () => {
           className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
             darkMode ? "text-white" : "text-black"
           }`}
-          onClick={() => setExpanded(!expanded)}
+          onClick={() => {
+            setExpanded(!expanded);
+            setTimeout(() => {
+              window.dispatchEvent(new Event("resize"));
+            }, 200); // Kleine Verzögerung für reflow
+          }}
           style={{
-            background: "transparent", // Kein Hintergrund
-            outline: "none", // Kein Fokus-Styling
-            boxShadow: "none", // Keine Schatten oder Border beim Klicken/Hovern
-            border: "none", // Entfernt jegliche Border
+            background: "transparent",
+            outline: "none",
+            boxShadow: "none",
+            border: "none",
           }}
         >
           {expanded ? (
