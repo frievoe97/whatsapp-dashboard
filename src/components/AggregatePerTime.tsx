@@ -5,161 +5,228 @@ import * as d3 from "d3";
 import { ChatMessage } from "../context/ChatContext";
 import useResizeObserver from "../hooks/useResizeObserver";
 import Switch from "react-switch";
-import "./Plot1.css"; // Importiere die CSS-Datei
+import "./Plot1.css";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Hash, Percent, Maximize2, Minimize2 } from "lucide-react";
 
-interface AggregatedData {
-  sender: string;
-  values: Array<{
-    category: string;
-    count: number;
-    percentage?: number;
-  }>;
+/**
+ * DataPoint interface for a single category value.
+ */
+interface DataPoint {
+  category: string;
+  count: number;
+  percentage?: number;
 }
 
+/**
+ * AggregatedData interface represents aggregated counts per sender.
+ */
+interface AggregatedData {
+  sender: string;
+  values: DataPoint[];
+}
+
+/**
+ * Mode type representing the current time-based mode.
+ */
 type Mode = "weekday" | "hour" | "month";
 
+/**
+ * Returns the list of categories based on the current mode.
+ *
+ * @param mode - The current mode ("weekday", "hour", or "month")
+ * @returns An array of category names.
+ */
+const getCategories = (mode: Mode): string[] => {
+  switch (mode) {
+    case "weekday":
+      return [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ];
+    case "hour":
+      return Array.from({ length: 24 }, (_, i) => i.toString());
+    case "month":
+      return [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+    default:
+      return [];
+  }
+};
+
+/**
+ * Returns the category for a given message based on the current mode.
+ *
+ * @param msg - A ChatMessage object.
+ * @param mode - The current mode ("weekday", "hour", or "month").
+ * @returns The category (e.g. "Monday", "14", "March").
+ */
+const getCategoryFromMessage = (msg: ChatMessage, mode: Mode): string => {
+  const date = new Date(msg.date);
+  if (mode === "weekday") {
+    // Adjust so that Monday is the first day (getDay returns 0 for Sunday)
+    return [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ][(date.getDay() + 6) % 7];
+  } else if (mode === "hour") {
+    return date.getHours().toString();
+  } else if (mode === "month") {
+    return [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ][date.getMonth()];
+  }
+  return "";
+};
+
+/**
+ * Aggregates chat messages by sender and category.
+ *
+ * Only messages with `isUsed` set to true are considered.
+ * A sender is only included if its total count exceeds the configured
+ * minimum percentage of all messages.
+ *
+ * If `showPercentage` is true, each category count is converted to a percentage.
+ *
+ * @param messages - Array of ChatMessage objects.
+ * @param mode - Current mode.
+ * @param categories - Array of categories.
+ * @param minMessagePercentage - Minimum percentage threshold for a sender.
+ * @param showPercentage - Flag to indicate if percentages should be calculated.
+ * @returns An array of AggregatedData.
+ */
+const aggregateMessages = (
+  messages: ChatMessage[],
+  mode: Mode,
+  categories: string[],
+  minMessagePercentage: number,
+  showPercentage: boolean
+): AggregatedData[] => {
+  if (messages.length === 0) return [];
+
+  // Calculate threshold based on percentage of used messages
+  const totalMessages = messages.filter((msg) => msg.isUsed).length;
+  const minMessagesThreshold = (minMessagePercentage / 100) * totalMessages;
+
+  // Build a nested object: sender -> category -> count
+  const dataMap: Record<string, Record<string, number>> = {};
+  messages.forEach((msg) => {
+    if (!msg.isUsed) return;
+    const sender = msg.sender;
+    const category = getCategoryFromMessage(msg, mode);
+    if (!dataMap[sender]) {
+      dataMap[sender] = {};
+      categories.forEach((cat) => (dataMap[sender][cat] = 0));
+    }
+    dataMap[sender][category] = (dataMap[sender][category] || 0) + 1;
+  });
+
+  // Convert the dataMap into an array of AggregatedData, filtering by total count
+  let result: AggregatedData[] = Object.keys(dataMap)
+    .map((sender) => {
+      const values = categories.map((category) => ({
+        category,
+        count: dataMap[sender][category],
+      }));
+      const total = values.reduce((sum, val) => sum + val.count, 0);
+      return { sender, values, total };
+    })
+    .filter((d) => d.total >= minMessagesThreshold)
+    .map(({ sender, values }) => ({ sender, values }));
+
+  // If showing percentages, calculate and add the percentage to each data point.
+  if (showPercentage) {
+    result = result.map((senderData) => {
+      const total = d3.sum(senderData.values, (d) => d.count);
+      return {
+        ...senderData,
+        values: senderData.values.map((d) => ({
+          ...d,
+          percentage: total > 0 ? (d.count / total) * 100 : 0,
+        })),
+      };
+    });
+  }
+
+  return result;
+};
+
+/**
+ * Plot1 Component
+ *
+ * This component renders an interactive D3 line chart displaying aggregated chat data.
+ * It supports toggling between different time modes (hour, weekday, month), a percentage view,
+ * tooltips, smooth transitions, a dynamic legend, and a expand/collapse feature.
+ */
 const Plot1: React.FC = () => {
   const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
 
+  // Refs for container and SVG elements
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
 
+  // Local state for expand toggle, mode selection, and percentage view
   const [expanded, setExpanded] = useState(false);
-
-  // State für Modus und Darstellung
   const [mode, setMode] = useState<Mode>("hour");
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
 
-  // Kategorien definieren
-  const categories: string[] = useMemo(() => {
-    switch (mode) {
-      case "weekday":
-        return [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday",
-        ];
-      case "hour":
-        return Array.from({ length: 24 }, (_, i) => i.toString());
-      case "month":
-        return [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ];
-      default:
-        return [];
-    }
-  }, [mode]);
+  // Get the categories for the current mode
+  const categories = useMemo(() => getCategories(mode), [mode]);
 
-  // Aggregiere Daten
-  const aggregatedData: AggregatedData[] = useMemo(() => {
-    if (messages.length === 0) return [];
+  // Aggregate data from chat messages
+  const aggregatedData = useMemo(
+    () =>
+      aggregateMessages(
+        messages,
+        mode,
+        categories,
+        minMessagePercentage,
+        showPercentage
+      ),
+    [messages, mode, categories, minMessagePercentage, showPercentage]
+  );
 
-    const totalMessages = messages.filter((msg) => msg.isUsed).length;
-    const minMessages = (minMessagePercentage / 100) * totalMessages;
-
-    const getCategory = (msg: ChatMessage): string => {
-      const date = new Date(msg.date);
-      switch (mode) {
-        case "weekday":
-          return [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-          ][(date.getDay() + 6) % 7];
-        case "hour":
-          return date.getHours().toString();
-        case "month":
-          return [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
-          ][date.getMonth()];
-        default:
-          return "";
-      }
-    };
-
-    const dataMap: { [sender: string]: { [category: string]: number } } = {};
-
-    messages.forEach((msg: ChatMessage) => {
-      if (!msg.isUsed) return;
-      const sender = msg.sender;
-      const category = getCategory(msg);
-      if (!dataMap[sender]) {
-        dataMap[sender] = {};
-        categories.forEach((cat) => (dataMap[sender][cat] = 0));
-      }
-      dataMap[sender][category] = (dataMap[sender][category] || 0) + 1;
-    });
-
-    let result: AggregatedData[] = Object.keys(dataMap)
-      .map((sender) => ({
-        sender,
-        total: Object.values(dataMap[sender]).reduce(
-          (sum, count) => sum + count,
-          0
-        ),
-        values: categories.map((category) => ({
-          category,
-          count: dataMap[sender][category],
-        })),
-      }))
-      .filter((d) => d.total >= minMessages) // Nur Sender mit ausreichend Nachrichten behalten
-      .map(({ sender, values }) => ({ sender, values }));
-
-    if (showPercentage) {
-      result = result.map((senderData) => {
-        const total = d3.sum(senderData.values, (d) => d.count);
-        return {
-          ...senderData,
-          values: senderData.values.map((d) => ({
-            ...d,
-            percentage: total > 0 ? (d.count / total) * 100 : 0,
-          })),
-        };
-      });
-    }
-
-    return result;
-  }, [messages, mode, showPercentage, categories, minMessagePercentage]);
-
-  // Extrahiere die Sender (für die Legende)
+  // Extract sender names for legend and color scaling
   const senders = useMemo(
     () => aggregatedData.map((d) => d.sender),
     [aggregatedData]
   );
 
+  // Reset mode and percentage view if there are no messages.
   useEffect(() => {
     if (messages.length === 0) {
       setMode("hour");
@@ -167,29 +234,24 @@ const Plot1: React.FC = () => {
     }
   }, [messages]);
 
-  useEffect(() => {
-    // console.log("Is Uploading changed", isUploading);
-  }, [isUploading]);
-
-  // Farbschema basierend auf den Sendern
+  // Create a color scale based on sender names and dark mode
   const colorScale = useMemo(() => {
     const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
     return d3.scaleOrdinal<string, string>(colors).domain(senders);
   }, [senders, darkMode]);
 
-  // --- Tooltip einmalig erstellen ---
-  // --- Tooltip einmalig erstellen ---
+  // Create the tooltip element (only once)
   useEffect(() => {
     if (!containerRef.current) return;
-    const existingTooltip = d3
+    const tooltipSelection = d3
       .select(containerRef.current)
       .select<HTMLDivElement>(".tooltip");
-    if (existingTooltip.empty()) {
+    if (tooltipSelection.empty()) {
       d3.select(containerRef.current)
         .append("div")
         .attr("class", "tooltip")
         .style("position", "absolute")
-        .style("z-index", "1000") // NEU: z-index hinzufügen
+        .style("z-index", "1000")
         .style("padding", "6px")
         .style("border", "1px solid #999")
         .style("border-radius", "4px")
@@ -198,7 +260,7 @@ const Plot1: React.FC = () => {
     }
   }, []);
 
-  // --- Tooltip-Style aktualisieren bei Dark Mode-Wechsel ---
+  // Update tooltip style when dark mode changes
   useEffect(() => {
     if (!containerRef.current) return;
     d3.select(containerRef.current)
@@ -207,20 +269,22 @@ const Plot1: React.FC = () => {
       .style("color", darkMode ? "#fff" : "#000");
   }, [darkMode]);
 
-  // --- D3-Diagramm erstellen ---
+  // D3 chart drawing effect: draws and updates the chart based on aggregated data and dimensions.
   useEffect(() => {
     if (!dimensions || aggregatedData.length === 0) return;
+
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
     const margin = { top: 10, right: 20, bottom: 110, left: 40 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
+    // Define scales for the chart.
     const xScale = d3
       .scalePoint<string>()
       .domain(categories)
       .range([0, innerWidth])
-      .padding(0); // Kein Padding mehr, damit der Graph genau bei der ersten und letzten Kategorie beginnt
+      .padding(0);
 
     const yMax = showPercentage
       ? d3.max(aggregatedData, (d) => d3.max(d.values, (v) => v.percentage)) ||
@@ -233,8 +297,10 @@ const Plot1: React.FC = () => {
       .nice()
       .range([innerHeight, 0]);
 
+    // Set the maximum number of ticks based on the mode.
     const maxTicks = mode === "hour" ? 30 : mode === "weekday" ? 30 : 10;
 
+    // Create axes.
     const xAxis = d3
       .axisBottom(xScale)
       .tickValues(
@@ -242,36 +308,40 @@ const Plot1: React.FC = () => {
           (_, i) => i % Math.ceil(categories.length / maxTicks) === 0
         )
       );
-
     const yAxis = d3
       .axisLeft(yScale)
       .ticks(5)
       .tickFormat((d) => (showPercentage ? `${d}%` : `${d}`));
 
-    // Linien-Generator
-    const line = d3
-      .line<{ category: string; count: number; percentage?: number }>()
+    // Create a line generator.
+    const lineGenerator = d3
+      .line<DataPoint>()
       .defined((d) => d.count !== null && d.count !== undefined)
       .x((d) => xScale(d.category) as number)
       .y((d) => yScale(showPercentage ? d.percentage || 0 : d.count))
       .curve(d3.curveMonotoneX);
 
-    // Erstelle (oder wähle) die Chart-Gruppe
-    let chart = svg.select<SVGGElement>(".chart-group");
-    if (chart.empty()) {
-      chart = svg
+    // Select or create the main chart group.
+    let chartGroup = svg.select<SVGGElement>(".chart-group");
+    if (chartGroup.empty()) {
+      chartGroup = svg
         .append("g")
         .attr("class", "chart-group")
         .attr("transform", `translate(${margin.left},${margin.top})`);
+    } else {
+      // Remove previous overlays, axes, and grid lines to avoid duplication.
+      chartGroup
+        .selectAll(".overlay, .hover-line, .x-grid, .y-grid, .x-axis, .y-axis")
+        .remove();
     }
 
-    // Tooltip-Element (bereits erstellt)
+    // Select the tooltip element.
     const tooltip = d3
       .select(containerRef.current)
       .select<HTMLDivElement>(".tooltip");
 
-    // Overlay-Rechteck zum Abfangen von Mausereignissen
-    const overlay = chart
+    // Append an overlay rectangle to capture mouse events.
+    const overlay = chartGroup
       .append("rect")
       .attr("class", "overlay")
       .attr("width", innerWidth)
@@ -279,15 +349,15 @@ const Plot1: React.FC = () => {
       .style("fill", "none")
       .style("pointer-events", "all");
 
-    // Horizontale Hilfslinie
-    const hoverLine = chart
+    // Append a hover line to indicate the current mouse position.
+    const hoverLine = chartGroup
       .append("line")
       .attr("class", "hover-line")
       .attr("stroke", "gray")
       .attr("stroke-width", 1)
       .style("opacity", 0);
 
-    // Mausereignisse
+    // Mouse event handlers for the overlay.
     overlay
       .on("mouseover", () => {
         hoverLine.style("opacity", 1);
@@ -301,11 +371,13 @@ const Plot1: React.FC = () => {
           .attr("y1", 0)
           .attr("y2", innerHeight);
 
+        // Determine the nearest category for the mouse x-coordinate.
         const xPositions = categories.map((cat) => xScale(cat) as number);
         const distances = xPositions.map((xPos) => Math.abs(xPos - mx));
         const minIndex = distances.indexOf(Math.min(...distances));
         const nearestCategory = categories[minIndex];
 
+        // Prepare tooltip content for each sender.
         const tooltipData = aggregatedData.map((d) => {
           const point = d.values.find((v) => v.category === nearestCategory);
           const value =
@@ -335,16 +407,9 @@ const Plot1: React.FC = () => {
         tooltip.style("display", "none");
       });
 
-    // Hier folgt der Code für das Zeichnen (bzw. Aktualisieren) des Diagramms
-    // (Grid, Achsen, Linien etc.)
-    // Entferne zuerst ggf. alte Grid-Elemente und Achsen:
-    chart.select(".x-grid").remove();
-    chart.select(".y-grid").remove();
-    chart.select(".x-axis").remove();
-    chart.select(".y-axis").remove();
-
-    // Zeichne das X-Grid
-    const xGrid = chart
+    // Draw grid lines and axes.
+    // X Grid
+    const xGrid = chartGroup
       .append("g")
       .attr("class", "x-grid")
       .attr("transform", `translate(0,${innerHeight})`)
@@ -359,8 +424,8 @@ const Plot1: React.FC = () => {
       .attr("stroke", darkMode ? "#606060" : "#e0e0e0")
       .attr("stroke-width", 1);
 
-    // Zeichne das Y-Grid
-    chart
+    // Y Grid
+    const yGrid = chartGroup
       .append("g")
       .attr("class", "y-grid")
       .call(
@@ -368,12 +433,11 @@ const Plot1: React.FC = () => {
           .axisLeft(yScale)
           .tickSize(-innerWidth)
           .tickFormat(() => "")
-      )
-      .selectAll("line")
-      .attr("stroke", darkMode ? "#606060" : "#e0e0e0");
+      );
+    yGrid.selectAll("line").attr("stroke", darkMode ? "#606060" : "#e0e0e0");
 
-    // Zeichne die X-Achse
-    chart
+    // Draw X Axis
+    chartGroup
       .append("g")
       .attr("class", "x-axis")
       .attr("transform", `translate(0,${innerHeight})`)
@@ -384,8 +448,8 @@ const Plot1: React.FC = () => {
       .style("font-size", "12px")
       .style("fill", darkMode ? "white" : "black");
 
-    // Zeichne die Y-Achse
-    chart
+    // Draw Y Axis
+    chartGroup
       .append("g")
       .attr("class", "y-axis")
       .call(yAxis)
@@ -393,7 +457,8 @@ const Plot1: React.FC = () => {
       .style("font-size", "12px")
       .style("fill", darkMode ? "white" : "black");
 
-    const lines = chart
+    // Bind aggregated data to path elements for each sender and apply transitions.
+    const lines = chartGroup
       .selectAll<SVGPathElement, AggregatedData>(".line")
       .data(aggregatedData, (d) => d.sender);
 
@@ -403,17 +468,18 @@ const Plot1: React.FC = () => {
           .append("path")
           .attr("class", "line")
           .attr("fill", "none")
-          .style("z-index", "500") // NEU: z-index hinzufügen
+          .style("z-index", "500")
           .attr("stroke", (d) => colorScale(d.sender))
           .attr("stroke-width", 3)
+          // Start from the bottom (for the initial animation)
           .attr("d", (d) => {
             const initialValues = d.values.map((v) => ({
               ...v,
               y: innerHeight,
             }));
             const initialLine = d3
-              .line<{ category: string; count: number; percentage?: number }>()
-              .x((d) => xScale(d.category) as number)
+              .line<DataPoint>()
+              .x((v) => xScale(v.category) as number)
               .y(() => innerHeight)
               .curve(d3.curveMonotoneX);
             return initialLine(initialValues) as string;
@@ -421,14 +487,14 @@ const Plot1: React.FC = () => {
           .transition()
           .duration(2000)
           .ease(d3.easeCubic)
-          .attr("d", (d) => line(d.values) as string),
+          .attr("d", (d) => lineGenerator(d.values) as string),
       (update) =>
         update
           .transition()
           .duration(1000)
           .ease(d3.easeCubic)
           .attr("stroke", (d) => colorScale(d.sender))
-          .attr("d", (d) => line(d.values) as string),
+          .attr("d", (d) => lineGenerator(d.values) as string),
       (exit) =>
         exit
           .transition()
@@ -438,8 +504,6 @@ const Plot1: React.FC = () => {
           })
           .remove()
     );
-
-    // Linien (für jeden Sender)
   }, [
     aggregatedData,
     dimensions,
@@ -467,51 +531,28 @@ const Plot1: React.FC = () => {
         overflow: "hidden",
       }}
     >
-      {/* Buttons und Switch */}
+      {/* Control Panel: Mode buttons, percentage toggle, and expand/collapse button */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex space-x-2">
-          <button
-            className={`px-3 py-1 md:text-base text-sm rounded-none ${
-              mode === "hour"
-                ? darkMode
-                  ? "bg-white text-black border border-gray-300 hover:border-gray-300"
-                  : "bg-black text-white border-none"
-                : darkMode
-                ? "bg-gray-700 text-white border border-gray-300 hover:border-gray-300"
-                : "bg-white text-gray-700 border border-black hover:border-black"
-            }`}
-            onClick={() => setMode("hour")}
-          >
-            Hour
-          </button>
-          <button
-            className={`px-3 py-1 md:text-base text-sm rounded-none ${
-              mode === "weekday"
-                ? darkMode
-                  ? "bg-white text-black border border-gray-300 hover:border-gray-300"
-                  : "bg-black text-white border-none"
-                : darkMode
-                ? "bg-gray-700 text-white border border-gray-300 hover:border-gray-300"
-                : "bg-white text-gray-700 border border-black hover:border-black"
-            }`}
-            onClick={() => setMode("weekday")}
-          >
-            Weekday
-          </button>
-          <button
-            className={`px-3 py-1 md:text-base text-sm rounded-none ${
-              mode === "month"
-                ? darkMode
-                  ? "bg-white text-black border border-gray-300 hover:border-gray-300"
-                  : "bg-black text-white border-none"
-                : darkMode
-                ? "bg-gray-700 text-white border border-gray-300 hover:border-gray-300"
-                : "bg-white text-gray-700 border border-black hover:border-black"
-            }`}
-            onClick={() => setMode("month")}
-          >
-            Month
-          </button>
+          {(["hour", "weekday", "month"] as Mode[]).map((item) => {
+            const isActive = mode === item;
+            const buttonClass = isActive
+              ? darkMode
+                ? "bg-white text-black border border-gray-300 hover:border-gray-300"
+                : "bg-black text-white border-none"
+              : darkMode
+              ? "bg-gray-700 text-white border border-gray-300 hover:border-gray-300"
+              : "bg-white text-gray-700 border border-black hover:border-black";
+            return (
+              <button
+                key={item}
+                className={`px-3 py-1 md:text-base text-sm rounded-none ${buttonClass}`}
+                onClick={() => setMode(item)}
+              >
+                {item.charAt(0).toUpperCase() + item.slice(1)}
+              </button>
+            );
+          })}
         </div>
         <div className="flex items-center w-fit md:w-auto justify-center md:justify-end">
           <Hash
@@ -539,16 +580,16 @@ const Plot1: React.FC = () => {
               darkMode ? "text-white" : "text-gray-700"
             } w-4 h-4 md:w-5 md:h-5`}
           />
-
           <button
             className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
               darkMode ? "text-white" : "text-black"
             }`}
             onClick={() => {
               setExpanded(!expanded);
+              // Dispatch a resize event for layout update after expanding/collapsing.
               setTimeout(() => {
                 window.dispatchEvent(new Event("resize"));
-              }, 200); // Kleine Verzögerung für reflow
+              }, 200);
             }}
             style={{
               background: "transparent",
@@ -565,7 +606,7 @@ const Plot1: React.FC = () => {
           </button>
         </div>
       </div>
-      {/* Legende */}
+      {/* Legend showing sender names with their corresponding colors */}
       <div className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2">
         {senders.map((sender) => (
           <div key={sender} className="flex items-center mr-4 mb-2">
@@ -574,7 +615,7 @@ const Plot1: React.FC = () => {
               style={{ backgroundColor: colorScale(sender) }}
             ></div>
             <span
-              className="text-sm text-nowrap"
+              className="text-sm whitespace-nowrap"
               style={{ color: darkMode ? "#fff" : "#000" }}
             >
               {sender}
@@ -582,7 +623,8 @@ const Plot1: React.FC = () => {
           </div>
         ))}
       </div>
-      {/* Inhalt / Diagramm oder Ladeanimation */}
+      {/* Chart container: shows a spinner while uploading, a message when no data is available,
+          or the SVG chart otherwise. */}
       <div className="flex-grow flex justify-center items-center">
         {isUploading ? (
           <ClipLoader

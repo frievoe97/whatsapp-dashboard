@@ -108,14 +108,14 @@ function App() {
         <div className="hidden md:block">
           <FileUpload onFileUpload={(file) => console.log(file)} />
         </div>
-        <div className="block md:hidden">
+        <div className="md:hidden">
           <FileUploadMobile onFileUpload={(file) => console.log(file)} />
         </div>
 
         {/* Chat Analysis Components */}
         <div
           ref={containerRef}
-          className="mt-4 h-full flex-1 overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
+          className="mt-4 h-full flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
         >
           {messages.length === 0 ? (
             <div
