@@ -239,7 +239,7 @@ const SentimentAnalysis: React.FC = () => {
         .line<SentimentDataPoint>()
         .x((d) => xScale(d.date))
         .y((d) => yScale(d[key]))
-        .curve(d3.curveMonotoneX);
+        .curve(d3.curveBasisOpen);
 
     // Append a group element for margins.
     const g = svg
