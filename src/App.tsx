@@ -119,7 +119,7 @@ function App() {
         >
           {messages.length === 0 ? (
             <div
-              className={`w-full p-4 flex text-lg items-center justify-center h-full border rounded-none text-center ${
+              className={`w-full flex text-lg items-center justify-center h-full border rounded-none text-center ${
                 darkMode ? "border-white" : "border-black"
               }`}
             >
