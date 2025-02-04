@@ -201,29 +201,24 @@ const Plot4: FC = (): ReactElement => {
    * width and container width.
    */
   const updateItemsPerPage = (): void => {
-    // If the screen is narrow, always show one item.
-    if (window.innerWidth < 768) {
-      setItemsPerPage(1);
-      setCurrentPage(1);
-      return;
+    let newItemsPerPage = 1;
+    if (window.innerWidth >= 768) {
+      const plotWidth = containerRef.current?.offsetWidth || 0;
+      if (plotWidth <= 670) newItemsPerPage = 1;
+      else if (plotWidth <= 1340) newItemsPerPage = 2;
+      else if (plotWidth <= 2010) newItemsPerPage = 3;
+      else if (plotWidth <= 2680) newItemsPerPage = 4;
+      else newItemsPerPage = 5;
     }
 
-    // Get the container width; fallback to 0 if not available.
-    const plotWidth = containerRef.current?.offsetWidth || 0;
-
-    // Set items per page based on the breakpoints.
-    if (plotWidth <= 670) {
-      setItemsPerPage(1);
-    } else if (plotWidth <= 1340) {
-      setItemsPerPage(2);
-    } else if (plotWidth <= 2010) {
-      setItemsPerPage(3);
-    } else if (plotWidth <= 2680) {
-      setItemsPerPage(4);
-    } else {
-      setItemsPerPage(5);
-    }
-    setCurrentPage(1); // Reset to the first page on resize
+    // Aktualisiere nur, wenn sich itemsPerPage ändert.
+    setItemsPerPage((prev) => {
+      if (prev !== newItemsPerPage) {
+        setCurrentPage(1);
+        return newItemsPerPage;
+      }
+      return prev;
+    });
   };
 
   // Update items per page when the component mounts and whenever the window resizes.

@@ -666,7 +666,7 @@ const Plot2: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[740px] ${
+      } w-full md:min-w-[730px] ${
         expanded ? "md:basis-[3000px]" : "md:basis-[800px]"
       } flex-grow p-4 flex flex-col`}
       style={{
