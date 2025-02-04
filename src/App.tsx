@@ -1,13 +1,11 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import FileUpload from "./components/FileUpload";
 import FileUploadMobile from "./components/FileUploadMobile";
 import AggregatePerTime from "./components/AggregatePerTime";
 import Timeline from "./components/Timeline";
-// import MessageRatio from "./components/MessageRatio";
 import WordCount from "./components/WordCount";
 import Stats from "./components/Stats";
-// import Heatmap from "./components/Heatmap";
 import Sentiment from "./components/Sentiment";
 import HeatmapDayHour from "./components/HeatmapDayHour";
 import Emoji from "./components/Emoji";
@@ -15,22 +13,24 @@ import BarChartComp from "./components/BarChartComp";
 import { useChat } from "./context/ChatContext";
 import "./index.css";
 
-function App() {
-  const { darkMode, messages } = useChat();
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  /**
-   * Updates the dark mode class on the document root.
-   */
+/**
+ * Custom hook to update the document's dark mode class and theme-color meta tag.
+ *
+ * This hook toggles the "dark" class on the document root and ensures the
+ * theme-color meta tag reflects the current mode (dark/light). If the meta tag
+ * is missing, it creates one.
+ *
+ * @param darkMode - A boolean indicating whether dark mode is enabled.
+ */
+function useDarkModeThemeEffect(darkMode: boolean) {
+  // Toggle dark mode class on the document root element.
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  /**
-   * Updates the theme color meta tag based on the dark mode state.
-   */
+  // Update the theme-color meta tag.
   useEffect(() => {
-    let metaThemeColor = document.querySelector("meta[name=theme-color]");
+    let metaThemeColor = document.querySelector("meta[name='theme-color']");
     if (!metaThemeColor) {
       metaThemeColor = document.createElement("meta");
       metaThemeColor.setAttribute("name", "theme-color");
@@ -38,21 +38,38 @@ function App() {
     }
     metaThemeColor.setAttribute("content", darkMode ? "#1f2937" : "#ffffff");
   }, [darkMode]);
+}
 
-  /**
-   * Ensures all elements in the same row have equal height for better UI consistency.
-   */
+/**
+ * Custom hook that ensures all child elements within a container have equal heights
+ * per row. This is especially useful when using flexbox layouts to maintain UI consistency.
+ *
+ * @param containerRef - A React ref object that points to the container element.
+ * @param dependencies - An optional dependency array that re-runs the effect when changed.
+ */
+function useEqualRowHeights(
+  containerRef: React.RefObject<HTMLDivElement>,
+  dependencies: any[] = []
+) {
   useEffect(() => {
+    /**
+     * Iterates over the container’s children, groups them by rows based on their
+     * top offset, and then sets each element’s height in a row to the maximum height found.
+     */
     function setEqualRowHeights() {
-      if (!containerRef.current) return;
-      const items = Array.from(
-        containerRef.current.children
-      ) as HTMLDivElement[];
-      let rows: HTMLDivElement[][] = [];
+      const container = containerRef.current;
+      if (!container) return;
+
+      // Get all children elements.
+      const items = Array.from(container.children) as HTMLDivElement[];
+
+      // Reset heights to auto to calculate natural heights.
+      items.forEach((item) => (item.style.height = "auto"));
+
+      // Group items into rows based on their top offset.
+      const rows: HTMLDivElement[][] = [];
       let currentRow: HTMLDivElement[] = [];
       let lastTop: number | null = null;
-
-      items.forEach((item) => (item.style.height = "auto"));
 
       items.forEach((item) => {
         const top = item.offsetTop;
@@ -66,16 +83,43 @@ function App() {
       });
       if (currentRow.length) rows.push(currentRow);
 
+      // For each row, calculate the maximum height and assign it to all items.
       rows.forEach((row) => {
         const maxHeight = Math.max(...row.map((item) => item.offsetHeight));
         row.forEach((item) => (item.style.height = `${maxHeight}px`));
       });
     }
 
+    // Execute the height equalization on mount and whenever dependencies change.
     setEqualRowHeights();
+
+    // Re-calculate heights on window resize.
     window.addEventListener("resize", setEqualRowHeights);
     return () => window.removeEventListener("resize", setEqualRowHeights);
-  }, [messages.length]);
+  }, dependencies);
+}
+
+/**
+ * Main Application Component.
+ *
+ * This component serves as the entry point for the WhatsApp Dashboard application.
+ * It handles SEO meta tags, theme settings (dark/light), responsive file upload components,
+ * and renders various chat analysis visualizations based on the uploaded messages.
+ *
+ * All existing functionalities (dark mode, SEO, equal row heights, file uploads, and chat analysis)
+ * have been preserved while cleaning up the code structure.
+ *
+ * @returns A JSX element representing the complete application UI.
+ */
+const App: React.FC = () => {
+  const { darkMode, messages } = useChat();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Apply dark mode and update the theme-color meta tag.
+  useDarkModeThemeEffect(darkMode);
+
+  // Ensure all analysis components in the container have equal heights per row.
+  useEqualRowHeights(containerRef, [messages.length]);
 
   return (
     <>
@@ -106,10 +150,10 @@ function App() {
       <div className="p-4 flex flex-col h-full md:h-screen">
         {/* File Upload Components (Desktop & Mobile) */}
         <div className="hidden md:block">
-          <FileUpload onFileUpload={(file) => console.log(file)} />
+          <FileUpload onFileUpload={(file: File) => console.log(file)} />
         </div>
         <div className="md:hidden">
-          <FileUploadMobile onFileUpload={(file) => console.log(file)} />
+          <FileUploadMobile onFileUpload={(file: File) => console.log(file)} />
         </div>
 
         {/* Chat Analysis Components */}
@@ -130,12 +174,10 @@ function App() {
               <AggregatePerTime />
               <Timeline />
               <BarChartComp />
-              {/*<MessageRatio />*/}
               <Emoji />
               <WordCount />
               <Stats />
               <HeatmapDayHour />
-              {/*<Heatmap />*/}
               <Sentiment />
             </>
           )}
@@ -143,6 +185,6 @@ function App() {
       </div>
     </>
   );
-}
+};
 
 export default App;
