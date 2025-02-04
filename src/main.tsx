@@ -1,9 +1,32 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
+
 import App from "./App";
 import { ChatProvider } from "./context/ChatContext";
-import { HelmetProvider } from "react-helmet-async";
 import "./index.css";
+
+/**
+ * Wraps the application with necessary global providers.
+ * This keeps the `index.tsx` clean and modular.
+ */
+const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <HelmetProvider>
+      <ChatProvider>{children}</ChatProvider>
+    </HelmetProvider>
+  );
+};
+
+// Ensure the root element exists before rendering
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error(
+    "Root element not found. Make sure there is an element with id='root' in index.html"
+  );
+}
+
+const root = ReactDOM.createRoot(rootElement);
 
 /**
  * Main entry point of the application.
@@ -11,14 +34,10 @@ import "./index.css";
  * - Wraps the App component with necessary context providers.
  * - Enables strict mode for additional runtime checks.
  */
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+root.render(
   <React.StrictMode>
-    {/* Provides SEO and metadata management */}
-    <HelmetProvider>
-      {/* Global chat context provider */}
-      <ChatProvider>
-        <App />
-      </ChatProvider>
-    </HelmetProvider>
+    <Providers>
+      <App />
+    </Providers>
   </React.StrictMode>
 );
