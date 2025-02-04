@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useState, FC } from "react";
+import { useEffect, useRef, useMemo, useState, FC } from "react";
 import { useChat } from "../context/ChatContext";
 import * as d3 from "d3";
 import useResizeObserver from "../hooks/useResizeObserver";
@@ -36,16 +36,6 @@ interface AggregatedStat {
   activeDays: number;
   uniqueWordsCount: number;
   averageCharactersPerMessage: number;
-}
-
-/**
- * The shape of each message from the chat context.
- */
-interface Message {
-  isUsed: boolean;
-  sender: string;
-  message: string;
-  date: string;
 }
 
 /**
