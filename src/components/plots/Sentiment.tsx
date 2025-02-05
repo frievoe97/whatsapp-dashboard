@@ -3,6 +3,7 @@ import * as d3 from "d3";
 import { useChat } from "../../context/ChatContext";
 import useResizeObserver from "../../hooks/useResizeObserver";
 import Sentiment from "sentiment";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 // -----------------------------------------------------------------------------
 // CONSTANTS & TYPES
@@ -51,6 +52,9 @@ const SentimentAnalysis: React.FC = () => {
   // Refs for the container and SVG elements.
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+
+  // State to track if the chart is expanded.
+  const [expanded, setExpanded] = useState(false);
 
   // Observe container dimensions to make the chart responsive.
   const dimensions = useResizeObserver(containerRef);
@@ -259,7 +263,7 @@ const SentimentAnalysis: React.FC = () => {
     if (!dimensions || sentimentData.length === 0) return;
 
     const { width, height } = dimensions;
-    const margin = { top: 20, right: 30, bottom: 70, left: 50 };
+    const margin = { top: 20, right: 10, bottom: 70, left: 30 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -351,7 +355,9 @@ const SentimentAnalysis: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[500px] md:basis-[500px] p-4 flex-grow flex flex-col`}
+      } w-full md:min-w-[500px] ${
+        expanded ? "md:basis-[3000px]" : "md:basis-[500px]"
+      } p-4 flex-grow flex flex-col`}
       style={{
         position: "relative",
         minHeight: "400px",
@@ -359,13 +365,39 @@ const SentimentAnalysis: React.FC = () => {
         overflow: "hidden",
       }}
     >
-      <h2
-        className={`text-lg font-semibold mb-4 ${
-          darkMode ? "text-white" : "text-black"
-        }`}
-      >
-        Sentiment Analysis over Time
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2
+          className={`text-lg font-semibold mb-4 ${
+            darkMode ? "text-white" : "text-black"
+          }`}
+        >
+          Sentiment Analysis over Time
+        </h2>
+        <button
+          className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
+            darkMode ? "text-white" : "text-black"
+          }`}
+          onClick={() => {
+            setExpanded(!expanded);
+            // Dispatch a resize event for layout update after expanding/collapsing.
+            setTimeout(() => {
+              window.dispatchEvent(new Event("resize"));
+            }, 200);
+          }}
+          style={{
+            background: "transparent",
+            outline: "none",
+            boxShadow: "none",
+            border: "none",
+          }}
+        >
+          {expanded ? (
+            <Minimize2 className="w-5 h-5" />
+          ) : (
+            <Maximize2 className="w-5 h-5" />
+          )}
+        </button>
+      </div>
       <div className="flex-grow flex justify-center items-center max-h-full">
         {sentimentData.length === 0 ? (
           <span className="text-lg">No Data Available</span>

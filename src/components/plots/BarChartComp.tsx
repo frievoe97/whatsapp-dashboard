@@ -251,8 +251,18 @@ const SenderComparisonBarChart: FC = () => {
 
     // Set up the SVG container.
     const svg = d3.select(svgRef.current);
-    const { width, height } = dimensions;
-    const margin = { top: 20, right: 20, bottom: 250, left: 40 };
+    let { width, height } = dimensions;
+
+    const headerHeight =
+      document.getElementById("bar-chart-header")?.clientHeight || 0;
+    const propertySelectHeight =
+      document.getElementById("property-select")?.clientHeight || 0;
+    const paginationHeight =
+      document.getElementById("bar-chart-pagination")?.clientHeight || 0;
+
+    height = height - headerHeight - propertySelectHeight - paginationHeight;
+
+    const margin = { top: 20, right: 20, bottom: 100, left: 40 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -287,7 +297,7 @@ const SenderComparisonBarChart: FC = () => {
       .attr("transform", `translate(0, ${innerHeight})`)
       .call(d3.axisBottom(xScale).tickFormat((_, i) => currentSenders[i] || ""))
       .selectAll("text")
-      .attr("transform", "rotate(-45)")
+      .attr("transform", "rotate(-30)")
       .style("text-anchor", "end")
       .style("font-size", "12px");
 
@@ -345,7 +355,7 @@ const SenderComparisonBarChart: FC = () => {
     <div
       id="plot-sender-comparison"
       ref={containerRef}
-      className={`border min-h-96 w-full md:min-w-[740px] flex-grow p-4 flex flex-col ${
+      className={`border w-full md:min-w-[740px] flex-grow p-4 flex flex-col ${
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
@@ -358,7 +368,7 @@ const SenderComparisonBarChart: FC = () => {
       }}
     >
       {/* Header with title and expand/minimize button */}
-      <div className="flex items-center justify-between">
+      <div id="bar-chart-header" className="flex items-center justify-between">
         <h2 className="text-lg font-semibold mb-4">Sender Comparison</h2>
         <button
           className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
@@ -416,33 +426,44 @@ const SenderComparisonBarChart: FC = () => {
       )}
 
       {/* Pagination Controls */}
-      <div className="flex justify-center items-center mt-4 space-x-2">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className={`px-2 py-1 border ${
-            darkMode ? "border-gray-300 text-white" : "border-black text-black"
-          } ${currentPage === 1 ? "text-gray-400 cursor-not-allowed" : ""}`}
+      {totalPages > 1 && (
+        <div
+          id="bar-chart-pagination"
+          className="flex justify-center items-center mt-4 space-x-2"
         >
-          Previous
-        </button>
-        <span className={darkMode ? "text-white" : "text-black"}>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages}
-          className={`px-2 py-1 border ${
-            darkMode ? "border-gray-300 text-white" : "border-black text-black"
-          } ${
-            currentPage === totalPages ? "text-gray-400 cursor-not-allowed" : ""
-          }`}
-        >
-          Next
-        </button>
-      </div>
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className={`px-2 py-1 border ${
+              darkMode
+                ? "border-gray-300 text-white"
+                : "border-black text-black"
+            } ${currentPage === 1 ? "text-gray-400 cursor-not-allowed" : ""}`}
+          >
+            Previous
+          </button>
+          <span className={darkMode ? "text-white" : "text-black"}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className={`px-2 py-1 border ${
+              darkMode
+                ? "border-gray-300 text-white"
+                : "border-black text-black"
+            } ${
+              currentPage === totalPages
+                ? "text-gray-400 cursor-not-allowed"
+                : ""
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

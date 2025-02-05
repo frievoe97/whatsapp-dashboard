@@ -23,7 +23,7 @@ import React, {
   ReactNode,
 } from "react";
 
-//#region Interfaces
+import { DEFAULT_WEEKDAYS } from "../hooks/useFileUploadLogic";
 
 /**
  * Represents a single chat message.
@@ -69,6 +69,12 @@ export interface ChatContextType {
   setSelectedSender: React.Dispatch<React.SetStateAction<string[]>>;
   minMessagePercentage: number;
   setMinMessagePercentage: React.Dispatch<React.SetStateAction<number>>;
+
+  selectedWeekdays: string[];
+  setSelectedWeekdays: React.Dispatch<React.SetStateAction<string[]>>;
+
+  isPanelOpen: boolean;
+  setIsPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 /**
@@ -113,6 +119,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [selectedSender, setSelectedSender] = useState<string[]>([]);
   const [minMessagePercentage, setMinMessagePercentage] = useState<number>(3);
 
+  const [selectedWeekdays, setSelectedWeekdays] =
+    useState<string[]>(DEFAULT_WEEKDAYS);
+
+  const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
+
   /**
    * Toggles the dark mode state.
    * Uses useCallback to avoid re-creating the function on each render.
@@ -145,6 +156,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       setSelectedSender,
       minMessagePercentage,
       setMinMessagePercentage,
+      selectedWeekdays,
+      setSelectedWeekdays,
+      isPanelOpen,
+      setIsPanelOpen,
     }),
     [
       messages,
@@ -157,6 +172,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       language,
       selectedSender,
       minMessagePercentage,
+      selectedWeekdays,
+      isPanelOpen,
     ]
   );
 

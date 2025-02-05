@@ -212,7 +212,7 @@ const Plot5: React.FC = () => {
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       }`}
-      style={{ minHeight: "550px", maxHeight: "550px", overflow: "hidden" }}
+      style={{ minHeight: "350px", maxHeight: "550px", overflow: "hidden" }}
     >
       <h2 className="text-lg font-semibold mb-4">
         Message Statistics per Person

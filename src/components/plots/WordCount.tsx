@@ -336,7 +336,7 @@ const Plot4: FC = (): ReactElement => {
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       }`}
-      style={{ minHeight: "550px", maxHeight: "550px", overflow: "hidden" }}
+      style={{ minHeight: "350px", maxHeight: "550px", overflow: "hidden" }}
     >
       <h2 className="text-lg font-semibold mb-4">Top 10 Words per Person</h2>
       <div className="flex-grow flex justify-center items-center flex-col w-full">

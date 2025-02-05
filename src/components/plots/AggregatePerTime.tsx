@@ -234,7 +234,6 @@ const AggregatePerTimePlot: React.FC = () => {
     }
   }, [messages]);
 
-  // Create a color scale based on sender names and dark mode
   const colorScale = useMemo(() => {
     const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
     return d3.scaleOrdinal<string, string>(colors).domain(senders);

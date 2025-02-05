@@ -218,6 +218,9 @@ const SentimentWordsPlot: FC = (): ReactElement => {
         }
         return prev;
       });
+      setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+      }, 0);
     };
 
     window.addEventListener("resize", updateItemsPerPage);
@@ -395,7 +398,7 @@ const SentimentWordsPlot: FC = (): ReactElement => {
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       }`}
-      style={{ minHeight: "550px", maxHeight: "550px", overflow: "hidden" }}
+      style={{ minHeight: "350px", maxHeight: "550px", overflow: "hidden" }}
     >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold mb-4">
