@@ -5,6 +5,8 @@ import { useChat } from "../../context/ChatContext";
 import Sentiment from "sentiment";
 import { removeStopwords, deu } from "stopword";
 import ClipLoader from "react-spinners/ClipLoader";
+import Switch from "react-switch";
+import { CirclePlus, CircleMinus } from "lucide-react";
 
 // -----------------------------------------------------------------------------
 // CONSTANTS & TYPES
@@ -232,6 +234,7 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     useState<boolean>(false);
 
   useEffect(() => {
+    console.log("Language changed for word analysis:", language);
     if (!language) return;
     const langToLoad = VALID_LANGUAGES.includes(language as any)
       ? language
@@ -394,36 +397,40 @@ const SentimentWordsPlot: FC = (): ReactElement => {
       }`}
       style={{ minHeight: "550px", maxHeight: "550px", overflow: "hidden" }}
     >
-      <h2 className="text-lg font-semibold mb-4">
-        Top 10 {showBest ? "Best" : "Worst"} Words per Person
-      </h2>
-      {/* Toggle for Best / Worst words */}
-      <div className="flex justify-center items-center mb-4 space-x-4">
-        <button
-          onClick={() => setShowBest(true)}
-          className={`px-3 py-1 rounded-none border ${
-            showBest
-              ? "bg-gray-700 text-white"
-              : darkMode
-              ? "border-gray-300 text-white hover:border-gray-400"
-              : "border-black text-black hover:border-black"
-          }`}
-        >
-          Best Words
-        </button>
-        <button
-          onClick={() => setShowBest(false)}
-          className={`px-3 py-1 rounded-none border ${
-            !showBest
-              ? "bg-gray-700 text-white"
-              : darkMode
-              ? "border-gray-300 text-white hover:border-gray-400"
-              : "border-black text-black hover:border-black"
-          }`}
-        >
-          Worst Words
-        </button>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold mb-4">
+          Top 10 {showBest ? "Best" : "Worst"} Words per Person
+        </h2>
+
+        <div className="flex items-center space-x-2">
+          <CircleMinus
+            className={`${
+              darkMode ? "text-white" : "text-gray-700"
+            } w-4 h-4 md:w-5 md:h-5`}
+          />
+          <Switch
+            onChange={() => setShowBest(!showBest)}
+            checked={showBest}
+            offColor={darkMode ? "#444" : "#ccc"}
+            onColor="#000"
+            uncheckedIcon={false}
+            checkedIcon={false}
+            height={20}
+            width={48}
+            handleDiameter={16}
+            borderRadius={20}
+            boxShadow="none"
+            activeBoxShadow="none"
+            className="custom-switch mx-1 md:mx-2"
+          />
+          <CirclePlus
+            className={`${
+              darkMode ? "text-white" : "text-gray-700"
+            } w-4 h-4 md:w-5 md:h-5`}
+          />
+        </div>
       </div>
+
       <div className="flex-grow flex justify-center items-center flex-col w-full">
         {isUploading ? (
           <ClipLoader
