@@ -204,10 +204,28 @@ const SenderComparisonBarChart: FC = () => {
     const sortedStats = [...aggregatedStats].sort((a, b) => {
       const aValue = a[selectedProperty as keyof AggregatedStat] as number;
       const bValue = b[selectedProperty as keyof AggregatedStat] as number;
-      return bValue - aValue; // Descending order.
+      return bValue - aValue; // Sort in descending order.
     });
+
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return sortedStats.slice(startIndex, startIndex + itemsPerPage);
+    let pageStats = sortedStats.slice(startIndex, startIndex + itemsPerPage);
+
+    // If on the last page and there are fewer items, fill with empty objects.
+    while (pageStats.length < itemsPerPage) {
+      pageStats.push({
+        sender: " ",
+        messageCount: 0,
+        averageWordsPerMessage: 0,
+        medianWordsPerMessage: 0,
+        totalWordsSent: 0,
+        maxWordsInMessage: 0,
+        activeDays: 0,
+        uniqueWordsCount: 0,
+        averageCharactersPerMessage: 0,
+      });
+    }
+
+    return pageStats;
   }, [aggregatedStats, currentPage, itemsPerPage, selectedProperty]);
 
   /**
