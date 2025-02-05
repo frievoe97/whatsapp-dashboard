@@ -1,8 +1,8 @@
 // src/components/Plot3.tsx
 import React, { useEffect, useRef, useMemo } from "react";
-import { useChat } from "../context/ChatContext";
+import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
-import useResizeObserver from "../hooks/useResizeObserver";
+import useResizeObserver from "../../hooks/useResizeObserver";
 import ClipLoader from "react-spinners/ClipLoader";
 
 interface PieData {

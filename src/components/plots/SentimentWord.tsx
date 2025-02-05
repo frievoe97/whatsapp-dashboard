@@ -1,11 +1,4 @@
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  FC,
-  ReactElement,
-} from "react";
+import { useEffect, useMemo, useRef, useState, FC, ReactElement } from "react";
 import * as d3 from "d3";
 import { useChat } from "../../context/ChatContext";
 // import useResizeObserver from "../../hooks/useResizeObserver";
@@ -34,13 +27,6 @@ interface WordSentimentCount {
 interface AggregatedSentimentWordData {
   sender: string;
   topWords: WordSentimentCount[];
-}
-
-// Chat message type.
-interface ChatMessage {
-  date: Date;
-  message: string;
-  isUsed: boolean;
 }
 
 // -----------------------------------------------------------------------------
