@@ -114,14 +114,16 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   /** File upload section with file input and delete button. */
   const FileUploadSection: React.FC = () => (
     <div className="w-full flex flex-row items-center justify-between">
-      <div className="flex flex-row items-center">
+      <div className={`flex flex-row items-center ${fileName ? "" : "w-full"}`}>
         <label
           htmlFor="file-upload"
           className={`cursor-pointer px-4 py-1 md:py-2 border ${
+            fileName ? "" : "w-full text-center"
+          } ${
             darkMode
               ? "border-white bg-gray-700 text-white"
               : "border-black bg-white text-black"
-          } hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 inline-block ${bgColor} ${textColor} ${borderColor}`}
+          }  hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 inline-block ${bgColor} ${textColor} ${borderColor}`}
         >
           Select File
         </label>
