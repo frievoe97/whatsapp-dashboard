@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useChat } from "../context/ChatContext";
+import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
 import emojiRegex from "emoji-regex";
 import ClipLoader from "react-spinners/ClipLoader";
@@ -16,49 +16,53 @@ interface AggregatedEmojiData {
 
 const MIN_WIDTH_PER_ITEM = 600;
 
-const Plot7: React.FC = () => {
+/**
+ * Calculates the number of items per page based on the container's width and window size.
+ * Returns 1 for small devices (width < 768) and computes the number based on the container's width.
+ * @param containerId - The ID of the container element.
+ * @returns The number of items per page.
+ */
+const calculateItemsPerPage = (containerId: string): number => {
+  if (window.innerWidth < 768) return 1;
+  const container = document.getElementById(containerId);
+  const plotWidth = container ? container.offsetWidth : 0;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) return 1;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) return 2;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) return 3;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) return 4;
+  return 5;
+};
+
+/**
+ * EmojiPlot component displays the top 10 emojis per sender.
+ * It supports responsive design with pagination and dark mode.
+ */
+const EmojiPlot: React.FC = () => {
   const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
-  const [currentPage, setCurrentPage] = useState(1);
+  const containerId = "plot-emoji-count";
 
-  const [itemsPerPage, setItemsPerPage] = useState(() => {
-    if (window.innerWidth < 768) return 1;
-    const plotWidth =
-      document.getElementById("plot-emoji-count")?.offsetWidth || 0;
-    if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) return 1;
-    if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) return 2;
-    if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) return 3;
-    if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) return 4;
-    return 5;
-  });
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(() =>
+    calculateItemsPerPage(containerId)
+  );
 
+  // Handle window resize events to update itemsPerPage responsively.
   useEffect(() => {
     const handleResize = () => {
-      setCurrentPage(1); // Zur ersten Seite zurückkehren
-      if (window.innerWidth < 768) {
-        setItemsPerPage(1);
-        return;
-      }
-
-      const plotWidth =
-        document.getElementById("plot-emoji-count")?.offsetWidth || 0;
-      if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) setItemsPerPage(1);
-      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) setItemsPerPage(2);
-      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) setItemsPerPage(3);
-      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) setItemsPerPage(4);
-      else setItemsPerPage(5);
+      const newItemsPerPage = calculateItemsPerPage(containerId);
+      setItemsPerPage((prev) =>
+        prev !== newItemsPerPage ? newItemsPerPage : prev
+      );
     };
 
     window.addEventListener("resize", handleResize);
-    handleResize(); // Initial setzen
+    handleResize();
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [containerId]);
 
-  // Verwende emoji-regex für eine umfassendere Emoji-Erkennung
-  const regex = emojiRegex();
-
-  // Aggregiere die Top 10 Emojis pro Sender
+  // Aggregate top 10 emojis per sender using useMemo for performance.
   const aggregatedEmojiData: AggregatedEmojiData[] = useMemo(() => {
-    // Berechne die Gesamtanzahl der Nachrichten pro Sender
+    // Count messages per sender to filter out senders with too few messages.
     const senderMessageCount: { [sender: string]: number } = {};
     messages.forEach((msg) => {
       if (!msg.isUsed) return;
@@ -69,28 +73,27 @@ const Plot7: React.FC = () => {
     const totalMessages = messages.filter((msg) => msg.isUsed).length;
     const minMessages = (minMessagePercentage / 100) * totalMessages;
 
-    // Datenstruktur für die Emojis
+    // Data map for storing emoji counts per sender.
     const dataMap: { [sender: string]: { [emoji: string]: number } } = {};
+    const regex = emojiRegex();
 
     messages.forEach((msg) => {
       if (!msg.isUsed) return;
       const sender = msg.sender;
-
-      // Falls der Sender die Mindestanzahl an Nachrichten nicht erreicht, überspringen
       if ((senderMessageCount[sender] || 0) < minMessages) return;
 
       if (!dataMap[sender]) {
         dataMap[sender] = {};
       }
 
-      // Extrahiere Emojis aus der Nachricht
+      // Extract emojis from the message.
       const emojis = msg.message.match(regex) || [];
       emojis.forEach((emoji) => {
         dataMap[sender][emoji] = (dataMap[sender][emoji] || 0) + 1;
       });
     });
 
-    // Finde die Top 10 Emojis pro Sender
+    // Build aggregated emoji data with the top 10 emojis for each sender.
     return Object.keys(dataMap).map((sender) => {
       const emojiCounts = Object.entries(dataMap[sender])
         .map(([emoji, count]) => ({ emoji, count }))
@@ -98,40 +101,41 @@ const Plot7: React.FC = () => {
         .slice(0, 10);
       return { sender, topEmojis: emojiCounts };
     });
-  }, [messages, regex, minMessagePercentage]);
+  }, [messages, minMessagePercentage]);
 
-  // Farbschema basierend auf den Sendern
-
-  // Farbschema basierend auf den Sendern
-  const colorScale = useMemo(() => {
-    const senders = aggregatedEmojiData.map((d) => d.sender);
-
-    // Definiere unterschiedliche Farbpaletten für Light- und Dark-Mode
-    const lightColors = d3.schemePaired; // Bestehende Farbschema für Light Mode
-    const darkColors = d3.schemeSet2;
-
-    // Wähle die Farbpalette basierend auf dem Dark Mode Zustand
-    const colors = darkMode ? darkColors : lightColors;
-
-    // Erstelle eine Farbzuteilung für jeden Sender
-    const scale = new Map<string, string>();
-    senders.forEach((sender, index) => {
-      scale.set(sender, colors[index % colors.length]);
-    });
-
-    return scale;
-  }, [aggregatedEmojiData, darkMode]); // Dark Mode als Dependency hinzufügen
-
+  // Calculate total pages based on the aggregated emoji data.
   const totalPages = useMemo(
     () => Math.ceil(aggregatedEmojiData.length / itemsPerPage),
     [aggregatedEmojiData, itemsPerPage]
   );
 
+  // Ensure currentPage is within valid range if totalPages changes.
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages || 1);
+    }
+  }, [currentPage, totalPages]);
+
+  // Get the current page's data.
   const currentData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return aggregatedEmojiData.slice(startIndex, startIndex + itemsPerPage);
   }, [aggregatedEmojiData, currentPage, itemsPerPage]);
 
+  // Create a color scale for each sender.
+  const colorScale = useMemo(() => {
+    const senders = aggregatedEmojiData.map((d) => d.sender);
+    const lightColors = d3.schemePaired;
+    const darkColors = d3.schemeSet2;
+    const colors = darkMode ? darkColors : lightColors;
+    const scale = new Map<string, string>();
+    senders.forEach((sender, index) => {
+      scale.set(sender, colors[index % colors.length]);
+    });
+    return scale;
+  }, [aggregatedEmojiData, darkMode]);
+
+  // Pagination handlers.
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
@@ -142,7 +146,7 @@ const Plot7: React.FC = () => {
 
   return (
     <div
-      id="plot-emoji-count"
+      id={containerId}
       className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 overflow-auto flex-grow ${
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
@@ -152,20 +156,16 @@ const Plot7: React.FC = () => {
     >
       <h2 className="text-lg font-semibold mb-4">Top 10 Emojis for Person</h2>
 
-      {/* Bedingtes Rendering für Ladeanimation und Datenanzeige */}
       <div className="flex-grow flex justify-center items-center flex-col">
         {isUploading ? (
-          // Ladeanimation anzeigen, wenn Daten hochgeladen werden
           <ClipLoader
             color={darkMode ? "#ffffff" : "#000000"}
             loading={true}
             size={50}
           />
         ) : aggregatedEmojiData.length === 0 ? (
-          // "No Data" anzeigen, wenn keine Daten vorhanden sind
           <span className="text-lg">No Data Available</span>
         ) : (
-          // Emojidaten und Paginierung anzeigen
           <>
             <div className="flex flex-col md:flex-row gap-4 w-full">
               {currentData.map((senderData) => {
@@ -173,7 +173,6 @@ const Plot7: React.FC = () => {
                   ...senderData.topEmojis.map((e) => e.count),
                   1
                 );
-
                 return (
                   <div
                     key={senderData.sender}
@@ -182,7 +181,6 @@ const Plot7: React.FC = () => {
                     }`}
                     style={{
                       flex: `1 1 calc(${100 / itemsPerPage}% - 16px)`,
-
                       borderLeft: `4px solid ${colorScale.get(
                         senderData.sender
                       )}`,
@@ -259,6 +257,9 @@ interface EmojiRowProps {
   color: string;
 }
 
+/**
+ * EmojiRow component renders a single row displaying an emoji with a rank, a progress bar, and the count.
+ */
 const EmojiRow: React.FC<EmojiRowProps> = ({
   rank,
   emoji,
@@ -266,16 +267,14 @@ const EmojiRow: React.FC<EmojiRowProps> = ({
   maxCount,
   color,
 }) => {
-  const { darkMode } = useChat(); // Dark Mode aus dem Context holen
+  const { darkMode } = useChat();
   const barWidth = (count / maxCount) * 100;
 
   return (
     <div className="flex items-center">
-      {/* Rang */}
       <div className={`w-6 text-sm ${darkMode ? "text-white" : "text-black"}`}>
         {rank}.
       </div>
-      {/* Emoji */}
       <div
         className={`w-12 text-lg ${darkMode ? "text-white" : "text-black"}`}
         style={{
@@ -285,7 +284,6 @@ const EmojiRow: React.FC<EmojiRowProps> = ({
       >
         {emoji}
       </div>
-      {/* Balken */}
       <div className="flex-1 bg-gray-300 h-4 mx-2">
         <div
           className="h-4"
@@ -295,7 +293,6 @@ const EmojiRow: React.FC<EmojiRowProps> = ({
           }}
         ></div>
       </div>
-      {/* Anzahl */}
       <div className={`w-8 text-sm ${darkMode ? "text-white" : "text-black"}`}>
         {count}
       </div>
@@ -303,4 +300,4 @@ const EmojiRow: React.FC<EmojiRowProps> = ({
   );
 };
 
-export default Plot7;
+export default EmojiPlot;

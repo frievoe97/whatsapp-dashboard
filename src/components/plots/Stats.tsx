@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useChat } from "../context/ChatContext";
+import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
 import ClipLoader from "react-spinners/ClipLoader";
 
-interface SenderStats {
+export interface SenderStats {
   sender: string;
   messageCount: number;
   averageWordsPerMessage: number;
@@ -13,57 +13,65 @@ interface SenderStats {
   activeDays: number;
   firstMessageDate: Date;
   lastMessageDate: Date;
-  uniqueWordsCount: number; // Neue Statistik
-  averageCharactersPerMessage: number; // Neue Statistik
+  uniqueWordsCount: number;
+  averageCharactersPerMessage: number;
 }
 
 const MIN_WIDTH_PER_ITEM = 600;
 
+/**
+ * Calculates the number of items per page based on the container's width and window size.
+ * Returns 1 for small devices (width < 768) and computes the number based on the container's width.
+ * @param containerId - The ID of the container element.
+ * @returns The number of items per page.
+ */
+const calculateItemsPerPage = (containerId: string): number => {
+  if (window.innerWidth < 768) return 1;
+  const container = document.getElementById(containerId);
+  const plotWidth = container ? container.offsetWidth : 0;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) return 1;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) return 2;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) return 3;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) return 4;
+  return 5;
+};
+
+/**
+ * Plot5 component displays aggregated message statistics per sender.
+ * It includes pagination, responsive design adjustments, and dark mode support.
+ */
 const Plot5: React.FC = () => {
   const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
-  const [currentPage, setCurrentPage] = useState(1);
+  const containerId = "plot-message-stats";
 
-  const [itemsPerPage, setItemsPerPage] = useState(() => {
-    if (window.innerWidth < 768) return 1;
-    const plotWidth =
-      document.getElementById("plot-message-stats")?.offsetWidth || 0;
-    if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) return 1;
-    if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) return 2;
-    if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) return 3;
-    if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) return 4;
-    return 5;
-  });
+  // State for current page and items per page
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(() =>
+    calculateItemsPerPage(containerId)
+  );
 
+  // Handle window resize events to update itemsPerPage responsively.
+  // Note: We do not reset currentPage on every resize – only update if the value changes.
   useEffect(() => {
     const handleResize = () => {
-      setCurrentPage(1); // Zur ersten Seite zurückkehren
-      if (window.innerWidth < 768) {
-        setItemsPerPage(1);
-        return;
-      }
-
-      const plotWidth =
-        document.getElementById("plot-message-stats")?.offsetWidth || 0;
-
-      console.log("Plot Width", plotWidth);
-
-      if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) setItemsPerPage(1);
-      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) setItemsPerPage(2);
-      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) setItemsPerPage(3);
-      else if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) setItemsPerPage(4);
-      else setItemsPerPage(5);
+      const newItemsPerPage = calculateItemsPerPage(containerId);
+      setItemsPerPage((prev) =>
+        prev !== newItemsPerPage ? newItemsPerPage : prev
+      );
     };
 
     window.addEventListener("resize", handleResize);
-    handleResize(); // Initial setzen
+    // Initial calculation
+    handleResize();
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [containerId]);
 
-  // Aggregiere Statistiken pro Sender
+  // Aggregate statistics per sender using useMemo for performance.
   const aggregatedStats: SenderStats[] = useMemo(() => {
     const totalMessages = messages.filter((msg) => msg.isUsed).length;
     const minMessages = (minMessagePercentage / 100) * totalMessages;
 
+    // Count messages per sender.
     const senderMessageCount: { [sender: string]: number } = {};
     const dataMap: {
       [sender: string]: {
@@ -82,10 +90,12 @@ const Plot5: React.FC = () => {
         (senderMessageCount[msg.sender] || 0) + 1;
     });
 
+    // Build data map with detailed statistics for each sender.
     messages.forEach((msg) => {
       if (!msg.isUsed || senderMessageCount[msg.sender] < minMessages) return;
       const sender = msg.sender;
       const date = new Date(msg.date);
+      // Normalize the message text and split into words.
       const words = msg.message
         .toLowerCase()
         .replace(/[^a-zA-ZäöüßÄÖÜ\s]/g, "")
@@ -112,6 +122,7 @@ const Plot5: React.FC = () => {
       dataMap[sender].totalCharacters += characters;
     });
 
+    // Convert aggregated data into an array of SenderStats objects.
     return Object.keys(dataMap).map((sender) => {
       const senderData = dataMap[sender];
       const messageCount = senderData.messages.length;
@@ -152,38 +163,39 @@ const Plot5: React.FC = () => {
     });
   }, [messages, minMessagePercentage]);
 
-  // Farbschema basierend auf den Sendern
-
-  // Farbschema basierend auf den Sendern
-  const colorScale = useMemo(() => {
-    const senders = aggregatedStats.map((d) => d.sender);
-
-    // Definiere unterschiedliche Farbpaletten für Light- und Dark-Mode
-    const lightColors = d3.schemePaired; // Bestehende Farbschema für Light Mode
-    const darkColors = d3.schemeSet2;
-
-    // Wähle die Farbpalette basierend auf dem Dark Mode Zustand
-    const colors = darkMode ? darkColors : lightColors;
-
-    // Erstelle eine Farbzuteilung für jeden Sender
-    const scale = new Map<string, string>();
-    senders.forEach((sender, index) => {
-      scale.set(sender, colors[index % colors.length]);
-    });
-
-    return scale;
-  }, [aggregatedStats, darkMode]); // Dark Mode als Dependency hinzufügen
-
+  // Calculate total pages based on the aggregated data.
   const totalPages = useMemo(
     () => Math.ceil(aggregatedStats.length / itemsPerPage),
     [aggregatedStats, itemsPerPage]
   );
 
+  // Ensure currentPage is within valid range if totalPages changes.
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages || 1);
+    }
+  }, [currentPage, totalPages]);
+
+  // Get the current page's data.
   const currentStats = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return aggregatedStats.slice(startIndex, startIndex + itemsPerPage);
   }, [aggregatedStats, currentPage, itemsPerPage]);
 
+  // Create a color scale for each sender based on dark mode and predefined D3 color schemes.
+  const colorScale = useMemo(() => {
+    const senders = aggregatedStats.map((d) => d.sender);
+    const lightColors = d3.schemePaired;
+    const darkColors = d3.schemeSet2;
+    const colors = darkMode ? darkColors : lightColors;
+    const scale = new Map<string, string>();
+    senders.forEach((sender, index) => {
+      scale.set(sender, colors[index % colors.length]);
+    });
+    return scale;
+  }, [aggregatedStats, darkMode]);
+
+  // Pagination handlers.
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
@@ -194,7 +206,7 @@ const Plot5: React.FC = () => {
 
   return (
     <div
-      id="plot-message-stats"
+      id={containerId}
       className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 overflow-auto flex-grow ${
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
@@ -206,20 +218,16 @@ const Plot5: React.FC = () => {
         Message Statistics per Person
       </h2>
 
-      {/* Bedingtes Rendering für Ladeanimation und Datenanzeige */}
       <div className="flex-grow flex justify-center items-center flex-col">
         {isUploading ? (
-          // Ladeanimation anzeigen, wenn Daten hochgeladen werden
           <ClipLoader
             color={darkMode ? "#ffffff" : "#000000"}
             loading={true}
             size={50}
           />
         ) : aggregatedStats.length === 0 ? (
-          // "No Data" anzeigen, wenn keine Daten vorhanden sind
           <span className="text-lg">No Data Available</span>
         ) : (
-          // Statistiken und Paginierung anzeigen
           <>
             <div className="flex flex-wrap gap-4 w-full justify-center">
               {currentStats.map((stat) => (
@@ -229,9 +237,8 @@ const Plot5: React.FC = () => {
                     darkMode ? "border-gray-300" : "border-black"
                   }`}
                   style={{
-                    flex: `1 1 calc(${100 / itemsPerPage}% - 16px)`, // Flexible Breite mit Abstand berücksichtigt
-                    minWidth: "250px", // Mindestbreite für bessere Darstellung
-
+                    flex: `1 1 calc(${100 / itemsPerPage}% - 16px)`,
+                    minWidth: "250px",
                     borderLeft: `4px solid ${colorScale.get(stat.sender)}`,
                   }}
                 >
@@ -326,6 +333,10 @@ const Plot5: React.FC = () => {
   );
 };
 
+/**
+ * StatRow component renders a single row of statistics with a label and a value.
+ * It supports dark mode styling.
+ */
 interface StatRowProps {
   label: string;
   value: string | number;
@@ -333,19 +344,14 @@ interface StatRowProps {
 
 const StatRow: React.FC<StatRowProps> = ({ label, value }) => {
   const { darkMode } = useChat();
-
   return (
     <div
       className={`flex justify-between h-[28px] ${
         darkMode ? "text-white" : "text-black"
       }`}
     >
-      <span className={`text-sm ${darkMode ? "text-white" : "text-black"}`}>
-        {label}
-      </span>
-      <span className={`text-sm ${darkMode ? "text-white" : "text-black"}`}>
-        {value}
-      </span>
+      <span className="text-sm">{label}</span>
+      <span className="text-sm">{value}</span>
     </div>
   );
 };

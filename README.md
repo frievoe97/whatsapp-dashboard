@@ -2,6 +2,10 @@
 
 A React application that visually represents WhatsApp chats. Upload your `.txt` chat files and explore interactive plots—all processed locally without any data being uploaded to external servers.
 
+## Live Demo
+
+[Whatsapp-Dashboard](https://whatsapp-dashboard.friedrichvoelkers.de/)
+
 ## Table of Contents
 
 - [Features](#features)

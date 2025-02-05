@@ -2,14 +2,15 @@ import React, { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import FileUpload from "./components/FileUpload";
 import FileUploadMobile from "./components/FileUploadMobile";
-import AggregatePerTime from "./components/AggregatePerTime";
-import Timeline from "./components/Timeline";
-import WordCount from "./components/WordCount";
-import Stats from "./components/Stats";
-import Sentiment from "./components/Sentiment";
-import HeatmapDayHour from "./components/HeatmapDayHour";
-import Emoji from "./components/Emoji";
-import BarChartComp from "./components/BarChartComp";
+import AggregatePerTime from "./components/plots/AggregatePerTime";
+import Timeline from "./components/plots/Timeline";
+import WordCount from "./components/plots/WordCount";
+import Stats from "./components/plots/Stats";
+import Sentiment from "./components/plots/Sentiment";
+import HeatmapDayHour from "./components/plots/HeatmapDayHour";
+import Emoji from "./components/plots/Emoji";
+import BarChartComp from "./components/plots/BarChartComp";
+import SentimentWord from "./components/plots/SentimentWord";
 import { useChat } from "./context/ChatContext";
 import "./index.css";
 
@@ -147,7 +148,7 @@ const App: React.FC = () => {
       </Helmet>
 
       {/* Main Container */}
-      <div className="p-4 flex flex-col min-h-screen md:h-[100dvh]">
+      <div className="p-4 flex flex-col min-h-screen md:h-screen">
         {/* File Upload Components (Desktop & Mobile) */}
         <div className="hidden md:block">
           <FileUpload onFileUpload={(file: File) => console.log(file)} />
@@ -159,7 +160,7 @@ const App: React.FC = () => {
         {/* Chat Analysis Components */}
         <div
           ref={containerRef}
-          className="mt-4 min-h-screen md:h-[100dvh] flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
+          className="mt-4  md:h-full flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
         >
           {messages.length === 0 ? (
             <div
@@ -179,6 +180,7 @@ const App: React.FC = () => {
               <Stats />
               <HeatmapDayHour />
               <Sentiment />
+              <SentimentWord />
             </>
           )}
         </div>

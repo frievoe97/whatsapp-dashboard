@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef, FC, ReactElement } from "react";
-import { useChat } from "../context/ChatContext";
+import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
 import { removeStopwords, deu } from "stopword";
 import ClipLoader from "react-spinners/ClipLoader";

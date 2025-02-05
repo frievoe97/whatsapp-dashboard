@@ -1,11 +1,11 @@
 // src/components/Plot2.tsx
 import React, { useEffect, useRef, useMemo, useState } from "react";
-import { useChat } from "../context/ChatContext";
+import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
-import { ChatMessage } from "../context/ChatContext";
-import useResizeObserver from "../hooks/useResizeObserver";
+import { ChatMessage } from "../../context/ChatContext";
+import useResizeObserver from "../../hooks/useResizeObserver";
 import Switch from "react-switch";
-import "./Plot1.css"; // Using the same CSS as Plot1
+import "./AggregatePerTimePlot.css"; // Using the same CSS as Plot1
 import ClipLoader from "react-spinners/ClipLoader";
 import { Hash, Percent, Maximize2, Minimize2 } from "lucide-react";
 

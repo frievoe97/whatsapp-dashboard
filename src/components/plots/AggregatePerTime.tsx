@@ -1,11 +1,11 @@
-// src/components/Plot1.tsx
+// src/components/AggregatePerTimePlot.tsx
 import React, { useEffect, useRef, useMemo, useState } from "react";
-import { useChat } from "../context/ChatContext";
+import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
-import { ChatMessage } from "../context/ChatContext";
-import useResizeObserver from "../hooks/useResizeObserver";
+import { ChatMessage } from "../../context/ChatContext";
+import useResizeObserver from "../../hooks/useResizeObserver";
 import Switch from "react-switch";
-import "./Plot1.css";
+import "./AggregatePerTimePlot.css";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Hash, Percent, Maximize2, Minimize2 } from "lucide-react";
 
@@ -185,13 +185,13 @@ const aggregateMessages = (
 };
 
 /**
- * Plot1 Component
+ * AggregatePerTimePlot Component
  *
  * This component renders an interactive D3 line chart displaying aggregated chat data.
  * It supports toggling between different time modes (hour, weekday, month), a percentage view,
  * tooltips, smooth transitions, a dynamic legend, and a expand/collapse feature.
  */
-const Plot1: React.FC = () => {
+const AggregatePerTimePlot: React.FC = () => {
   const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
 
   // Refs for container and SVG elements
@@ -646,4 +646,4 @@ const Plot1: React.FC = () => {
   );
 };
 
-export default Plot1;
+export default AggregatePerTimePlot;

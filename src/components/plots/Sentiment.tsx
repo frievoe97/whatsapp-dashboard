@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
-import { useChat } from "../context/ChatContext";
-import useResizeObserver from "../hooks/useResizeObserver";
+import { useChat } from "../../context/ChatContext";
+import useResizeObserver from "../../hooks/useResizeObserver";
 import Sentiment from "sentiment";
 
 // -----------------------------------------------------------------------------
@@ -11,10 +11,12 @@ import Sentiment from "sentiment";
 // List of valid languages supported for sentiment analysis
 const VALID_LANGUAGES = ["de", "en", "fr"] as const;
 
+// Window size for the moving average smoothing
+const WINDOW_SIZE = 100;
+
 // Colors for each sentiment type for the chart
 const SENTIMENT_COLORS: Record<"positive" | "negative", string> = {
   positive: "#2BA02B",
-  // neutral: "#7F7F7F",
   negative: "#D62727",
 };
 
@@ -22,11 +24,10 @@ const SENTIMENT_COLORS: Record<"positive" | "negative", string> = {
 interface SentimentDataPoint {
   date: Date;
   positive: number;
-  // neutral: number;
   negative: number;
 }
 
-// Adjust the properties as needed based on your ChatContext.
+// Chat message type (adjust as needed)
 interface ChatMessage {
   date: Date;
   message: string;
@@ -39,9 +40,9 @@ interface ChatMessage {
 
 /**
  * SentimentAnalysis component displays a line chart of sentiment over time.
- * It loads the appropriate AFINN lexicon based on the current language,
- * registers the lexicon with the sentiment analyzer, processes messages to
- * compute daily sentiment scores (with smoothing), and renders the chart using d3.
+ * It loads the appropriate AFINN lexicon based on the current language, registers the lexicon
+ * with the sentiment analyzer, processes messages to compute daily sentiment scores (filling in
+ * missing days with the previous day’s value), and then smooths the results with a moving average.
  */
 const SentimentAnalysis: React.FC = () => {
   // Extract context values (messages, darkMode, language) from ChatContext.
@@ -57,7 +58,7 @@ const SentimentAnalysis: React.FC = () => {
   // Create and memoize the Sentiment analyzer instance.
   const sentimentAnalyzer = useMemo(() => new Sentiment(), []);
 
-  // State to hold the loaded AFINN lexicon (a mapping from word to score).
+  // State to hold the loaded AFINN lexicon.
   const [afinn, setAfinn] = useState<Record<string, number>>({});
   // State to track if the language has been successfully registered.
   const [isLanguageRegistered, setIsLanguageRegistered] = useState(false);
@@ -75,7 +76,7 @@ const SentimentAnalysis: React.FC = () => {
 
     console.log(`Loading AFINN-${langToLoad}.json`);
 
-    import(`../assets/AFINN-${langToLoad}.json`)
+    import(`../../assets/AFINN-${langToLoad}.json`)
       .then((data) => {
         setAfinn(data.default);
         console.log(`AFINN-${langToLoad} loaded successfully.`);
@@ -87,7 +88,6 @@ const SentimentAnalysis: React.FC = () => {
 
   // ---------------------------------------------------------------------------
   // EFFECT: Register the language with the sentiment analyzer.
-  // This ensures that the analyzer uses the loaded lexicon.
   // ---------------------------------------------------------------------------
   useEffect(() => {
     if (!language || Object.keys(afinn).length === 0) return;
@@ -116,7 +116,8 @@ const SentimentAnalysis: React.FC = () => {
   // ---------------------------------------------------------------------------
   // COMPUTE SENTIMENT DATA
   // Process messages to compute aggregated sentiment per day.
-  // Then smooth the results over a sliding window.
+  // Then fill in missing days with the previous day's value and smooth the data
+  // using a moving average.
   // ---------------------------------------------------------------------------
   const sentimentData: SentimentDataPoint[] = useMemo(() => {
     // Only proceed if a language is selected and registered.
@@ -125,15 +126,13 @@ const SentimentAnalysis: React.FC = () => {
       ? language
       : "en";
 
-    // Initialize an object to aggregate sentiment scores per day.
+    // Aggregate raw sentiment scores per day.
     const dataMap: Record<
       string,
-      { positive: number; neutral: number; negative: number; count: number }
+      { positive: number; negative: number; count: number }
     > = {};
 
-    // Process each message from the ChatContext.
     (messages as ChatMessage[]).forEach((msg) => {
-      // Skip messages that are not marked for use.
       if (!msg.isUsed) return;
 
       // Create a date key (YYYY-MM-DD) from the message date.
@@ -148,20 +147,15 @@ const SentimentAnalysis: React.FC = () => {
 
         // Initialize the day's data if not already present.
         if (!dataMap[dateKey]) {
-          dataMap[dateKey] = { positive: 0, neutral: 0, negative: 0, count: 0 };
+          dataMap[dateKey] = { positive: 0, negative: 0, count: 0 };
         }
-
-        // Increase the message count for that day.
         dataMap[dateKey].count += 1;
 
-        // Aggregate the sentiment scores.
+        // Aggregate sentiment scores: for positive scores, add; for negative, add absolute value.
         if (score > 0) {
           dataMap[dateKey].positive += score;
         } else if (score < 0) {
           dataMap[dateKey].negative += Math.abs(score);
-        } else {
-          // For a neutral score, you might want to count it (currently remains 0).
-          dataMap[dateKey].neutral += 0;
         }
       } catch (error) {
         console.error(
@@ -171,33 +165,86 @@ const SentimentAnalysis: React.FC = () => {
       }
     });
 
-    // Convert the aggregated data into a sorted array of data points.
-    const rawData: (SentimentDataPoint & {
-      count: number;
-    })[] = Object.entries(dataMap)
+    // Convert aggregated data into a sorted array of raw data points.
+    const rawData: (SentimentDataPoint & { count: number })[] = Object.entries(
+      dataMap
+    )
       .map(([date, values]) => ({
         date: new Date(date),
-        ...values,
+        positive: values.positive / values.count, // average positive score
+        negative: values.negative / values.count, // average negative score
+        count: values.count,
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    // Determine the smoothing window size (10% of the data points, at least 1).
-    const windowSize = Math.max(1, Math.floor(rawData.length / 10));
+    if (rawData.length === 0) return [];
 
-    // Smooth the data by averaging over a sliding window.
-    const smoothedData: SentimentDataPoint[] = rawData.map((_, i, arr) => {
-      const start = Math.max(0, i - windowSize);
-      const end = Math.min(arr.length - 1, i + windowSize);
+    // Generate a continuous daily series from the first to the last date.
+    const firstDate = rawData[0].date;
+    const lastDate = rawData[rawData.length - 1].date;
+    const allDates = d3.timeDay.range(
+      firstDate,
+      d3.timeDay.offset(lastDate, 1)
+    );
+
+    // Create a lookup map for rawData by date string.
+    const rawDataMap = new Map<string, SentimentDataPoint>();
+    rawData.forEach((d) => {
+      const key = d.date.toISOString().split("T")[0];
+      rawDataMap.set(key, {
+        date: d.date,
+        positive: d.positive,
+        negative: d.negative,
+      });
+    });
+
+    // Fill in missing days:
+    // For each day in the continuous range, if there's no data, use the previous day's value.
+    const dailyData: SentimentDataPoint[] = [];
+    let lastValid: SentimentDataPoint | null = null;
+    allDates.forEach((date) => {
+      const key = date.toISOString().split("T")[0];
+      if (rawDataMap.has(key)) {
+        const dataPoint = rawDataMap.get(key)!;
+        dailyData.push({
+          date,
+          positive: dataPoint.positive,
+          negative: dataPoint.negative,
+        });
+        lastValid = {
+          date,
+          positive: dataPoint.positive,
+          negative: dataPoint.negative,
+        };
+      } else if (lastValid) {
+        // Use the previous day's sentiment values if no data is available for the day.
+        dailyData.push({
+          date,
+          positive: lastValid.positive,
+          negative: lastValid.negative,
+        });
+      } else {
+        // Fallback (should not occur as the first day is always present).
+        dailyData.push({ date, positive: 0, negative: 0 });
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // SMOOTHING: Apply moving average to reduce noise.
+    // Here, we use a window of 7 (WINDOW_SIZE) days (or fewer if there aren't enough data points).
+    // -------------------------------------------------------------------------
+    const windowSize =
+      dailyData.length >= WINDOW_SIZE ? WINDOW_SIZE : dailyData.length;
+    const halfWindow = Math.floor(windowSize / 2);
+
+    const smoothedData: SentimentDataPoint[] = dailyData.map((d, i, arr) => {
+      const start = Math.max(0, i - halfWindow);
+      const end = Math.min(arr.length - 1, i + halfWindow);
       const windowSlice = arr.slice(start, end + 1);
-
-      // Total number of messages in the window (avoid division by zero).
-      const totalCount = d3.sum(windowSlice, (d) => d.count) || 1;
-
       return {
-        date: arr[i].date,
-        positive: (d3.sum(windowSlice, (d) => d.positive) || 0) / totalCount,
-        // neutral: (d3.sum(windowSlice, (d) => d.neutral) || 0) / totalCount,
-        negative: (d3.sum(windowSlice, (d) => d.negative) || 0) / totalCount,
+        date: d.date,
+        positive: d3.mean(windowSlice, (x) => x.positive) ?? d.positive,
+        negative: d3.mean(windowSlice, (x) => x.negative) ?? d.negative,
       };
     });
 
@@ -211,13 +258,12 @@ const SentimentAnalysis: React.FC = () => {
   useEffect(() => {
     if (!dimensions || sentimentData.length === 0) return;
 
-    // Define margins and calculate inner chart dimensions.
     const { width, height } = dimensions;
     const margin = { top: 20, right: 30, bottom: 70, left: 50 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    // Select the SVG element and clear any previous content.
+    // Select the SVG element and clear previous content.
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
@@ -227,21 +273,19 @@ const SentimentAnalysis: React.FC = () => {
       .domain(d3.extent(sentimentData, (d) => d.date) as [Date, Date])
       .range([0, innerWidth]);
 
-    // const yMax = d3.max(sentimentData, (d) => Math.max(d.positive, d.neutral, d.negative)) || 1;
-
     const yMax =
       d3.max(sentimentData, (d) => Math.max(d.positive, d.negative)) || 1;
     const yScale = d3.scaleLinear().domain([0, yMax]).range([innerHeight, 0]);
 
-    // Helper function to create a line generator for a given sentiment key.
-    const lineGenerator = (key: keyof typeof SENTIMENT_COLORS) =>
+    // Helper function to generate a line for a given sentiment key.
+    const lineGenerator = (key: keyof Omit<SentimentDataPoint, "date">) =>
       d3
         .line<SentimentDataPoint>()
         .x((d) => xScale(d.date))
         .y((d) => yScale(d[key]))
-        .curve(d3.curveBasisOpen);
+        .curve(d3.curveBasis);
 
-    // Append a group element for margins.
+    // Append a group element for chart margins.
     const g = svg
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
@@ -254,23 +298,22 @@ const SentimentAnalysis: React.FC = () => {
       .selectAll("text")
       .style("font-size", "14px")
       .attr("dy", "1em")
-      .style("text-anchor", "middle")
-      .attr("transform", null);
+      .style("text-anchor", "middle");
 
     // Draw the Y Axis.
-    const yTicks = 5;
-    g.append("g")
-      .call(d3.axisLeft(yScale).ticks(yTicks))
-      .style("font-size", "14px");
+    g.append("g").call(d3.axisLeft(yScale).ticks(5)).style("font-size", "14px");
 
-    // Draw lines for each sentiment type.
+    // Draw sentiment lines.
     Object.entries(SENTIMENT_COLORS).forEach(([key, color]) => {
       g.append("path")
         .datum(sentimentData)
         .attr("fill", "none")
         .attr("stroke", color)
         .attr("stroke-width", 2)
-        .attr("d", lineGenerator(key as keyof typeof SENTIMENT_COLORS));
+        .attr(
+          "d",
+          lineGenerator(key as keyof Omit<SentimentDataPoint, "date">)
+        );
     });
 
     // Draw a legend at the top-right of the chart.
@@ -282,15 +325,11 @@ const SentimentAnalysis: React.FC = () => {
       const legendItem = legend
         .append("g")
         .attr("transform", `translate(${legendX}, 0)`);
-
-      // Colored rectangle for the legend.
       legendItem
         .append("rect")
         .attr("width", 15)
         .attr("height", 15)
         .attr("fill", color);
-
-      // Label text for the legend.
       legendItem
         .append("text")
         .attr("x", 20)
@@ -298,15 +337,12 @@ const SentimentAnalysis: React.FC = () => {
         .attr("fill", darkMode ? "white" : "black")
         .attr("font-size", "14px")
         .text(key);
-
       legendX += 80;
     });
   }, [dimensions, sentimentData, darkMode]);
 
   // ---------------------------------------------------------------------------
   // COMPONENT RENDERING
-  // The container includes a header and either the chart (if data exists) or
-  // a placeholder message.
   // ---------------------------------------------------------------------------
   return (
     <div
@@ -315,7 +351,7 @@ const SentimentAnalysis: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full p-4 flex-grow flex flex-col`}
+      } w-full md:min-w-[500px] md:basis-[500px] p-4 flex-grow flex flex-col`}
       style={{
         position: "relative",
         minHeight: "400px",

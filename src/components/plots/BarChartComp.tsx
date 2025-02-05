@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo, useState, FC } from "react";
-import { useChat } from "../context/ChatContext";
+import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
-import useResizeObserver from "../hooks/useResizeObserver";
+import useResizeObserver from "../../hooks/useResizeObserver";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Maximize2, Minimize2 } from "lucide-react";
 

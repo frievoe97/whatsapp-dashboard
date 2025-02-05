@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useMemo } from "react";
 import * as d3 from "d3";
-import { useChat } from "../context/ChatContext";
-import useResizeObserver from "../hooks/useResizeObserver";
+import { useChat } from "../../context/ChatContext";
+import useResizeObserver from "../../hooks/useResizeObserver";
 import ClipLoader from "react-spinners/ClipLoader";
 
 // Constants for days of the week and hours in a day
