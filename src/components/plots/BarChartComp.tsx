@@ -210,19 +210,21 @@ const SenderComparisonBarChart: FC = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     let pageStats = sortedStats.slice(startIndex, startIndex + itemsPerPage);
 
-    // If on the last page and there are fewer items, fill with empty objects.
-    while (pageStats.length < itemsPerPage) {
-      pageStats.push({
-        sender: " ",
-        messageCount: 0,
-        averageWordsPerMessage: 0,
-        medianWordsPerMessage: 0,
-        totalWordsSent: 0,
-        maxWordsInMessage: 0,
-        activeDays: 0,
-        uniqueWordsCount: 0,
-        averageCharactersPerMessage: 0,
-      });
+    if (totalPages > 1) {
+      // If on the last page and there are fewer items, fill with empty objects.
+      while (pageStats.length < itemsPerPage) {
+        pageStats.push({
+          sender: " ",
+          messageCount: 0,
+          averageWordsPerMessage: 0,
+          medianWordsPerMessage: 0,
+          totalWordsSent: 0,
+          maxWordsInMessage: 0,
+          activeDays: 0,
+          uniqueWordsCount: 0,
+          averageCharactersPerMessage: 0,
+        });
+      }
     }
 
     return pageStats;
@@ -377,7 +379,7 @@ const SenderComparisonBarChart: FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } ${expanded ? "md:basis-[3000px]" : "md:basis-[800px]"}`}
+      } ${expanded ? "md:basis-[3000px]" : "md:basis-[300px]"}`}
       style={{
         position: "relative",
         minHeight: "400px",
