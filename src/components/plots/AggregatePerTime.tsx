@@ -274,7 +274,6 @@ const AggregatePerTimePlot: React.FC = () => {
 
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
-    // const margin = { top: 10, right: 20, bottom: 110, left: 40 };
 
     const margin = { top: 20, right: 20, bottom: 30, left: 30 };
 

@@ -14,6 +14,7 @@ import SentimentWord from "./components/plots/SentimentWord";
 import ChordDiagram from "./components/plots/ChordDiagram";
 import { useChat } from "./context/ChatContext";
 import "./index.css";
+import HeatmapMonthWeekday from "./components/plots/HeatmapMonthWeekday";
 
 /**
  * Custom hook to update the document's dark mode class and theme-color meta tag.
@@ -183,6 +184,7 @@ const App: React.FC = () => {
               <HeatmapDayHour />
               <Sentiment />
               <SentimentWord />
+              <HeatmapMonthWeekday />
             </>
           )}
         </div>
