@@ -77,6 +77,8 @@ const ChordDiagram: React.FC = () => {
     const height = dimensions.height - margin.top - margin.bottom;
     const radius = Math.min(width, height) / 2 - 50;
 
+    if (radius <= 0) return;
+
     svg.selectAll("*").remove();
     const g = svg
       .append("g")
