@@ -13,7 +13,7 @@ const MAX_SENDERS = 12;
  * The diagram correctly handles theme changes and window resizes to ensure proper rendering.
  */
 const ChordDiagram: React.FC = () => {
-  const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
+  const { messages, darkMode, isUploading } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
@@ -23,27 +23,21 @@ const ChordDiagram: React.FC = () => {
   const { chordData, uniqueSenders } = useMemo(() => {
     const counts: { [key: string]: { [key: string]: number } } = {};
     const participants = new Set<string>();
-    const totalMessages = messages.filter((msg) => msg.isUsed).length;
-    const minMessages = (minMessagePercentage / 100) * totalMessages;
 
-    const senderMessageCount: { [sender: string]: number } = {};
+    // Zähle Nachrichten pro Sender (nur für Nachrichten, die verwendet werden)
     messages.forEach((msg) => {
       if (!msg.isUsed) return;
-      senderMessageCount[msg.sender] =
-        (senderMessageCount[msg.sender] || 0) + 1;
+      participants.add(msg.sender);
     });
 
+    // Optional: Falls Du die Chord-Daten basierend auf Interaktionen zwischen aufeinanderfolgenden, verwendeten Nachrichten berechnen möchtest:
     messages.forEach((msg, index) => {
+      // Nur wenn beide Nachrichten verwendet werden:
       if (!msg.isUsed || index === 0) return;
+      const previousMessage = messages[index - 1];
+      if (!previousMessage.isUsed) return;
       const sender = msg.sender;
-      const previousSender = messages[index - 1].sender;
-      if (
-        senderMessageCount[sender] < minMessages ||
-        senderMessageCount[previousSender] < minMessages
-      )
-        return;
-      participants.add(sender);
-      participants.add(previousSender);
+      const previousSender = previousMessage.sender;
       if (!counts[previousSender]) counts[previousSender] = {};
       if (!counts[previousSender][sender]) counts[previousSender][sender] = 0;
       counts[previousSender][sender] += 1;
@@ -59,7 +53,7 @@ const ChordDiagram: React.FC = () => {
       ),
       uniqueSenders: participants.size,
     };
-  }, [messages, minMessagePercentage]);
+  }, [messages]);
 
   // Render the chord diagram
   useEffect(() => {
@@ -218,6 +212,22 @@ const ChordDiagram: React.FC = () => {
     svg.on("dblclick", () => {
       group.selectAll("path").transition().duration(500).style("opacity", 1);
       ribbons.transition().duration(500).style("opacity", 1);
+    });
+
+    let touchTimer: NodeJS.Timeout;
+
+    // Event-Listener für langes Drücken hinzufügen
+    svg.on("touchstart", () => {
+      touchTimer = setTimeout(() => {
+        // Setzt alles zurück nach langem Drücken
+        group.selectAll("path").transition().duration(500).style("opacity", 1);
+        ribbons.transition().duration(500).style("opacity", 1);
+      }, 600); // 600ms lang gedrückt halten
+    });
+
+    // Falls der Benutzer den Finger zu früh wegnimmt, den Timer abbrechen
+    svg.on("touchend", () => {
+      clearTimeout(touchTimer);
     });
   }, [chordData, dimensions, darkMode]);
 
