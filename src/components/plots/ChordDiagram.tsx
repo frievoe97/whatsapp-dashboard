@@ -98,7 +98,9 @@ const ChordDiagram: React.FC = () => {
     const participants = Array.from(
       new Set(chordData.flatMap((d) => [d.source, d.target]))
     );
-    const colorScale = d3.scaleOrdinal(d3.schemePaired).domain(participants);
+    const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
+    const colorScale = d3.scaleOrdinal(colors).domain(participants);
+
     const matrix = Array.from({ length: participants.length }, () =>
       new Array(participants.length).fill(0)
     );
