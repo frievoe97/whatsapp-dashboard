@@ -92,11 +92,8 @@ function parseMessageLine(
 
 // Main event listener for processing the chat file.
 self.addEventListener("message", (event: MessageEvent<string>) => {
-  console.log("Worker: Message received for parsing.");
-
   try {
     const fileContent: string = event.data;
-    console.log(`Worker: Received file with ${fileContent.length} characters.`);
 
     const lines = fileContent.split("\n");
     const messages: ParsedMessage[] = [];
@@ -143,8 +140,6 @@ self.addEventListener("message", (event: MessageEvent<string>) => {
         `Worker: Found ${weggelassenMessages.length} messages containing "weggelassen":`,
         weggelassenMessages
       );
-    } else {
-      console.log('Worker: No messages containing "weggelassen" found.');
     }
 
     // Post the parsed messages back to the main thread.

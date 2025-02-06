@@ -78,12 +78,9 @@ const SentimentAnalysis: React.FC = () => {
       ? language
       : "en";
 
-    console.log(`Loading AFINN-${langToLoad}.json`);
-
     import(`../../assets/AFINN-${langToLoad}.json`)
       .then((data) => {
         setAfinn(data.default);
-        console.log(`AFINN-${langToLoad} loaded successfully.`);
       })
       .catch((error) =>
         console.error(`Error loading AFINN-${langToLoad}:`, error)
@@ -101,15 +98,13 @@ const SentimentAnalysis: React.FC = () => {
       ? language
       : "en";
 
-    console.log("Registering language:", langToUse);
-
     // Register the lexicon with the sentiment analyzer.
     sentimentAnalyzer.registerLanguage(langToUse, { labels: afinn });
 
     try {
       // Test the registration by analyzing a sample text.
       sentimentAnalyzer.analyze("Test", { language: langToUse });
-      console.log(`Language ${langToUse} successfully registered.`);
+
       setIsLanguageRegistered(true);
     } catch (error) {
       console.error(`Error registering language ${langToUse}:`, error);

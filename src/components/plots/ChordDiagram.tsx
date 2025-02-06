@@ -61,18 +61,9 @@ const ChordDiagram: React.FC = () => {
     };
   }, [messages, minMessagePercentage]);
 
-  useEffect(() => {
-    console.log("ChordData:", chordData);
-    console.log("Unique Senders:", uniqueSenders);
-  }, [chordData, uniqueSenders]);
-
   // Render the chord diagram
   useEffect(() => {
     if (!dimensions || chordData.length === 0 || !svgRef.current) return;
-
-    console.log("Dimensions:", dimensions);
-    console.log("Width:", dimensions.width);
-    console.log("Height:", dimensions.height);
 
     const svg = d3.select(svgRef.current);
     const width = dimensions.width;

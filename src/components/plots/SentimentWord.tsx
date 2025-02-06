@@ -237,16 +237,13 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     useState<boolean>(false);
 
   useEffect(() => {
-    console.log("Language changed for word analysis:", language);
     if (!language) return;
     const langToLoad = VALID_LANGUAGES.includes(language as any)
       ? language
       : "en";
-    console.log(`Loading AFINN-${langToLoad}.json for word analysis`);
     import(`../../assets/AFINN-${langToLoad}.json`)
       .then((data) => {
         setAfinn(data.default);
-        console.log(`AFINN-${langToLoad} loaded successfully.`);
       })
       .catch((error) =>
         console.error(`Error loading AFINN-${langToLoad}:`, error)
@@ -258,11 +255,9 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     const langToUse = VALID_LANGUAGES.includes(language as any)
       ? language
       : "en";
-    console.log("Registering language for word analysis:", langToUse);
     sentimentAnalyzer.registerLanguage(langToUse, { labels: afinn });
     try {
       sentimentAnalyzer.analyze("Test", { language: langToUse });
-      console.log(`Language ${langToUse} successfully registered.`);
       setIsLanguageRegistered(true);
     } catch (error) {
       console.error(`Error registering language ${langToUse}:`, error);

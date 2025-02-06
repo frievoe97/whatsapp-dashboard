@@ -11,7 +11,7 @@ const Heatmap: React.FC = () => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
 
-  const [xCategory, setXCategory] = useState("Month");
+  const [xCategory, setXCategory] = useState("Hour");
   const [yCategory, setYCategory] = useState("Weekday");
 
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
@@ -146,6 +146,9 @@ const Heatmap: React.FC = () => {
       .attr("height", yScale.bandwidth())
       .attr("fill", (d) => colorScale(d.count));
 
+    const tickCountX = Math.max(2, Math.floor(innerWidth / 30));
+    const tickCountY = Math.max(2, Math.floor(innerHeight / 50));
+
     g.append("g")
       .attr("transform", `translate(0, ${innerHeight})`)
       .style("font-size", "14px")
@@ -156,7 +159,10 @@ const Heatmap: React.FC = () => {
           .tickValues(
             xScale
               .domain()
-              .filter((_, i) => i % Math.ceil(xScale.domain().length / 5) === 0)
+              .filter(
+                (_, i) =>
+                  i % Math.ceil(xScale.domain().length / tickCountX) === 0
+              )
           )
       );
 
@@ -168,7 +174,10 @@ const Heatmap: React.FC = () => {
           .tickValues(
             yScale
               .domain()
-              .filter((_, i) => i % Math.ceil(yScale.domain().length / 5) === 0)
+              .filter(
+                (_, i) =>
+                  i % Math.ceil(yScale.domain().length / tickCountY) === 0
+              )
           )
       )
       .style("font-size", "14px");

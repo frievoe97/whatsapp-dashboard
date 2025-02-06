@@ -72,11 +72,6 @@ const Heatmap: React.FC = () => {
     return result;
   }, [messages]);
 
-  // Log container dimensions whenever they change (for debugging purposes)
-  useEffect(() => {
-    console.log("Container dimensions:", dimensions);
-  }, [dimensions]);
-
   /**
    * D3 Rendering Effect
    *

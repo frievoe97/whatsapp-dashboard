@@ -15,6 +15,7 @@ import ChordDiagram from "./components/plots/ChordDiagram";
 import { useChat } from "./context/ChatContext";
 import "./index.css";
 import HeatmapMonthWeekday from "./components/plots/HeatmapMonthWeekday";
+import HeatmapDayHour from "./components/plots/HeatmapDayHour";
 
 /**
  * Custom hook to update the document's dark mode class and theme-color meta tag.
@@ -153,10 +154,10 @@ const App: React.FC = () => {
       <div className="p-4 flex flex-col min-h-screen md:h-screen">
         {/* File Upload Components (Desktop & Mobile) */}
         <div className="hidden md:block">
-          <FileUpload onFileUpload={(file: File) => console.log(file)} />
+          <FileUpload onFileUpload={(_: File) => {}} />
         </div>
         <div className="md:hidden">
-          <FileUploadMobile onFileUpload={(file: File) => console.log(file)} />
+          <FileUploadMobile onFileUpload={(_: File) => {}} />
         </div>
 
         {/* Chat Analysis Components */}
@@ -181,7 +182,7 @@ const App: React.FC = () => {
               <ChordDiagram />
               <WordCount />
               <Stats />
-              {/* <HeatmapDayHour /> */}
+              <HeatmapDayHour />
               <Sentiment />
               <SentimentWord />
               <HeatmapMonthWeekday />
