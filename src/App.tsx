@@ -11,6 +11,7 @@ import HeatmapDayHour from "./components/plots/HeatmapDayHour";
 import Emoji from "./components/plots/Emoji";
 import BarChartComp from "./components/plots/BarChartComp";
 import SentimentWord from "./components/plots/SentimentWord";
+import ChordDiagram from "./components/plots/ChordDiagram";
 import { useChat } from "./context/ChatContext";
 import "./index.css";
 
@@ -176,6 +177,7 @@ const App: React.FC = () => {
               <Timeline />
               <BarChartComp />
               <Emoji />
+              <ChordDiagram />
               <WordCount />
               <Stats />
               <HeatmapDayHour />

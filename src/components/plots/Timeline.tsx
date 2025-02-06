@@ -248,13 +248,6 @@ const Plot2: React.FC = () => {
 
     const fallbackDate = new Date(2000, 0, 1);
 
-    console.log("First Message", messages[0]);
-    console.log("Last Message", messages[messages.length - 1]);
-    console.log("Start Date", startDate);
-    console.log("End Date", endDate);
-
-    console.log("Aggregated Data", aggregatedData);
-
     // Filtere die Datenpunkte anhand von startDate und endDate
     const filteredData = aggregatedData.map((d) => ({
       sender: d.sender,
@@ -294,16 +287,9 @@ const Plot2: React.FC = () => {
       d.values.map((v) => v.date)
     );
 
-    console.log("Filtered Data", filteredData);
-    console.log("Filtered Dates", filteredDates);
-    console.log("Messages", messages);
-
     // Ermittle das minimale und maximale Datum der gefilterten Nachrichten
     const minDate = d3.min(filteredDates) || fallbackDate;
     const maxDate = d3.max(filteredDates) || new Date();
-
-    console.log("Min Date", minDate);
-    console.log("Max Date", maxDate);
 
     // Passe computedStartDate und computedEndDate abhängig vom Modus an
     let computedStartDate: Date, computedEndDate: Date;
@@ -323,23 +309,15 @@ const Plot2: React.FC = () => {
       );
     }
 
-    console.log("Computed Start Date", computedStartDate);
-    console.log("Computed End Date", computedEndDate);
-
     // Bestimme die einzigartigen Jahre in den gefilterten Daten (so wie sie im "year"-Modus betrachtet würden)
     const uniqueYears = new Set(
       filteredDates.map((date) => date.getFullYear())
     );
 
-    console.log("Unique Years", uniqueYears);
-
     // Falls weniger als drei einzigartige Jahre vorhanden sind, wechsle in den "month"-Modus
     const hasLessThanThreeYears = uniqueYears.size < 3;
     setUniqueYearsLessThanThree(hasLessThanThreeYears);
     if (hasLessThanThreeYears) {
-      console.log(
-        "Switching to 'month' mode due to fewer than three unique years."
-      );
       setMode("month");
     }
 
