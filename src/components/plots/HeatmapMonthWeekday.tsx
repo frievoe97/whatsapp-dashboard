@@ -111,8 +111,12 @@ const Heatmap: React.FC = () => {
       margin.left = 30;
     }
 
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    let innerWidth = width - margin.left - margin.right;
+    let innerHeight = height - margin.top - margin.bottom;
+
+    if (window.innerWidth < 768 && innerHeight > innerWidth) {
+      innerHeight = innerWidth;
+    }
 
     svg.selectAll("*").remove();
 
@@ -190,7 +194,7 @@ const Heatmap: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full p-4 pl-0 md:pl-4 flex min-h-[600px] md:min-h-[600px] flex-col`}
+      } w-full p-4 pl-0 md:pl-4 flex min-h-[400px] md:min-h-[400px] flex-col`}
     >
       <h2 className="text-lg font-semibold mb-4 flex items-center space-x-0 pl-4 md:pl-0">
         <span>Messages By</span>
