@@ -277,16 +277,44 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           {DEFAULT_WEEKDAYS.map((day) => (
             <label
               key={day}
-              className={`flex items-center space-x-2 ${textColor}`}
+              className="flex items-center space-x-2 cursor-pointer"
             >
               <input
                 type="checkbox"
                 value={day}
                 checked={selectedWeekdays.includes(day)}
                 onChange={handleWeekdayChange}
-                className={`form-checkbox h-4 w-4 text-blue-600 ${borderColor} hover:${borderColor} border focus:outline-none`}
+                className="hidden"
               />
-              <span className="text-sm">{day}</span>
+              <span
+                className={`flex items-center justify-center w-4 h-4 border ${
+                  darkMode ? "border-white" : "border-black"
+                } rounded-none relative`}
+              >
+                {selectedWeekdays.includes(day) && (
+                  <svg
+                    className={`w-3 h-3 ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M2 8L6 12L14 4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </span>
+              <span
+                className={`text-sm ${darkMode ? "text-white" : "text-black"}`}
+              >
+                {day}
+              </span>
             </label>
           ))}
         </div>
