@@ -200,6 +200,7 @@ const Heatmap: React.FC = () => {
           options={Object.keys(CATEGORIES)
             .filter((cat) => cat !== yCategory)
             .map((cat) => ({ value: cat, label: cat }))}
+          isSearchable={false}
           styles={{
             control: (provided) => ({
               ...provided,
