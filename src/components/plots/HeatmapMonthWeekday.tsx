@@ -262,6 +262,7 @@ const Heatmap: React.FC = () => {
         <Select
           value={{ value: yCategory, label: yCategory }}
           onChange={(selected) => setYCategory(selected?.value || "Weekday")}
+          isSearchable={false}
           options={Object.keys(CATEGORIES)
             .filter((cat) => cat !== xCategory)
             .map((cat) => ({ value: cat, label: cat }))}
