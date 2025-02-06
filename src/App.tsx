@@ -7,7 +7,6 @@ import Timeline from "./components/plots/Timeline";
 import WordCount from "./components/plots/WordCount";
 import Stats from "./components/plots/Stats";
 import Sentiment from "./components/plots/Sentiment";
-// import HeatmapDayHour from "./components/plots/HeatmapDayHour";
 import Emoji from "./components/plots/Emoji";
 import BarChartComp from "./components/plots/BarChartComp";
 import SentimentWord from "./components/plots/SentimentWord";
@@ -15,7 +14,6 @@ import ChordDiagram from "./components/plots/ChordDiagram";
 import { useChat } from "./context/ChatContext";
 import "./index.css";
 import HeatmapMonthWeekday from "./components/plots/HeatmapMonthWeekday";
-import HeatmapDayHour from "./components/plots/HeatmapDayHour";
 
 /**
  * Custom hook to update the document's dark mode class and theme-color meta tag.
@@ -189,7 +187,6 @@ const App: React.FC = () => {
               <ChordDiagram />
               <WordCount />
               <Stats />
-              <HeatmapDayHour />
               <Sentiment />
               <SentimentWord />
               <HeatmapMonthWeekday />
