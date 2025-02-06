@@ -275,7 +275,12 @@ const AggregatePerTimePlot: React.FC = () => {
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
 
-    const margin = { top: 20, right: 30, bottom: 30, left: 30 };
+    let margin = { top: 20, right: 30, bottom: 30, left: 30 };
+
+    if (window.innerWidth <= 768) {
+      margin.right = 30;
+      margin.left = 40;
+    }
 
     const headerHeight = getTotalHeightIncludingMargin(
       "aggregate-per-time-plot-header"
@@ -306,7 +311,7 @@ const AggregatePerTimePlot: React.FC = () => {
       .nice()
       .range([innerHeight, 0]);
 
-    const tickSpacing = mode === "hour" ? 20 : mode === "weekday" ? 55 : 50;
+    const tickSpacing = mode === "hour" ? 20 : mode === "weekday" ? 55 : 55;
     const maxTicks = Math.max(2, Math.floor(innerWidth / tickSpacing));
 
     const xTickValues = categories.filter(
@@ -315,10 +320,7 @@ const AggregatePerTimePlot: React.FC = () => {
 
     const xAxis = d3.axisBottom(xScale).tickValues(xTickValues);
 
-    const yAxis = d3
-      .axisLeft(yScale)
-      .ticks(5)
-      .tickFormat((d) => (showPercentage ? `${d}%` : `${d}`));
+    const yAxis = d3.axisLeft(yScale).ticks(5).tickFormat(d3.format(".2s"));
 
     // Create a line generator.
     const lineGenerator = d3
@@ -543,7 +545,7 @@ const AggregatePerTimePlot: React.FC = () => {
           : "border-black bg-white text-black"
       } w-full md:min-w-[730px] ${
         expanded ? "md:basis-[3000px]" : "md:basis-[800px]"
-      } flex-grow p-4 flex flex-col`}
+      } flex-grow py-2 pt-4 px-0 md:p-4 flex flex-col`}
       style={{
         position: "relative",
         minHeight: "400px",
@@ -554,7 +556,7 @@ const AggregatePerTimePlot: React.FC = () => {
       {/* Control Panel: Mode buttons, percentage toggle, and expand/collapse button */}
       <div
         id="aggregate-per-time-plot-header"
-        className="flex items-center justify-between mb-2"
+        className="flex items-center justify-between mb-2 px-4 md:px-0"
       >
         <div className="flex space-x-2">
           {(["hour", "weekday", "month"] as Mode[]).map((item) => {
@@ -632,7 +634,7 @@ const AggregatePerTimePlot: React.FC = () => {
       {/* Legend showing sender names with their corresponding colors */}
       <div
         id="aggregate-per-time-plot-legend"
-        className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2"
+        className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2 px-4 md:px-0"
       >
         {senders.map((sender) => (
           <div key={sender} className="flex items-center mr-4 mb-2">

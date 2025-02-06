@@ -324,7 +324,12 @@ const Plot2: React.FC = () => {
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
 
-    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+    let margin = { top: 20, right: 30, bottom: 30, left: 30 };
+
+    if (window.innerWidth <= 768) {
+      margin.right = 30;
+      margin.left = 40;
+    }
 
     const headerHeight = getTotalHeightIncludingMargin("timeline-plot-header");
     const legendHeight = getTotalHeightIncludingMargin("timeline-plot-legend");
@@ -355,10 +360,7 @@ const Plot2: React.FC = () => {
     // Dynamically compute the maximum number of ticks based on available width.
     const maxTicks = Math.floor(innerWidth / 80);
     const xAxis = d3.axisBottom(xScale).ticks(maxTicks);
-    const yAxis = d3
-      .axisLeft(yScale)
-      .ticks(5)
-      .tickFormat((d) => (showPercentage ? `${d}%` : `${d}`));
+    const yAxis = d3.axisLeft(yScale).ticks(5).tickFormat(d3.format(".2s"));
 
     // Create a line generator for the timeline.
     const lineGenerator = d3
@@ -668,7 +670,7 @@ const Plot2: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[730px] ${
+      } w-full py-2 pt-4 px-0 md:p-4 md:min-w-[730px] ${
         expanded ? "md:basis-[3000px]" : "md:basis-[800px]"
       } flex-grow p-4 flex flex-col`}
       style={{
@@ -681,7 +683,7 @@ const Plot2: React.FC = () => {
       {/* Control Panel: Mode Buttons, Percentage Toggle, and Expand/Collapse */}
       <div
         id="timeline-plot-header"
-        className="flex items-center justify-between mb-2"
+        className="flex items-center justify-between mb-2 px-4 md:px-0"
       >
         {!uniqueYearsLessThanThree ? (
           <div className="flex space-x-2 mt-0">
@@ -772,7 +774,7 @@ const Plot2: React.FC = () => {
       {/* Legend */}
       <div
         id="timeline-plot-legend"
-        className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2"
+        className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2 px-4 md:px-0"
       >
         {senders.map((sender) => (
           <div key={sender} className="flex items-center mr-4 mb-2">
