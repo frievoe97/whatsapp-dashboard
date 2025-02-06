@@ -274,9 +274,20 @@ const AggregatePerTimePlot: React.FC = () => {
 
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
-    const margin = { top: 10, right: 20, bottom: 110, left: 40 };
+    // const margin = { top: 10, right: 20, bottom: 110, left: 40 };
+
+    const margin = { top: 20, right: 20, bottom: 30, left: 30 };
+
+    const headerHeight = getTotalHeightIncludingMargin(
+      "aggregate-per-time-plot-header"
+    );
+    const legendHeight = getTotalHeightIncludingMargin(
+      "aggregate-per-time-plot-legend"
+    );
+
     const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    const innerHeight =
+      height - margin.top - margin.bottom - headerHeight - legendHeight;
 
     // Define scales for the chart.
     const xScale = d3
@@ -513,6 +524,19 @@ const AggregatePerTimePlot: React.FC = () => {
     categories,
   ]);
 
+  function getTotalHeightIncludingMargin(elementId: string) {
+    const element = document.getElementById(elementId);
+    if (!element) return 0;
+
+    const rect = element.getBoundingClientRect();
+    const computedStyle = window.getComputedStyle(element);
+
+    const marginTop = parseFloat(computedStyle.marginTop) || 0;
+    const marginBottom = parseFloat(computedStyle.marginBottom) || 0;
+
+    return rect.height + marginTop + marginBottom;
+  }
+
   return (
     <div
       ref={containerRef}
@@ -531,7 +555,10 @@ const AggregatePerTimePlot: React.FC = () => {
       }}
     >
       {/* Control Panel: Mode buttons, percentage toggle, and expand/collapse button */}
-      <div className="flex items-center justify-between mb-2">
+      <div
+        id="aggregate-per-time-plot-header"
+        className="flex items-center justify-between mb-2"
+      >
         <div className="flex space-x-2">
           {(["hour", "weekday", "month"] as Mode[]).map((item) => {
             const isActive = mode === item;
@@ -606,7 +633,10 @@ const AggregatePerTimePlot: React.FC = () => {
         </div>
       </div>
       {/* Legend showing sender names with their corresponding colors */}
-      <div className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2">
+      <div
+        id="aggregate-per-time-plot-legend"
+        className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2"
+      >
         {senders.map((sender) => (
           <div key={sender} className="flex items-center mr-4 mb-2">
             <div

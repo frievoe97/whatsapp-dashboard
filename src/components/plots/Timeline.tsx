@@ -323,9 +323,15 @@ const Plot2: React.FC = () => {
 
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
-    const margin = { top: 10, right: 20, bottom: 110, left: 40 };
+
+    const margin = { top: 20, right: 10, bottom: 30, left: 40 };
+
+    const headerHeight = getTotalHeightIncludingMargin("timeline-plot-header");
+    const legendHeight = getTotalHeightIncludingMargin("timeline-plot-legend");
+
     const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    const innerHeight =
+      height - margin.top - margin.bottom - headerHeight - legendHeight;
 
     if (filteredData.every((d) => d.values.length === 0)) return;
 
@@ -637,6 +643,24 @@ const Plot2: React.FC = () => {
     categories,
   ]);
 
+  /**
+   * This function calculates the total height of an element including its margins.
+   * @param elementId ID of the element to calculate the total height for.
+   * @returns Returns the total height of the element including margins.
+   */
+  function getTotalHeightIncludingMargin(elementId: string) {
+    const element = document.getElementById(elementId);
+    if (!element) return 0;
+
+    const rect = element.getBoundingClientRect();
+    const computedStyle = window.getComputedStyle(element);
+
+    const marginTop = parseFloat(computedStyle.marginTop) || 0;
+    const marginBottom = parseFloat(computedStyle.marginBottom) || 0;
+
+    return rect.height + marginTop + marginBottom;
+  }
+
   return (
     <div
       ref={containerRef}
@@ -655,7 +679,10 @@ const Plot2: React.FC = () => {
       }}
     >
       {/* Control Panel: Mode Buttons, Percentage Toggle, and Expand/Collapse */}
-      <div className="flex items-center justify-between mb-2">
+      <div
+        id="timeline-plot-header"
+        className="flex items-center justify-between mb-2"
+      >
         {!uniqueYearsLessThanThree ? (
           <div className="flex space-x-2 mt-0">
             <button
@@ -743,7 +770,10 @@ const Plot2: React.FC = () => {
         </div>
       </div>
       {/* Legend */}
-      <div className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2">
+      <div
+        id="timeline-plot-legend"
+        className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2"
+      >
         {senders.map((sender) => (
           <div key={sender} className="flex items-center mr-4 mb-2">
             <div
