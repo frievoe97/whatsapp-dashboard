@@ -75,6 +75,13 @@ export interface ChatContextType {
 
   isPanelOpen: boolean;
   setIsPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
+
+  originalMessages: ChatMessage[];
+  setOriginalMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  manualSenderSelection: Record<string, boolean>;
+  setManualSenderSelection: React.Dispatch<
+    React.SetStateAction<Record<string, boolean>>
+  >;
 }
 
 /**
@@ -132,6 +139,12 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     setDarkMode((prevMode) => !prevMode);
   }, []);
 
+  const [originalMessages, setOriginalMessages] = useState<ChatMessage[]>([]);
+
+  const [manualSenderSelection, setManualSenderSelection] = useState<
+    Record<string, boolean>
+  >({});
+
   /**
    * Memoizes the context value to prevent unnecessary re-renders of
    * context consumers.
@@ -160,6 +173,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       setSelectedWeekdays,
       isPanelOpen,
       setIsPanelOpen,
+      originalMessages,
+      setOriginalMessages,
+      manualSenderSelection,
+      setManualSenderSelection,
     }),
     [
       messages,
@@ -174,6 +191,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       minMessagePercentage,
       selectedWeekdays,
       isPanelOpen,
+      originalMessages,
+      manualSenderSelection,
     ]
   );
 

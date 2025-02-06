@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ChevronDown, ChevronUp, Info, Moon, Sun } from "lucide-react";
@@ -35,6 +35,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     endDate,
     setEndDate,
     selectedSender,
+    manualSenderSelection, // neu: für den Dropdown‑Status
     toggleDarkMode,
     selectedWeekdays,
     setSelectedWeekdays,
@@ -64,6 +65,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     setIsPanelOpen((prev) => !prev);
     setTimeout(() => window.dispatchEvent(new Event("resize")), 50);
   };
+
+  // Neuer lokaler State für das Öffnen/Schließen des Sender-Dropdowns:
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
     <div className="file-upload-wrapper">
@@ -175,28 +179,57 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
             {fileName && (
               <div className="flex flex-col space-y-2">
                 <h3 className="text-md font-semibold">Select Senders:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {senders.map((sender) => (
-                    <button
-                      key={sender}
-                      onClick={() => handleSenderChange(sender)}
-                      className={`px-3 py-1 text-sm border rounded-none w-auto ${
+                {/* Neuer Sender-Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setDropdownOpen((prev) => !prev)}
+                    className={`w-full px-4 py-2 border rounded-none flex justify-between items-center focus:outline-none ${
+                      darkMode
+                        ? "bg-gray-800 border-white text-white"
+                        : "bg-white border-black text-black"
+                    }`}
+                  >
+                    <span>Select Senders</span>
+                    <ChevronDown size={16} />
+                  </button>
+                  {dropdownOpen && (
+                    <div
+                      className={`absolute z-10 mt-1 w-full rounded-none  ${
                         darkMode
-                          ? "border-white hover:border-white"
-                          : "border-black hover:border-black"
-                      } ${
-                        selectedSender.includes(sender)
-                          ? darkMode
-                            ? "bg-white text-black"
-                            : "bg-black text-white"
-                          : darkMode
-                          ? "text-white"
-                          : "text-black"
+                          ? "bg-gray-800 border border-white"
+                          : "bg-white border border-black"
                       }`}
                     >
-                      {sender}
-                    </button>
-                  ))}
+                      <div
+                        className={`max-h-60 overflow-auto ${
+                          darkMode ? "text-white" : "text-black"
+                        }`}
+                      >
+                        {senders.map((sender) => {
+                          const isChecked =
+                            typeof manualSenderSelection[sender] !== "undefined"
+                              ? manualSenderSelection[sender]
+                              : true;
+                          return (
+                            <label
+                              key={sender}
+                              className={`flex items-center px-4 py-2 cursor-pointer hover:${
+                                darkMode ? "bg-gray-700" : "bg-gray-100"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                className="mr-2"
+                                checked={isChecked}
+                                onChange={() => handleSenderChange(sender)}
+                              />
+                              <span>{sender}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

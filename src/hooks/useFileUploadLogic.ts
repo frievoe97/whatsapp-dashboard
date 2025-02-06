@@ -79,7 +79,6 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
     messages,
     setMessages,
     setIsUploading,
-    selectedSender,
     setSelectedSender,
     minMessagePercentage,
     setMinMessagePercentage,
@@ -87,6 +86,10 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
     selectedWeekdays,
     setSelectedWeekdays,
     setIsPanelOpen,
+    setOriginalMessages,
+    setManualSenderSelection,
+    manualSenderSelection,
+    originalMessages,
   } = useChat();
 
   // Lokale Zustände, die in beiden Varianten gebraucht werden.
@@ -122,62 +125,131 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
   // Bei der initialen Datei‑Ladung: Datum und Sender filtern initial setzen.
   useEffect(() => {
     if (messages.length > 0 && isInitialLoad) {
+      // Setze Datumseinstellungen
       const firstMessageDate = new Date(messages[0].date);
       const lastMessageDate = new Date(messages[messages.length - 1].date);
       setStartDate(firstMessageDate);
       setEndDate(lastMessageDate);
-      setSelectedSender(senders);
+
+      // Berechne die Gesamtzahl der Nachrichten
+      const totalMessages = messages.length;
+      // Ermittele alle Sender aus den Nachrichten
+      const allSenders = Array.from(new Set(messages.map((msg) => msg.sender)));
+
+      // Berechne für jeden Sender den Anteil und wähle Sender aus, die ≥ minMessagePercentage haben
+      const defaultSelected = allSenders.filter((sender) => {
+        const count = messages.filter((msg) => msg.sender === sender).length;
+        const percentage = (count / totalMessages) * 100;
+        return percentage >= minMessagePercentage;
+      });
+
+      // Erstelle den neuen manuellen Sender-Override-Status:
+      const newManualSelection: Record<string, boolean> = {};
+      allSenders.forEach((sender) => {
+        newManualSelection[sender] = defaultSelected.includes(sender);
+      });
+
+      // Setze den Context entsprechend
+      setSelectedSender(defaultSelected);
+      setManualSenderSelection(newManualSelection);
+
       setIsInitialLoad(false);
     }
   }, [
     messages,
     isInitialLoad,
-    senders,
+    minMessagePercentage,
     setStartDate,
     setEndDate,
     setSelectedSender,
+    setManualSenderSelection,
   ]);
 
   // Filterlogik: Wenn die Filter angewendet werden sollen, wird – wenn möglich – ein Web Worker
   // zur Verarbeitung genutzt.
   useEffect(() => {
     if (applyFilters) {
+      // Compute the final sender selection based on manual overrides and the minMessagePercentage threshold.
+      // Use the originalMessages as the base data.
+      const totalMessages = originalMessages.length;
+
+      // 'senders' is computed from messages; however, to be safe, use the ones from originalMessages.
+      const allSenders = Array.from(
+        new Set(originalMessages.map((msg) => msg.sender))
+      );
+
+      const finalSelectedSenders = allSenders.filter((sender) => {
+        if (sender in manualSenderSelection) {
+          // Use the manual decision.
+          return manualSenderSelection[sender];
+        } else {
+          // Automatic selection: include if sender has at least tempMinMessagePercentage of total messages.
+          const count = originalMessages.filter(
+            (msg) => msg.sender === sender
+          ).length;
+          const percentage = (count / totalMessages) * 100;
+          return percentage >= tempMinMessagePercentage;
+        }
+      });
+
+      // Debug log for final sender selection:
+      console.debug("Final selected senders:", finalSelectedSenders);
+
       if (window.Worker) {
         const worker = new FilterWorker();
         worker.postMessage({
-          messages,
+          messages: originalMessages,
           filters: {
             startDate: startDate?.toISOString(),
             endDate: endDate?.toISOString(),
-            selectedSenders: selectedSender,
-            selectedWeekdays,
+            selectedSenders: finalSelectedSenders,
+            selectedWeekdays: selectedWeekdays,
           },
         });
         worker.onmessage = (event: MessageEvent<ChatMessage[]>) => {
+          // Update the displayed (filtered) messages.
           setMessages(event.data);
+
+          const newManualSelection: Record<string, boolean> = {};
+          allSenders.forEach((sender) => {
+            newManualSelection[sender] = finalSelectedSenders.includes(sender);
+          });
+
+          setSelectedSender(finalSelectedSenders);
+          setManualSenderSelection(newManualSelection);
+
           setApplyFilters(false);
           worker.terminate();
         };
       } else {
         // Fallback: lokale Filterung
-        const filteredMessages = applyLocalFilters(messages, {
+        const filteredMessages = applyLocalFilters(originalMessages, {
           startDate,
           endDate,
-          selectedSenders: selectedSender,
+          selectedSenders: finalSelectedSenders,
           selectedWeekdays: selectedWeekdays,
         });
         setMessages(filteredMessages);
+
+        const newManualSelection: Record<string, boolean> = {};
+        allSenders.forEach((sender) => {
+          newManualSelection[sender] = finalSelectedSenders.includes(sender);
+        });
+
+        setSelectedSender(finalSelectedSenders);
+        setManualSenderSelection(newManualSelection);
+
         setApplyFilters(false);
       }
     }
   }, [
-    applyFilters,
-    messages,
     startDate,
     endDate,
-    selectedSender,
     selectedWeekdays,
     setMessages,
+    manualSenderSelection,
+    applyFilters,
+    originalMessages,
   ]);
 
   /**
@@ -186,6 +258,7 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
    */
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     setMessages([]);
+    setOriginalMessages([]);
     const file = event.target.files?.[0];
     if (file) {
       setFileName(file.name);
@@ -208,6 +281,7 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
           worker.postMessage(fileContent);
           worker.onmessage = (event) => {
             setMessages(event.data);
+            setOriginalMessages(event.data);
             worker.terminate();
             setIsUploading(false);
             setIsPanelOpen(false);
@@ -220,16 +294,34 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
   };
 
   /**
-   * Toggle‑Funktion zum Ändern der Senderauswahl.
+   * Toggles the manual selection override for a sender.
+   * If a sender is not present in the manual override, then no manual decision
+   * exists and the sender is auto-included if its message share is above the threshold.
    *
-   * @param sender Der Sender, dessen Auswahl umgeschaltet wird.
+   * On toggle:
+   * - If previously not overridden, set it to false (exclude sender manually).
+   * - If previously false, set it to true (explicitly include).
+   * - If previously true, remove the override (revert to automatic decision).
+   *
+   * @param sender The sender to toggle.
    */
   const handleSenderChange = (sender: string) => {
-    setSelectedSender((prev) =>
-      prev.includes(sender)
-        ? prev.filter((s) => s !== sender)
-        : [...prev, sender]
-    );
+    setManualSenderSelection((prev) => {
+      if (sender in prev) {
+        // Cycle: true -> remove override, false -> true
+        const current = prev[sender];
+        if (current === false) {
+          return { ...prev, [sender]: true };
+        } else {
+          // Remove override => use automatic decision
+          const { [sender]: removed, ...rest } = prev;
+          return rest;
+        }
+      } else {
+        // No override yet: set to false to manually exclude.
+        return { ...prev, [sender]: false };
+      }
+    });
   };
 
   /**
@@ -257,7 +349,8 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
    * Setzt alle Filter auf die Standardwerte zurück.
    */
   const handleResetFilters = () => {
-    setSelectedSender(senders);
+    // Reset manual overrides: so that automatic selection (by minMessagePercentage) is used.
+    setManualSenderSelection({});
     setSelectedWeekdays([...DEFAULT_WEEKDAYS]);
     if (messages.length > 0) {
       const firstMessageDate = new Date(messages[0].date);

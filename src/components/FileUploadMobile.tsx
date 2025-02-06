@@ -33,12 +33,13 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     setStartDate,
     endDate,
     setEndDate,
-    selectedSender,
+    manualSenderSelection,
     toggleDarkMode,
     selectedWeekdays,
     isPanelOpen,
     setIsPanelOpen,
   } = useChat();
+
   const [hasFileBeenSet, setHasFileBeenSet] = useState<boolean>(false);
 
   const {
@@ -54,6 +55,9 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     isInfoOpen,
     setIsInfoOpen,
   } = useFileUploadLogic(onFileUpload);
+
+  // Innerhalb der FileUploadMobile-Komponente (oberhalb der Rückgabe):
+  const [senderDropdownOpen, setSenderDropdownOpen] = useState(false);
 
   // Automatisch das Panel einklappen, wenn eine Datei gesetzt wurde.
   useEffect(() => {
@@ -157,6 +161,8 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     </div>
   );
 
+  console.log("manualSenderSelection", manualSenderSelection);
+
   /** Filter section with sender selection, date pickers, numeric input and weekday checkboxes. */
   const FilterSection: React.FC = () => (
     <div className="space-y-6">
@@ -164,22 +170,55 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
         <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
           Select Sender
         </h3>
-        <div className="flex flex-wrap gap-2">
-          {senders.map((sender) => (
-            <button
-              key={sender}
-              onClick={() => handleSenderChange(sender)}
-              className={`px-3 py-1 text-sm rounded-none ${borderColor} ${bgColor} hover:${borderColor} border ${
-                selectedSender.includes(sender)
-                  ? `${senderSelected} ${textColor}`
-                  : ""
-              } focus:outline-none`}
+        <div className="relative">
+          <button
+            onClick={() => setSenderDropdownOpen((prev) => !prev)}
+            className={`w-full px-4 py-2 border rounded-none flex justify-between items-center ${borderColor} ${bgColor} ${textColor} hover:${borderColor} focus:outline-none`}
+          >
+            <span>Select Sender</span>
+            <ChevronDown size={16} />
+          </button>
+          {senderDropdownOpen && (
+            <div
+              className={`absolute z-10 mt-1 w-full rounded-none  ${
+                darkMode
+                  ? "bg-gray-800 border border-white"
+                  : "bg-white border border-black"
+              }`}
             >
-              {sender}
-            </button>
-          ))}
+              <div
+                className={`max-h-60 overflow-auto ${
+                  darkMode ? "text-white" : "text-black"
+                }`}
+              >
+                {senders.map((sender) => {
+                  const isChecked =
+                    typeof manualSenderSelection[sender] !== "undefined"
+                      ? manualSenderSelection[sender]
+                      : true;
+                  return (
+                    <label
+                      key={sender}
+                      className={`flex items-center px-4 py-2 cursor-pointer hover:${
+                        darkMode ? "bg-gray-700" : "bg-gray-100"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="mr-2"
+                        checked={isChecked}
+                        onChange={() => handleSenderChange(sender)}
+                      />
+                      <span>{sender}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
       <div className="flex flex-row gap-4">
         <div>
           <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
@@ -263,6 +302,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
         <button
           onClick={() => {
             handleApplyFilters();
+            setSenderDropdownOpen(false);
           }}
           className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} ${activeColor} border focus:outline-none`}
         >
