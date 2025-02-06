@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef, FC, ReactElement } from "react";
 import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
-import { removeStopwords, deu, eng, fra } from "stopword";
+import { removeStopwords, deu, eng, fra, spa } from "stopword";
 import ClipLoader from "react-spinners/ClipLoader";
 
 // -----------------------------------------------------------------------------
@@ -280,6 +280,11 @@ const Plot4: FC = (): ReactElement => {
       } else if (language === "en") {
         // Remove stopwords and filter out short words.
         filteredWords = removeStopwords(words, eng).filter(
+          (word) => word.length > 2
+        );
+      } else if (language === "es") {
+        // Remove stopwords and filter out short words.
+        filteredWords = removeStopwords(words, spa).filter(
           (word) => word.length > 2
         );
       } else if (language === "fr") {

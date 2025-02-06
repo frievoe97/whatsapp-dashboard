@@ -13,7 +13,7 @@ import { CirclePlus, CircleMinus } from "lucide-react";
 // -----------------------------------------------------------------------------
 
 // List of valid languages supported for sentiment analysis
-const VALID_LANGUAGES = ["de", "en", "fr"] as const;
+const VALID_LANGUAGES = ["de", "en", "fr", "es"] as const;
 
 // For pagination responsiveness
 const MIN_WIDTH_PER_ITEM = 600;

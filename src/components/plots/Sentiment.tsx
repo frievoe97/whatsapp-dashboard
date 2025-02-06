@@ -10,7 +10,7 @@ import { Maximize2, Minimize2 } from "lucide-react";
 // -----------------------------------------------------------------------------
 
 // List of valid languages supported for sentiment analysis
-const VALID_LANGUAGES = ["de", "en", "fr"] as const;
+const VALID_LANGUAGES = ["de", "en", "fr", "es"] as const;
 
 // Window size for the moving average smoothing
 const WINDOW_SIZE = 100;

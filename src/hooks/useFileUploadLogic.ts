@@ -111,6 +111,8 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
         setLanguage("de");
       } else if (detectedLanguage === "fra") {
         setLanguage("fr");
+      } else if (detectedLanguage === "spa") {
+        setLanguage("es");
       } else {
         setLanguage("en");
       }
