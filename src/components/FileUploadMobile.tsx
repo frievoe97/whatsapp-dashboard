@@ -83,7 +83,6 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   const textColor = darkMode ? "text-white" : "text-black";
   const bgColor = darkMode ? "bg-[#1f2937]" : "bg-white";
   const activeColor = darkMode ? "active:bg-gray-600" : "active:bg-gray-300";
-  const senderSelected = darkMode ? "bg-gray-500" : "bg-gray-200";
 
   /** Header section with info, title, dark mode and expand/collapse toggle. */
   const HeaderSection: React.FC = () => (

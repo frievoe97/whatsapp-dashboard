@@ -34,7 +34,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     setStartDate,
     endDate,
     setEndDate,
-    selectedSender,
     manualSenderSelection, // neu: für den Dropdown‑Status
     toggleDarkMode,
     selectedWeekdays,
