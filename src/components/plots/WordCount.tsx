@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef, FC, ReactElement } from "react";
 import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
-import { removeStopwords, deu } from "stopword";
+import { removeStopwords, deu, eng, fra } from "stopword";
 import ClipLoader from "react-spinners/ClipLoader";
 
 // -----------------------------------------------------------------------------
@@ -185,7 +185,8 @@ const Pagination: FC<PaginationProps> = ({
  */
 const Plot4: FC = (): ReactElement => {
   // Retrieve necessary data and configuration from the Chat context.
-  const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
+  const { messages, darkMode, isUploading, minMessagePercentage, language } =
+    useChat();
 
   // Current page for pagination.
   const [currentPage, setCurrentPage] = useState(1);
@@ -269,10 +270,29 @@ const Plot4: FC = (): ReactElement => {
         .replace(/[^a-zA-ZäöüßÄÖÜ\s]/g, "")
         .split(/\s+/);
 
-      // Remove stopwords and filter out short words.
-      const filteredWords = removeStopwords(words, deu).filter(
-        (word) => word.length > 2
-      );
+      let filteredWords = [];
+
+      if (language === "de") {
+        // Remove stopwords and filter out short words.
+        filteredWords = removeStopwords(words, deu).filter(
+          (word) => word.length > 2
+        );
+      } else if (language === "en") {
+        // Remove stopwords and filter out short words.
+        filteredWords = removeStopwords(words, eng).filter(
+          (word) => word.length > 2
+        );
+      } else if (language === "fr") {
+        // Remove stopwords and filter out short words.
+        filteredWords = removeStopwords(words, fra).filter(
+          (word) => word.length > 2
+        );
+      } else {
+        // Remove stopwords and filter out short words.
+        filteredWords = removeStopwords(words, eng).filter(
+          (word) => word.length > 2
+        );
+      }
 
       filteredWords.forEach((word) => {
         dataMap[sender][word] = (dataMap[sender][word] || 0) + 1;
@@ -287,7 +307,7 @@ const Plot4: FC = (): ReactElement => {
         .slice(0, 10);
       return { sender, topWords: wordCounts };
     });
-  }, [messages, minMessagePercentage]);
+  }, [messages, minMessagePercentage, language]);
 
   /**
    * Creates a color mapping for each sender using D3 color schemes.
