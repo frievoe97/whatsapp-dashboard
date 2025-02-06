@@ -119,6 +119,13 @@ const App: React.FC = () => {
   const { darkMode, messages } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  /**
+   * Custom hook to scroll to the top of the page on component mount.
+   */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Apply dark mode and update the theme-color meta tag.
   useDarkModeThemeEffect(darkMode);
 
