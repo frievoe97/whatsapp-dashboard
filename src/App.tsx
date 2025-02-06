@@ -7,7 +7,7 @@ import Timeline from "./components/plots/Timeline";
 import WordCount from "./components/plots/WordCount";
 import Stats from "./components/plots/Stats";
 import Sentiment from "./components/plots/Sentiment";
-import HeatmapDayHour from "./components/plots/HeatmapDayHour";
+// import HeatmapDayHour from "./components/plots/HeatmapDayHour";
 import Emoji from "./components/plots/Emoji";
 import BarChartComp from "./components/plots/BarChartComp";
 import SentimentWord from "./components/plots/SentimentWord";
@@ -181,7 +181,7 @@ const App: React.FC = () => {
               <ChordDiagram />
               <WordCount />
               <Stats />
-              <HeatmapDayHour />
+              {/* <HeatmapDayHour /> */}
               <Sentiment />
               <SentimentWord />
               <HeatmapMonthWeekday />

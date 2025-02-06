@@ -1,28 +1,9 @@
 import React, { useEffect, useRef, useMemo, useState } from "react";
+import Select from "react-select";
 import * as d3 from "d3";
 import { useChat } from "../../context/ChatContext";
 import useResizeObserver from "../../hooks/useResizeObserver";
 import ClipLoader from "react-spinners/ClipLoader";
-
-const CATEGORIES: Record<string, string[]> = {
-  Month: [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ],
-  Weekday: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  Hour: Array.from({ length: 24 }, (_, i) => i.toString()),
-  Day: Array.from({ length: 31 }, (_, i) => (i + 1).toString()),
-};
 
 const Heatmap: React.FC = () => {
   const { messages, darkMode, isUploading } = useChat();
@@ -32,6 +13,35 @@ const Heatmap: React.FC = () => {
 
   const [xCategory, setXCategory] = useState("Month");
   const [yCategory, setYCategory] = useState("Weekday");
+
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
+
+  const years = Array.from(
+    new Set(messages.map((msg) => new Date(msg.date).getFullYear()))
+  )
+    .sort((a, b) => a - b)
+    .map(String);
+
+  const CATEGORIES: Record<string, string[]> = {
+    Year: years.length > 0 ? years : ["2024"],
+    Month: [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ],
+    Weekday: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    Hour: Array.from({ length: 24 }, (_, i) => i.toString()),
+    Day: Array.from({ length: 31 }, (_, i) => (i + 1).toString()),
+  };
 
   const aggregatedData = useMemo(() => {
     const dataMap: { [x: string]: { [y: string]: number } } = {};
@@ -46,25 +56,31 @@ const Heatmap: React.FC = () => {
       if (!msg.isUsed) return;
       const date = new Date(msg.date);
       const xValue =
-        CATEGORIES[xCategory][
-          xCategory === "Month"
-            ? date.getMonth()
-            : xCategory === "Weekday"
-            ? (date.getDay() + 6) % 7
-            : xCategory === "Hour"
-            ? date.getHours()
-            : date.getDate() - 1
-        ];
+        xCategory === "Year"
+          ? String(date.getFullYear())
+          : CATEGORIES[xCategory][
+              xCategory === "Month"
+                ? date.getMonth()
+                : xCategory === "Weekday"
+                ? (date.getDay() + 6) % 7
+                : xCategory === "Hour"
+                ? date.getHours()
+                : date.getDate() - 1
+            ];
+
       const yValue =
-        CATEGORIES[yCategory][
-          yCategory === "Month"
-            ? date.getMonth()
-            : yCategory === "Weekday"
-            ? (date.getDay() + 6) % 7
-            : yCategory === "Hour"
-            ? date.getHours()
-            : date.getDate() - 1
-        ];
+        yCategory === "Year"
+          ? String(date.getFullYear())
+          : CATEGORIES[yCategory][
+              yCategory === "Month"
+                ? date.getMonth()
+                : yCategory === "Weekday"
+                ? (date.getDay() + 6) % 7
+                : yCategory === "Hour"
+                ? date.getHours()
+                : date.getDate() - 1
+            ];
+
       if (xValue && yValue) dataMap[xValue][yValue] += 1;
     });
 
@@ -74,16 +90,27 @@ const Heatmap: React.FC = () => {
   }, [messages, xCategory, yCategory]);
 
   useEffect(() => {
+    if (dimensions) {
+      setIsDesktop(window.innerWidth >= 768);
+    }
+  }, [dimensions]);
+
+  useEffect(() => {
     if (!dimensions || aggregatedData.length === 0) return;
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
-    // const margin = { top: 20, right: 20, bottom: 80, left: 80 };
-    const margin = {
+
+    let margin = {
       top: 0,
       right: 0,
       bottom: 70,
       left: 40,
     };
+
+    if (window.innerWidth >= 768) {
+      margin.left = 30;
+    }
+
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -122,9 +149,28 @@ const Heatmap: React.FC = () => {
     g.append("g")
       .attr("transform", `translate(0, ${innerHeight})`)
       .style("font-size", "14px")
-      .call(d3.axisBottom(xScale).tickSize(0));
+      .call(
+        d3
+          .axisBottom(xScale)
+          .tickSize(0)
+          .tickValues(
+            xScale
+              .domain()
+              .filter((_, i) => i % Math.ceil(xScale.domain().length / 5) === 0)
+          )
+      );
+
     g.append("g")
-      .call(d3.axisLeft(yScale).tickSize(0))
+      .call(
+        d3
+          .axisLeft(yScale)
+          .tickSize(0)
+          .tickValues(
+            yScale
+              .domain()
+              .filter((_, i) => i % Math.ceil(yScale.domain().length / 5) === 0)
+          )
+      )
       .style("font-size", "14px");
   }, [aggregatedData, dimensions, darkMode]);
 
@@ -135,32 +181,138 @@ const Heatmap: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full p-4 flex min-h-[600px] md:min-h-[600px] flex-col`}
+      } w-full p-4 pl-0 md:pl-4 flex min-h-[600px] md:min-h-[600px] flex-col`}
     >
-      <div className="flex space-x-4 mb-4">
-        {[xCategory, yCategory].map((_, index) => (
-          <select
-            key={index}
-            value={index === 0 ? xCategory : yCategory}
-            onChange={(e) =>
-              index === 0
-                ? setXCategory(e.target.value)
-                : setYCategory(e.target.value)
-            }
-            className={`border p-2 ${
-              darkMode
-                ? "border-gray-300 bg-black text-white"
-                : "border-black bg-white text-black"
-            }`}
-          >
-            {Object.keys(CATEGORIES).map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        ))}
-      </div>
+      <h2 className="text-lg font-semibold mb-4 flex items-center space-x-0 pl-4 md:pl-0">
+        <span>Messages By</span>
+        <Select
+          value={{ value: xCategory, label: xCategory }}
+          onChange={(selected) => setXCategory(selected?.value || "Weekday")}
+          options={Object.keys(CATEGORIES)
+            .filter((cat) => cat !== yCategory)
+            .map((cat) => ({ value: cat, label: cat }))}
+          styles={{
+            control: (provided) => ({
+              ...provided,
+              backgroundColor: "transparent",
+              border: "none",
+              boxShadow: "none",
+              display: "flex",
+              justifyContent: "space-between",
+              marginLeft: "4px",
+            }),
+            valueContainer: (provided) => ({
+              ...provided,
+              padding: "0px",
+              flex: "1 1 auto",
+            }),
+            indicatorSeparator: () => ({
+              display: "none",
+            }),
+            dropdownIndicator: (provided) => ({
+              ...provided,
+              padding: "6px",
+              marginLeft: "-5px",
+              color: darkMode ? "white" : "black",
+            }),
+            menu: (provided) => ({
+              ...provided,
+              backgroundColor: darkMode ? "#333" : "white",
+              color: darkMode ? "white" : "black",
+              boxShadow: "none",
+              width: "auto",
+              minWidth: "fit-content",
+              border: darkMode ? "1px solid white" : "1px solid black",
+              borderRadius: "0",
+            }),
+            option: (provided, state) => ({
+              ...provided,
+              backgroundColor: state.isSelected
+                ? darkMode
+                  ? "#777"
+                  : "#ddd"
+                : isDesktop && state.isFocused && state.selectProps.menuIsOpen
+                ? darkMode
+                  ? "#555"
+                  : "grey"
+                : darkMode
+                ? "#333"
+                : "white",
+              color: darkMode ? "white" : "black",
+            }),
+
+            singleValue: (provided) => ({
+              ...provided,
+              color: darkMode ? "white" : "black",
+            }),
+          }}
+        />
+
+        <span>&</span>
+        <Select
+          value={{ value: yCategory, label: yCategory }}
+          onChange={(selected) => setYCategory(selected?.value || "Weekday")}
+          options={Object.keys(CATEGORIES)
+            .filter((cat) => cat !== xCategory)
+            .map((cat) => ({ value: cat, label: cat }))}
+          styles={{
+            control: (provided) => ({
+              ...provided,
+              backgroundColor: "transparent",
+              border: "none",
+              boxShadow: "none",
+              display: "flex",
+              justifyContent: "space-between",
+              marginLeft: "4px",
+            }),
+            valueContainer: (provided) => ({
+              ...provided,
+              padding: "0px",
+              flex: "1 1 auto",
+            }),
+            indicatorSeparator: () => ({
+              display: "none",
+            }),
+            dropdownIndicator: (provided) => ({
+              ...provided,
+              padding: "6px",
+              marginLeft: "-5px",
+              color: darkMode ? "white" : "black",
+            }),
+            menu: (provided) => ({
+              ...provided,
+              backgroundColor: darkMode ? "#333" : "white",
+              color: darkMode ? "white" : "black",
+              boxShadow: "none",
+              width: "auto",
+              minWidth: "fit-content",
+              border: darkMode ? "1px solid white" : "1px solid black",
+              borderRadius: "0",
+            }),
+            option: (provided, state) => ({
+              ...provided,
+              backgroundColor: state.isSelected
+                ? darkMode
+                  ? "#777"
+                  : "#ddd"
+                : isDesktop && state.isFocused && state.selectProps.menuIsOpen
+                ? darkMode
+                  ? "#555"
+                  : "grey"
+                : darkMode
+                ? "#333"
+                : "white",
+              color: darkMode ? "white" : "black",
+            }),
+
+            singleValue: (provided) => ({
+              ...provided,
+              color: darkMode ? "white" : "black",
+            }),
+          }}
+        />
+      </h2>
+
       <div className="flex-grow flex justify-center items-center">
         {isUploading ? (
           <ClipLoader
