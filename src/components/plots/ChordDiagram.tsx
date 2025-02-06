@@ -213,22 +213,6 @@ const ChordDiagram: React.FC = () => {
       group.selectAll("path").transition().duration(500).style("opacity", 1);
       ribbons.transition().duration(500).style("opacity", 1);
     });
-
-    let touchTimer: NodeJS.Timeout;
-
-    // Event-Listener für langes Drücken hinzufügen
-    svg.on("touchstart", () => {
-      touchTimer = setTimeout(() => {
-        // Setzt alles zurück nach langem Drücken
-        group.selectAll("path").transition().duration(500).style("opacity", 1);
-        ribbons.transition().duration(500).style("opacity", 1);
-      }, 600); // 600ms lang gedrückt halten
-    });
-
-    // Falls der Benutzer den Finger zu früh wegnimmt, den Timer abbrechen
-    svg.on("touchend", () => {
-      clearTimeout(touchTimer);
-    });
   }, [chordData, dimensions, darkMode]);
 
   useEffect(() => {
