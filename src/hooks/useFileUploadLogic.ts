@@ -109,6 +109,8 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
       const detectedLanguage = franc(allText, { minLength: 3 });
       if (detectedLanguage === "deu") {
         setLanguage("de");
+      } else if (detectedLanguage === "fra") {
+        setLanguage("fr");
       } else {
         setLanguage("en");
       }
