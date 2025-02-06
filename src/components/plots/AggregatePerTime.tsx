@@ -275,7 +275,7 @@ const AggregatePerTimePlot: React.FC = () => {
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
 
-    const margin = { top: 20, right: 20, bottom: 30, left: 30 };
+    const margin = { top: 20, right: 30, bottom: 30, left: 30 };
 
     const headerHeight = getTotalHeightIncludingMargin(
       "aggregate-per-time-plot-header"
@@ -306,17 +306,15 @@ const AggregatePerTimePlot: React.FC = () => {
       .nice()
       .range([innerHeight, 0]);
 
-    // Set the maximum number of ticks based on the mode.
-    const maxTicks = mode === "hour" ? 30 : mode === "weekday" ? 30 : 10;
+    const tickSpacing = mode === "hour" ? 20 : mode === "weekday" ? 55 : 50;
+    const maxTicks = Math.max(2, Math.floor(innerWidth / tickSpacing));
 
-    // Create axes.
-    const xAxis = d3
-      .axisBottom(xScale)
-      .tickValues(
-        categories.filter(
-          (_, i) => i % Math.ceil(categories.length / maxTicks) === 0
-        )
-      );
+    const xTickValues = categories.filter(
+      (_, i) => i % Math.ceil(categories.length / maxTicks) === 0
+    );
+
+    const xAxis = d3.axisBottom(xScale).tickValues(xTickValues);
+
     const yAxis = d3
       .axisLeft(yScale)
       .ticks(5)

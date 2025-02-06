@@ -324,7 +324,7 @@ const Plot2: React.FC = () => {
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
 
-    const margin = { top: 20, right: 10, bottom: 30, left: 40 };
+    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
 
     const headerHeight = getTotalHeightIncludingMargin("timeline-plot-header");
     const legendHeight = getTotalHeightIncludingMargin("timeline-plot-legend");
