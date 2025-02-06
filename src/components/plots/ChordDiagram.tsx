@@ -19,8 +19,6 @@ const ChordDiagram: React.FC = () => {
   const dimensions = useResizeObserver(containerRef);
   const [isRendered, setIsRendered] = useState(false);
 
-  const margin = { top: 20, right: 20, bottom: 20, left: 20 };
-
   // Process messages to generate chord data and unique senders count
   const { chordData, uniqueSenders } = useMemo(() => {
     const counts: { [key: string]: { [key: string]: number } } = {};
@@ -72,10 +70,23 @@ const ChordDiagram: React.FC = () => {
   useEffect(() => {
     if (!dimensions || chordData.length === 0 || !svgRef.current) return;
 
+    console.log("Dimensions:", dimensions);
+    console.log("Width:", dimensions.width);
+    console.log("Height:", dimensions.height);
+
     const svg = d3.select(svgRef.current);
-    const width = dimensions.width - margin.left - margin.right;
-    const height = dimensions.height - margin.top - margin.bottom;
-    const radius = Math.min(width, height) / 2 - 50;
+    const width = dimensions.width;
+
+    const header = document.getElementById("chord-diagram-header");
+
+    const headerHeight = header
+      ? header.getBoundingClientRect().height +
+        parseFloat(getComputedStyle(header).marginTop) +
+        parseFloat(getComputedStyle(header).marginBottom)
+      : 0;
+
+    const height = dimensions.height - headerHeight;
+    const radius = Math.min(width, height) / 2 - 40;
 
     if (radius <= 0) return;
 
