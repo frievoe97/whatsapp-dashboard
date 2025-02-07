@@ -1,239 +1,353 @@
-// src/components/Plot6.tsx
-import React, { useEffect, useRef, useMemo, useState } from "react";
-import { useChat } from "../../context/ChatContext";
+import React, {
+  FC,
+  useEffect,
+  useRef,
+  useMemo,
+  useState,
+  MutableRefObject,
+} from "react";
+import Select from "react-select";
 import * as d3 from "d3";
-import useResizeObserver from "../../hooks/useResizeObserver";
+import { useChat } from "../../context/ChatContext"; // Context providing messages, darkMode, and isUploading
+import useResizeObserver from "../../hooks/useResizeObserver"; // Custom hook for tracking container resize
 import ClipLoader from "react-spinners/ClipLoader";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { ChatMessage } from "../../context/ChatContext";
 
-interface DailyMessages {
-  date: Date;
-  count: number;
-}
+/**
+ * HeatmapProps is an empty interface here but can be extended
+ * if you need to pass down props to the Heatmap component.
+ */
+interface HeatmapProps {}
 
-const Plot6: React.FC = () => {
+/**
+ * This component displays a D3-based heatmap that visualizes
+ * the frequency of messages along two categorical axes (e.g., Hour vs. Weekday).
+ * It allows the user to switch the categories via react-select dropdowns.
+ */
+const Heatmap: FC<HeatmapProps> = () => {
+  // -------------
+  // Context & Hooks
+  // -------------
   const { messages, darkMode, isUploading } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+
+  // This custom hook gives us width/height of the containerRef.
   const dimensions = useResizeObserver(containerRef);
 
-  const [expanded, setExpanded] = useState(false);
+  // -------------
+  // State
+  // -------------
+  // Dropdown selections for X and Y categories
+  const [xCategory, setXCategory] = useState<string>("Hour");
+  const [yCategory, setYCategory] = useState<string>("Weekday");
 
-  const [selectedYear, setSelectedYear] = useState<number>(() => {
-    const currentYear = new Date().getFullYear();
-    return currentYear;
-  });
+  // Tracks if the viewport is considered "desktop" size
+  const [isDesktop, setIsDesktop] = useState<boolean>(window.innerWidth >= 768);
 
-  const availableYears: number[] = useMemo(() => {
-    const yearsSet = new Set<number>();
-    messages.forEach((msg) => {
-      if (!msg.isUsed) return;
+  // -------------
+  // Derived Data
+  // -------------
+  // Extract all possible 'Year' values from messages, sorted ascending.
+  // If no years are found, default to ["2024"] to avoid empty arrays.
+  const years = Array.from(
+    new Set(
+      messages.map((msg: ChatMessage) => new Date(msg.date).getFullYear())
+    )
+  )
+    .sort((a, b) => a - b)
+    .map(String);
+
+  /**
+   * Available categories and their possible values (in the correct order).
+   * For example, "Weekday" has Monday -> Sunday, "Hour" has 0..23, etc.
+   * These are used both for the axis labels and for aggregating data.
+   */
+  const CATEGORIES: Record<string, string[]> = {
+    Year: years.length > 0 ? years : ["2024"],
+    Month: [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ],
+    Weekday: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    Hour: Array.from({ length: 24 }, (_, i) => i.toString()), // "0" .. "23"
+    Day: Array.from({ length: 31 }, (_, i) => (i + 1).toString()), // "1" .. "31"
+  };
+
+  // -------------
+  // Data Aggregation
+  // -------------
+  /**
+   * Generates a 2D structure that counts how many messages
+   * occur at each [xCategory, yCategory] pair.
+   * Then flattens it into an array for D3 rendering.
+   */
+  const aggregatedData = useMemo(() => {
+    // Initialize a nested mapping for counts, e.g. dataMap[x][y] = count
+    const dataMap: Record<string, Record<string, number>> = {};
+
+    // Ensure every combination of x and y is present, even if 0
+    CATEGORIES[xCategory].forEach((xVal) => {
+      dataMap[xVal] = {};
+      CATEGORIES[yCategory].forEach((yVal) => {
+        dataMap[xVal][yVal] = 0;
+      });
+    });
+
+    // Populate counts based on existing messages
+    messages.forEach((msg: ChatMessage) => {
+      if (!msg.isUsed) return; // Skip messages that aren't used
+
       const date = new Date(msg.date);
-      if (!isNaN(date.getTime())) {
-        yearsSet.add(date.getFullYear());
+
+      // Extract the correct value for the X axis category
+      const xValue = getDateValue(date, xCategory, CATEGORIES[xCategory]);
+
+      // Extract the correct value for the Y axis category
+      const yValue = getDateValue(date, yCategory, CATEGORIES[yCategory]);
+
+      if (xValue && yValue) {
+        dataMap[xValue][yValue] += 1;
       }
     });
-    return Array.from(yearsSet).sort((a, b) => a - b);
-  }, [messages]);
 
-  const dailyMessages: DailyMessages[] = useMemo(() => {
-    const dateMap: { [date: string]: number } = {};
-    messages.forEach((msg) => {
-      if (!msg.isUsed) return;
-      const date = new Date(msg.date);
-      if (date.getFullYear() !== selectedYear) return;
-      const key = d3.timeFormat("%Y-%m-%d")(date);
-      dateMap[key] = (dateMap[key] || 0) + 1;
-    });
+    // Flatten the nested map into an array: [{ x, y, count }, ...]
+    return CATEGORIES[xCategory].flatMap((xVal) =>
+      CATEGORIES[yCategory].map((yVal) => ({
+        x: xVal,
+        y: yVal,
+        count: dataMap[xVal][yVal],
+      }))
+    );
+  }, [messages, xCategory, yCategory, CATEGORIES]);
 
-    const startDate = d3.timeYear(new Date(selectedYear, 0, 1));
-    const endDate = d3.timeYear.offset(startDate, 1);
-    const allDates: DailyMessages[] = [];
-    let currentDate = startDate;
-
-    while (currentDate < endDate) {
-      const key = d3.timeFormat("%Y-%m-%d")(currentDate);
-      allDates.push({
-        date: new Date(currentDate),
-        count: dateMap[key] || 0,
-      });
-      currentDate = d3.timeDay.offset(currentDate, 1);
+  /**
+   * Helper function to map a Date object to the string label
+   * based on the specified category and valid values.
+   *
+   * For example, if category = "Month", it returns "Jan" for 0, "Feb" for 1, etc.
+   */
+  function getDateValue(
+    date: Date,
+    category: string,
+    validValues: string[]
+  ): string | undefined {
+    switch (category) {
+      case "Year":
+        return String(date.getFullYear());
+      case "Month":
+        return validValues[date.getMonth()]; // 0..11
+      case "Weekday":
+        // Note: JS getDay() = 0 (Sun), 1 (Mon), ... 6 (Sat)
+        // Provided array is ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        // so we shift Sunday to the end: (date.getDay() + 6) % 7
+        return validValues[(date.getDay() + 6) % 7];
+      case "Hour":
+        return validValues[date.getHours()]; // 0..23
+      case "Day":
+        return validValues[date.getDate() - 1]; // 1..31 => index 0..30
+      default:
+        return undefined;
     }
+  }
 
-    return allDates;
-  }, [messages, selectedYear]);
-
-  // Überprüfe, ob mindestens ein Tag Daten hat
-  const hasData = useMemo(
-    () => dailyMessages.some((d) => d.count > 0),
-    [dailyMessages]
-  );
-
-  // Debugging: Überprüfe den Wert von hasData
+  // -------------
+  // Effects
+  // -------------
+  /**
+   * Whenever the dimensions object updates (container resize)
+   * we also update whether the viewport is considered desktop size.
+   */
   useEffect(() => {
-    // console.log(`Selected Year: ${selectedYear}, Has Data: ${hasData}`);
-  }, [selectedYear, hasData]);
+    if (!dimensions) return;
+    setIsDesktop(window.innerWidth >= 768);
+  }, [dimensions]);
 
-  // Neuer useEffect: Dispatch eines Resize-Events, nachdem die Daten geladen wurden
+  /**
+   * Render the D3 heatmap whenever:
+   * - aggregatedData changes
+   * - dimensions change
+   * - darkMode changes (affects color scale)
+   */
   useEffect(() => {
-    if (!isUploading && containerRef.current) {
-      setTimeout(() => {
-        window.dispatchEvent(new Event("resize"));
-      }, 50);
-    }
-  }, [isUploading, messages]);
-
-  const maxCount = useMemo(() => {
-    return d3.max(dailyMessages, (d) => d.count) || 0;
-  }, [dailyMessages]);
-
-  useEffect(() => {
-    if (!dimensions || !hasData) {
-      const svg = d3.select(svgRef.current);
-      svg.selectAll("*").remove();
-      return;
-    }
+    if (!dimensions || aggregatedData.length === 0) return;
 
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
 
-    // === NEU: Berechne die Höhe der zusätzlichen Elemente ===
-    const titleEl = document.getElementById("heatmap-title");
-    const yearSelectEl = document.getElementById("year-select");
-    const titleHeight = titleEl ? titleEl.offsetHeight : 0;
-    const yearSelectHeight = yearSelectEl ? yearSelectEl.offsetHeight : 0;
-    const extraMargin = 10; // optionaler Puffer in Pixeln
-    const adjustedHeight =
-      height - titleHeight - yearSelectHeight - extraMargin;
-    // ============================================================
+    // Define margins; adjust for smaller screens
+    const margin = {
+      top: 0,
+      right: 0,
+      bottom: 70,
+      left: window.innerWidth >= 768 ? 30 : 40,
+    };
 
-    const padding = { top: 50, right: 40, bottom: 80, left: 40 };
+    let innerWidth = width - margin.left - margin.right;
+    let innerHeight = height - margin.top - margin.bottom;
 
-    // Berechne verfügbare Breite und Höhe anhand der adjustierten Höhe:
-    const availableWidth = width - padding.left - padding.right;
-    const availableHeight = adjustedHeight - padding.top - padding.bottom - 30;
+    // On very small screens, constrain height if necessary
+    if (window.innerWidth < 768 && innerHeight > innerWidth) {
+      innerHeight = innerWidth;
+    }
 
-    // Beispielsweise für den Jahresanfang und Wochenberechnung:
-    const startOfYear = d3.timeYear(new Date(selectedYear, 0, 1));
-    const endOfYear = d3.timeYear.offset(startOfYear, 1);
-    const weeks = d3.timeWeeks(startOfYear, endOfYear);
-    const numberOfWeeks = weeks.length;
+    // Clear previous render
+    svg.selectAll("*").remove();
 
-    // Berechne die Zellengrößen:
-    const cellSizeWidth = availableWidth / numberOfWeeks - 2;
-    const cellSizeHeight = availableHeight / 7 - 2;
-    const cellSize = Math.min(cellSizeWidth, cellSizeHeight);
+    // Create main group for drawing
+    const g = svg
+      .append("g")
+      .style("font-size", "14px")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    // Farbskala
+    // Create X and Y band scales
+    const xScale = d3
+      .scaleBand()
+      .domain(CATEGORIES[xCategory])
+      .range([0, innerWidth])
+      .padding(0.05);
+
+    const yScale = d3
+      .scaleBand()
+      .domain(CATEGORIES[yCategory])
+      .range([0, innerHeight])
+      .padding(0.05);
+
+    // Determine max count for color domain
+    const maxCount = d3.max(aggregatedData, (d) => d.count) || 1;
+
+    // Use a color scale that differs based on darkMode (for better contrast)
     const colorScale = d3
       .scaleSequential(darkMode ? d3.interpolateGnBu : d3.interpolateOrRd)
       .domain([0, maxCount]);
 
-    // Bereite das SVG vor:
-    svg.selectAll("*").remove();
-    svg.attr("width", width).attr("height", height);
-
-    // console.log("Drawing Heatmap...");
-    // console.log("Dimensions:", dimensions);
-
-    const g = svg
-      .append("g")
-      .attr("transform", `translate(${padding.left}, ${padding.top})`);
-
-    // Entferne vorhandenes Tooltip-Element (falls vorhanden) und erstelle ein neues
-    const tooltip = d3.select(containerRef.current).select(".tooltip");
-    tooltip.remove();
-
-    const newTooltip = d3
-      .select(containerRef.current)
-      .append("div")
-      .attr(
-        "class",
-        `absolute p-2 text-sm opacity-0 transition-opacity duration-200 ${
-          darkMode
-            ? "bg-gray-700 text-white border-gray-300"
-            : "bg-white text-black border-black"
-        }`
-      )
-      .style("pointer-events", "none")
-      .attr("class", "tooltip");
-
-    // Zeichne die einzelnen Tage als Rechtecke
-    g.selectAll<SVGRectElement, DailyMessages>(".day")
-      .data(dailyMessages)
+    // Draw the heatmap rectangles
+    g.selectAll(".cell")
+      .data(aggregatedData)
       .enter()
       .append("rect")
-      .attr("class", "day")
-      .attr("width", cellSize)
-      .attr("height", cellSize)
-      .attr(
-        "x",
-        (d) => d3.timeSunday.count(startOfYear, d.date) * (cellSize + 2)
-      )
-      .attr("y", (d) => d.date.getDay() * (cellSize + 2))
-      .attr("fill", (d) =>
-        d.count > 0
-          ? (colorScale(d.count) as string)
-          : darkMode
-          ? "#444444"
-          : "#ebedf0"
-      )
-      .on("mouseover", (event, d) => {
-        newTooltip
-          .style("opacity", 1)
-          .html(
-            `<strong>${d3.timeFormat("%d.%m.%Y")(
-              d.date
-            )}</strong><br/>Nachrichten: ${d.count}`
+      .attr("class", "cell")
+      .attr("x", (d) => xScale(d.x) ?? 0)
+      .attr("y", (d) => yScale(d.y) ?? 0)
+      .attr("width", xScale.bandwidth())
+      .attr("height", yScale.bandwidth())
+      .attr("fill", (d) => colorScale(d.count));
+
+    // Determine how many ticks to show on each axis (avoid overcrowding)
+    const tickCountX = Math.max(2, Math.floor(innerWidth / 30));
+    const tickCountY = Math.max(2, Math.floor(innerHeight / 50));
+
+    // X Axis
+    g.append("g")
+      .attr("transform", `translate(0, ${innerHeight})`)
+      .style("font-size", "14px")
+      .call(
+        d3
+          .axisBottom(xScale)
+          .tickSize(0)
+          .tickValues(
+            xScale
+              .domain()
+              .filter(
+                (_, i) =>
+                  i % Math.ceil(xScale.domain().length / tickCountX) === 0
+              )
           )
-          .style("left", `${event.pageX + 10}px`)
-          .style("top", `${event.pageY - 28}px`);
-      })
-      .on("mouseout", () => {
-        newTooltip.style("opacity", 0);
-      });
+      );
 
-    // Zeichne Monatsnamen
-    const months = d3.timeMonths(startOfYear, endOfYear);
+    // Y Axis
+    g.append("g")
+      .style("font-size", "14px")
+      .call(
+        d3
+          .axisLeft(yScale)
+          .tickSize(0)
+          .tickValues(
+            yScale
+              .domain()
+              .filter(
+                (_, i) =>
+                  i % Math.ceil(yScale.domain().length / tickCountY) === 0
+              )
+          )
+      );
+  }, [aggregatedData, dimensions, darkMode, xCategory, yCategory, CATEGORIES]);
 
-    g.selectAll<SVGTextElement, Date>(".month")
-      .data(months)
-      .enter()
-      .append("text")
-      .attr("class", "month")
-      .attr(
-        "x",
-        (d: Date) => d3.timeSunday.count(startOfYear, d) * (cellSize + 2)
-      )
-      .attr("y", -10)
-      .text((d) => d3.timeFormat("%b")(d))
-      .attr("font-size", "12px")
-      .attr("fill", darkMode ? "#ffffff" : "#000000");
+  // -------------
+  // React-Select Styles
+  // -------------
+  /**
+   * Shared React-Select styles for both X and Y dropdowns.
+   * Adjusts colors, sizing, and layout for better integration with Tailwind & dark mode.
+   */
+  const customSelectStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      backgroundColor: "transparent",
+      border: "none",
+      boxShadow: "none",
+      display: "flex",
+      justifyContent: "space-between",
+      marginLeft: "4px",
+    }),
+    valueContainer: (provided: any) => ({
+      ...provided,
+      padding: "0px",
+      flex: "1 1 auto",
+    }),
+    indicatorSeparator: () => ({
+      display: "none",
+    }),
+    dropdownIndicator: (provided: any) => ({
+      ...provided,
+      padding: "6px",
+      marginLeft: "-5px",
+      color: darkMode ? "white" : "black",
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: darkMode ? "#333" : "white",
+      color: darkMode ? "white" : "black",
+      boxShadow: "none",
+      width: "auto",
+      minWidth: "fit-content",
+      border: darkMode ? "1px solid white" : "1px solid black",
+      borderRadius: "0",
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? darkMode
+          ? "#777"
+          : "#ddd"
+        : isDesktop && state.isFocused && state.selectProps.menuIsOpen
+        ? darkMode
+          ? "#555"
+          : "grey"
+        : darkMode
+        ? "#333"
+        : "white",
+      color: darkMode ? "white" : "black",
+    }),
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: darkMode ? "white" : "black",
+    }),
+  };
 
-    // Zeichne Wochentage
-    const daysOfWeek = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-
-    g.selectAll<SVGTextElement, string>(".weekday")
-      .data(daysOfWeek)
-      .enter()
-      .append("text")
-      .attr("class", "weekday")
-      .attr("x", -10)
-      .attr("y", (_, i) => i * (cellSize + 2) + cellSize / 1.5)
-      .text((d) => d)
-      .attr("font-size", "12px")
-      .attr("fill", darkMode ? "#ffffff" : "#000000")
-      .attr("text-anchor", "end");
-  }, [
-    dailyMessages,
-    dimensions,
-    maxCount,
-    selectedYear,
-    darkMode,
-    hasData,
-    expanded,
-  ]);
-
+  // -------------
+  // Render
+  // -------------
   return (
     <div
       ref={containerRef}
@@ -241,86 +355,38 @@ const Plot6: React.FC = () => {
         darkMode
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
-      } w-full md:min-w-[750px] ${
-        expanded ? "md:basis-[3000px]" : "md:basis-[1000px]"
-      } flex-grow p-4 flex flex-col`}
-      style={{
-        minHeight: "200px",
-        maxHeight: "550px",
-        overflow: "hidden",
-      }}
+      } w-full p-4 pl-0 md:pl-4 flex min-h-[400px] md:min-h-[400px] flex-col`}
     >
-      <div className="flex justify-between items-center mb-4">
-        <h2
-          id="heatmap-title"
-          className={`text-lg font-semibold mb-4 ${
-            darkMode ? "text-white" : "text-black"
-          }`}
-        >
-          Message Heatmap Calendar
-        </h2>
-        <button
-          className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
-            darkMode ? "text-white" : "text-black"
-          }`}
-          onClick={() => {
-            setExpanded(!expanded);
-            setTimeout(() => {
-              window.dispatchEvent(new Event("resize"));
-            }, 200); // Kleine Verzögerung für reflow
-          }}
-          style={{
-            background: "transparent",
-            outline: "none",
-            boxShadow: "none",
-            border: "none",
-          }}
-        >
-          {expanded ? (
-            <Minimize2 className="w-5 h-5" />
-          ) : (
-            <Maximize2 className="w-5 h-5" />
-          )}
-        </button>
-      </div>
+      {/* Title and Category Selectors */}
+      <h2 className="text-lg font-semibold mb-4 flex items-center space-x-0 pl-4 md:pl-0">
+        <span>Messages By</span>
 
-      {/* Jahr auswählen */}
-      <div id="heatmap-year-select" className="mb-4">
-        <div>
-          <select
-            id="year-select"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className={`mt-1.5 w-fit border border-[1px] text-sm font-medium outline-none focus:ring-0 appearance-none
-    ${
-      darkMode
-        ? "border-gray-300 bg-black text-white"
-        : "border-black bg-white text-black"
-    } 
-    p-2`}
-            style={{
-              fontFamily: "Arial, sans-serif",
-            }}
-          >
-            {availableYears.map((year) => (
-              <option
-                key={year}
-                value={year}
-                className={
-                  darkMode ? "bg-black text-white" : "bg-white text-black"
-                }
-                style={{
-                  fontFamily: "Arial, sans-serif",
-                }}
-              >
-                {year}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+        {/* X-Category Select */}
+        <Select
+          value={{ value: xCategory, label: xCategory }}
+          onChange={(selected) => setXCategory(selected?.value || "Weekday")}
+          options={Object.keys(CATEGORIES)
+            .filter((cat) => cat !== yCategory)
+            .map((cat) => ({ value: cat, label: cat }))}
+          isSearchable={false}
+          styles={customSelectStyles}
+        />
 
-      {/* Bedingtes Rendering des Inhalts */}
+        <span>&</span>
+
+        {/* Y-Category Select */}
+        <Select
+          value={{ value: yCategory, label: yCategory }}
+          onChange={(selected) => setYCategory(selected?.value || "Weekday")}
+          isSearchable={false}
+          options={Object.keys(CATEGORIES)
+            .filter((cat) => cat !== xCategory)
+            .map((cat) => ({ value: cat, label: cat }))}
+          styles={customSelectStyles}
+        />
+      </h2>
+
+      {/* Heatmap Body (Spinner or "No Data" or the Heatmap itself) */}
       <div className="flex-grow flex justify-center items-center">
         {isUploading ? (
           <ClipLoader
@@ -328,14 +394,14 @@ const Plot6: React.FC = () => {
             loading={true}
             size={50}
           />
-        ) : !hasData ? (
+        ) : aggregatedData.length === 0 ? (
           <span className="text-lg">No Data Available</span>
         ) : (
-          <svg ref={svgRef} className="w-full h-full"></svg>
+          <svg ref={svgRef} className="w-full h-full" />
         )}
       </div>
     </div>
   );
 };
 
-export default Plot6;
+export default Heatmap;

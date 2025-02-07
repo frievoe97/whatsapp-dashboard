@@ -13,7 +13,7 @@ import SentimentWord from "./components/plots/SentimentWord";
 import ChordDiagram from "./components/plots/ChordDiagram";
 import { useChat } from "./context/ChatContext";
 import "./index.css";
-import HeatmapMonthWeekday from "./components/plots/HeatmapMonthWeekday";
+import HeatmapMonthWeekday from "./components/plots/Heatmap";
 
 /**
  * Custom hook to update the document's dark mode class and theme-color meta tag.
@@ -168,7 +168,7 @@ const App: React.FC = () => {
         {/* Chat Analysis Components */}
         <div
           ref={containerRef}
-          className="mt-4  md:h-full flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-start items-stretch"
+          className="mt-4  md:h-full flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-between items-stretch"
         >
           {messages.length === 0 ? (
             <div

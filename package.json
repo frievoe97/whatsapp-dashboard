@@ -30,6 +30,7 @@
   "devDependencies": {
     "@eslint/js": "^9.11.1",
     "@types/d3": "^7.4.3",
+    "@types/node": "^22.13.1",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
     "@types/sentiment": "^5.0.4",

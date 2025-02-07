@@ -5,7 +5,6 @@ import * as d3 from "d3";
 import { ChatMessage } from "../../context/ChatContext";
 import useResizeObserver from "../../hooks/useResizeObserver";
 import Switch from "react-switch";
-import "./AggregatePerTimePlot.css";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Hash, Percent, Maximize2, Minimize2 } from "lucide-react";
 
@@ -278,7 +277,7 @@ const AggregatePerTimePlot: React.FC = () => {
     let margin = { top: 20, right: 30, bottom: 30, left: 30 };
 
     if (window.innerWidth <= 768) {
-      margin.right = 30;
+      margin.right = 20;
       margin.left = 40;
     }
 
@@ -454,7 +453,7 @@ const AggregatePerTimePlot: React.FC = () => {
       .selectAll("text")
       .attr("transform", "translate(0,5)")
       .style("text-anchor", "middle")
-      .style("font-size", "12px")
+      .style("font-size", "14px")
       .style("fill", darkMode ? "white" : "black");
 
     // Draw Y Axis
@@ -463,7 +462,7 @@ const AggregatePerTimePlot: React.FC = () => {
       .attr("class", "y-axis")
       .call(yAxis)
       .selectAll("text")
-      .style("font-size", "12px")
+      .style("font-size", "14px")
       .style("fill", darkMode ? "white" : "black");
 
     // Bind aggregated data to path elements for each sender and apply transitions.

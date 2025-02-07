@@ -1,43 +1,48 @@
-import { useEffect, useMemo, useRef, useState, FC, ReactElement } from "react";
+import { FC, ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
-import { useChat } from "../../context/ChatContext";
-// import useResizeObserver from "../../hooks/useResizeObserver";
-import Sentiment from "sentiment";
-import { removeStopwords, deu } from "stopword";
-import ClipLoader from "react-spinners/ClipLoader";
 import Switch from "react-switch";
 import { CirclePlus, CircleMinus } from "lucide-react";
+import ClipLoader from "react-spinners/ClipLoader";
+import Sentiment from "sentiment";
+import { removeStopwords, deu } from "stopword";
+import { useChat } from "../../context/ChatContext";
+// import useResizeObserver from "../../hooks/useResizeObserver"; // If you want to use a custom hook for resizing.
 
+//
 // -----------------------------------------------------------------------------
 // CONSTANTS & TYPES
 // -----------------------------------------------------------------------------
 
-// List of valid languages supported for sentiment analysis
+/**
+ * List of valid language codes supported for sentiment analysis.
+ */
 const VALID_LANGUAGES = ["de", "en", "fr", "es"] as const;
 
-// For pagination responsiveness
+/**
+ * Minimum width per item (in px) to decide how many items we can display per page.
+ * This helps with a simple responsive pagination calculation.
+ */
 const MIN_WIDTH_PER_ITEM = 600;
 
-// Type for a word with aggregated sentiment data.
+/**
+ * Represents a single word and its aggregated sentiment data.
+ */
 interface WordSentimentCount {
   word: string;
   count: number;
-  totalSentiment: number; // = count * (lexicon score)
+  totalSentiment: number;
 }
 
-// Aggregated data per sender.
+/**
+ * Represents the aggregated top words (by sentiment) for a particular sender.
+ */
 interface AggregatedSentimentWordData {
   sender: string;
   topWords: WordSentimentCount[];
 }
 
-// -----------------------------------------------------------------------------
-// HELPER COMPONENTS
-// -----------------------------------------------------------------------------
-
 /**
- * SenderSentimentWordChart renders the bar chart for a single sender’s top sentiment words.
- * The bar length is scaled relative to the maximum absolute total sentiment within the list.
+ * Props for the subcomponent that displays each sender’s top words in bar chart style.
  */
 interface SenderSentimentWordChartProps {
   sender: string;
@@ -46,16 +51,39 @@ interface SenderSentimentWordChartProps {
   darkMode: boolean;
 }
 
+/**
+ * Props for the pagination subcomponent.
+ */
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  darkMode: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+//
+// -----------------------------------------------------------------------------
+// HELPER COMPONENTS
+// -----------------------------------------------------------------------------
+
+/**
+ * SenderSentimentWordChart
+ *
+ * Renders a simple bar-chart-like view for a single sender's top words.
+ * - Bars are scaled relative to the maximum absolute sentiment among all displayed words.
+ * - Displays word rank, word text, bar, and the numeric sentiment value.
+ */
 const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
   sender,
   topWords,
   color,
   darkMode,
 }) => {
-  // Calculate the maximum absolute total sentiment among the words.
-  const maxSentiment = Math.max(
-    ...topWords.map((w) => Math.abs(w.totalSentiment)),
-    1
+  // Compute the maximum absolute total sentiment (to scale bar widths).
+  const maxSentiment = useMemo(
+    () => Math.max(...topWords.map((w) => Math.abs(w.totalSentiment)), 1),
+    [topWords]
   );
 
   return (
@@ -71,12 +99,12 @@ const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
       <h3 className="text-md font-medium mb-2">{sender}</h3>
       <div className="space-y-1">
         {topWords.map((wordData, index) => {
-          // Scale bar width relative to maximum absolute sentiment value.
-          const barWidth =
+          const barWidthPercent =
             (Math.abs(wordData.totalSentiment) / maxSentiment) * 100;
+
           return (
             <div key={wordData.word} className="flex items-center h-[28px]">
-              {/* Rank */}
+              {/* Rank (1-based index) */}
               <div
                 className={`w-6 text-sm ${
                   darkMode ? "text-white" : "text-black"
@@ -84,7 +112,8 @@ const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
               >
                 {index + 1}.
               </div>
-              {/* Word */}
+
+              {/* Word text */}
               <div
                 className={`w-24 text-sm ${
                   darkMode ? "text-white" : "text-black"
@@ -92,17 +121,19 @@ const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
               >
                 {wordData.word}
               </div>
-              {/* Bar */}
+
+              {/* Bar container */}
               <div className="flex-1 bg-gray-300 h-4 mx-2">
                 <div
                   className="h-4"
                   style={{
-                    width: `${barWidth}%`,
+                    width: `${barWidthPercent}%`,
                     backgroundColor: color,
                   }}
-                ></div>
+                />
               </div>
-              {/* Total Sentiment (formatted) */}
+
+              {/* Total sentiment value (formatted) */}
               <div
                 className={`w-12 text-sm ${
                   darkMode ? "text-white" : "text-black"
@@ -119,16 +150,10 @@ const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
 };
 
 /**
- * Pagination component renders simple pagination controls.
+ * Pagination
+ *
+ * Renders simple pagination controls: "Previous" / "Next" buttons and current page info.
  */
-interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  darkMode: boolean;
-  onPrev: () => void;
-  onNext: () => void;
-}
-
 const Pagination: FC<PaginationProps> = ({
   currentPage,
   totalPages,
@@ -153,9 +178,11 @@ const Pagination: FC<PaginationProps> = ({
       >
         Previous
       </button>
+
       <span className={darkMode ? "text-white" : "text-black"}>
         Page {currentPage} of {totalPages}
       </span>
+
       <button
         onClick={onNext}
         disabled={currentPage === totalPages}
@@ -175,42 +202,72 @@ const Pagination: FC<PaginationProps> = ({
   );
 };
 
+//
 // -----------------------------------------------------------------------------
 // MAIN COMPONENT: SentimentWordsPlot
 // -----------------------------------------------------------------------------
 
 /**
- * SentimentWordsPlot analyzes chat messages per sender and displays, for each sender,
- * the top 10 words with either the highest positive (best) or lowest negative (worst)
- * aggregated sentiment impact. The component loads and registers the appropriate AFINN lexicon,
- * aggregates words (after normalization and stopword removal), computes each word’s total sentiment,
- * and provides a toggle to switch between best and worst words.
+ * SentimentWordsPlot
+ *
+ * Analyzes chat messages from a context (useChat) and displays, for each sender,
+ * the top 10 words with the highest total positive sentiment (best) OR lowest total
+ * negative sentiment (worst). Provides:
+ *   - Language-based sentiment analysis (AFINN lexicon).
+ *   - Filtering by minMessagePercentage (sender must have at least X% of total messages).
+ *   - Simple bar visualizations for each sender's top words.
+ *   - Pagination that adapts to available horizontal space (responsive).
+ *   - A toggle switch to show best (positive) or worst (negative) words.
  */
 const SentimentWordsPlot: FC = (): ReactElement => {
-  // Extract context values.
+  //
+  // ---------------------------------------------------------------------------
+  // CONTEXT & STATE
+  // ---------------------------------------------------------------------------
   const { messages, darkMode, language, isUploading, minMessagePercentage } =
     useChat();
 
-  // Refs for container (for responsiveness).
+  // Reference to the container (to measure width for responsiveness).
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Pagination states.
   const [itemsPerPage, setItemsPerPage] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // Toggle to show best (positive) words or worst (negative) words.
+  // Toggle: true = show best words; false = show worst words.
   const [showBest, setShowBest] = useState<boolean>(true);
 
-  // Resize observer to update items per page.
+  //
+  // ---------------------------------------------------------------------------
+  // RESIZE HANDLING (RESPONSIVE ITEMS PER PAGE)
+  // ---------------------------------------------------------------------------
   useEffect(() => {
+    /**
+     * Determines how many items (charts) can fit per page based on container width
+     * and a predefined minimum width per item (MIN_WIDTH_PER_ITEM).
+     */
     const updateItemsPerPage = (): void => {
       let newItemsPerPage = 1;
+
+      // Only do more advanced calculation if viewport is wide enough.
       if (window.innerWidth >= 768) {
         const plotWidth = containerRef.current?.offsetWidth || 0;
-        if (plotWidth <= MIN_WIDTH_PER_ITEM * 1) newItemsPerPage = 1;
-        else if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) newItemsPerPage = 2;
-        else if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) newItemsPerPage = 3;
-        else if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) newItemsPerPage = 4;
-        else newItemsPerPage = 5;
+
+        if (plotWidth <= MIN_WIDTH_PER_ITEM) {
+          newItemsPerPage = 1;
+        } else if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) {
+          newItemsPerPage = 2;
+        } else if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) {
+          newItemsPerPage = 3;
+        } else if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) {
+          newItemsPerPage = 4;
+        } else {
+          // If we have enough space for 5 or more items, we cap at 5 in this example.
+          newItemsPerPage = 5;
+        }
       }
+
+      // If the new items-per-page differs, reset the currentPage to 1 to avoid out-of-range pages.
       setItemsPerPage((prev) => {
         if (prev !== newItemsPerPage) {
           setCurrentPage(1);
@@ -218,45 +275,62 @@ const SentimentWordsPlot: FC = (): ReactElement => {
         }
         return prev;
       });
+
+      // Hack/trick to force a re-render in certain scenarios.
       setTimeout(() => {
         window.dispatchEvent(new Event("resize"));
       }, 0);
     };
 
     window.addEventListener("resize", updateItemsPerPage);
-    updateItemsPerPage();
+    updateItemsPerPage(); // Run once on mount.
     return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
 
+  //
   // ---------------------------------------------------------------------------
-  // Lexicon loading & registration (similar to SentimentAnalysis)
+  // SENTIMENT ANALYZER & LEXICON LOADING
   // ---------------------------------------------------------------------------
   const sentimentAnalyzer = useMemo(() => new Sentiment(), []);
   const [afinn, setAfinn] = useState<Record<string, number>>({});
   const [isLanguageRegistered, setIsLanguageRegistered] =
     useState<boolean>(false);
 
+  /**
+   * Dynamically imports the correct AFINN lexicon JSON based on `language`.
+   */
   useEffect(() => {
     if (!language) return;
+
+    // If language is not in VALID_LANGUAGES, fallback to "en".
     const langToLoad = VALID_LANGUAGES.includes(language as any)
       ? language
       : "en";
+
     import(`../../assets/AFINN-${langToLoad}.json`)
       .then((data) => {
         setAfinn(data.default);
       })
-      .catch((error) =>
-        console.error(`Error loading AFINN-${langToLoad}:`, error)
-      );
+      .catch((error) => {
+        console.error(`Error loading AFINN-${langToLoad}.json:`, error);
+      });
   }, [language]);
 
+  /**
+   * Registers the loaded AFINN lexicon with the Sentiment instance.
+   */
   useEffect(() => {
     if (!language || Object.keys(afinn).length === 0) return;
+
     const langToUse = VALID_LANGUAGES.includes(language as any)
       ? language
       : "en";
+
+    // Register the language with the Sentiment instance.
     sentimentAnalyzer.registerLanguage(langToUse, { labels: afinn });
+
     try {
+      // Attempt a test analyze to confirm registration works.
       sentimentAnalyzer.analyze("Test", { language: langToUse });
       setIsLanguageRegistered(true);
     } catch (error) {
@@ -265,60 +339,74 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     }
   }, [language, afinn, sentimentAnalyzer]);
 
+  //
   // ---------------------------------------------------------------------------
-  // Compute aggregated sentiment words per sender.
-  // For each message: normalize text, remove stopwords, and for each word (if in lexicon)
-  // aggregate count. Then, per sender, compute totalSentiment = count * lexiconScore.
-  // Finally, filter & sort depending on whether we show best or worst words.
+  // AGGREGATE SENTIMENT CALCULATION
   // ---------------------------------------------------------------------------
   const aggregatedSentimentData: AggregatedSentimentWordData[] = useMemo(() => {
-    if (!language || !isLanguageRegistered) return [];
+    if (!language || !isLanguageRegistered) {
+      return [];
+    }
 
-    // Determine minimum messages required per sender.
+    // Calculate the total number of messages that are "isUsed".
     const totalMessages = messages.filter((msg) => msg.isUsed).length;
-    const minMessages = (minMessagePercentage / 100) * totalMessages;
+    // Convert minMessagePercentage to an absolute count of messages.
+    const minMessagesCount = (minMessagePercentage / 100) * totalMessages;
 
-    // First, count messages per sender.
-    const senderMessageCount: { [sender: string]: number } = {};
+    // Count how many messages each sender has (only considering `isUsed`).
+    const senderMessageCount: Record<string, number> = {};
     messages.forEach((msg) => {
       if (!msg.isUsed) return;
       senderMessageCount[msg.sender] =
         (senderMessageCount[msg.sender] || 0) + 1;
     });
 
-    // Aggregate word data per sender.
+    // This data structure will hold intermediate values:
+    // dataMap[sender][word] = { count, sentiment }
     const dataMap: {
       [sender: string]: {
         [word: string]: { count: number; sentiment: number };
       };
     } = {};
 
+    // Process each message, filter out short words/stopwords, and accumulate counts.
     messages.forEach((msg) => {
-      if (!msg.isUsed || senderMessageCount[msg.sender] < minMessages) return;
+      // Skip if message is not used or if the sender has fewer than minMessagesCount.
+      if (!msg.isUsed || senderMessageCount[msg.sender] < minMessagesCount)
+        return;
+
       const sender = msg.sender;
       if (!dataMap[sender]) {
         dataMap[sender] = {};
       }
-      // Normalize text: lowercase and remove non-letter characters.
+
+      // Normalize text: toLowerCase, remove non-letter chars, split by whitespace.
       const words = msg.message
         .toLowerCase()
         .replace(/[^a-zA-ZäöüßÄÖÜ\s]/g, " ")
         .split(/\s+/);
-      // Remove stopwords (using German stopwords as in Plot4; adapt if needed).
+
+      // Remove German stopwords (using `deu`). If you need dynamic stopwords for other languages,
+      // you'd have to adapt this logic or the stopword library usage.
       const filteredWords = removeStopwords(words, deu).filter(
         (word) => word.length > 2
       );
+
+      // Only count words that appear in the AFINN dictionary (afinn[word] !== undefined).
       filteredWords.forEach((word) => {
-        // Only consider the word if it exists in the lexicon.
         if (afinn[word] === undefined) return;
+
         if (!dataMap[sender][word]) {
-          dataMap[sender][word] = { count: 0, sentiment: afinn[word] };
+          dataMap[sender][word] = {
+            count: 0,
+            sentiment: afinn[word],
+          };
         }
         dataMap[sender][word].count += 1;
       });
     });
 
-    // Build the aggregated data per sender.
+    // Convert the dataMap into an array of AggregatedSentimentWordData.
     return Object.keys(dataMap).map((sender) => {
       const wordEntries = Object.entries(dataMap[sender]).map(
         ([word, { count, sentiment }]) => ({
@@ -328,17 +416,19 @@ const SentimentWordsPlot: FC = (): ReactElement => {
         })
       );
 
-      // Depending on the toggle, filter for positive (best) or negative (worst) words.
+      // Depending on the toggle, we either filter to positive or negative sentiments.
       let filteredWords: WordSentimentCount[];
       if (showBest) {
         filteredWords = wordEntries.filter((w) => w.totalSentiment > 0);
         filteredWords.sort((a, b) => b.totalSentiment - a.totalSentiment);
       } else {
         filteredWords = wordEntries.filter((w) => w.totalSentiment < 0);
-        filteredWords.sort((a, b) => a.totalSentiment - b.totalSentiment); // most negative first
+        filteredWords.sort((a, b) => a.totalSentiment - b.totalSentiment);
       }
-      // Take top 10.
+
+      // Take the top 10 words by absolute value.
       const topWords = filteredWords.slice(0, 10);
+
       return { sender, topWords };
     });
   }, [
@@ -350,37 +440,52 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     showBest,
   ]);
 
+  //
   // ---------------------------------------------------------------------------
-  // Pagination: determine total pages and current page’s data.
+  // PAGINATION LOGIC
   // ---------------------------------------------------------------------------
-  const totalPages = useMemo(
-    () => Math.ceil(aggregatedSentimentData.length / itemsPerPage),
-    [aggregatedSentimentData, itemsPerPage]
-  );
+  const totalPages = useMemo(() => {
+    if (aggregatedSentimentData.length === 0) return 1;
+    return Math.ceil(aggregatedSentimentData.length / itemsPerPage);
+  }, [aggregatedSentimentData, itemsPerPage]);
 
   const currentData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return aggregatedSentimentData.slice(startIndex, startIndex + itemsPerPage);
   }, [aggregatedSentimentData, currentPage, itemsPerPage]);
 
-  // Create a color mapping per sender.
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  //
+  // ---------------------------------------------------------------------------
+  // COLOR SCALES (d3)
+  // ---------------------------------------------------------------------------
   const colorScale: Map<string, string> = useMemo(() => {
+    // Collect unique senders from the aggregated data.
     const senders = aggregatedSentimentData.map((d) => d.sender);
-    const lightColors = d3.schemePaired;
-    const darkColors = d3.schemeSet2;
-    const colors = darkMode ? darkColors : lightColors;
+
+    // Choose a color palette; can be different for dark/light mode if desired.
+    const lightPalette = d3.schemePaired;
+    const darkPalette = d3.schemeSet2;
+
+    const selectedPalette = darkMode ? darkPalette : lightPalette;
     const scale = new Map<string, string>();
+
     senders.forEach((sender, index) => {
-      scale.set(sender, colors[index % colors.length]);
+      // Use modulo to wrap around the palette if there are more senders than palette colors.
+      scale.set(sender, selectedPalette[index % selectedPalette.length]);
     });
+
     return scale;
   }, [aggregatedSentimentData, darkMode]);
 
-  // Handlers for pagination.
-  const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
-  const handleNextPage = () =>
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-
+  //
   // ---------------------------------------------------------------------------
   // RENDERING
   // ---------------------------------------------------------------------------
@@ -395,11 +500,11 @@ const SentimentWordsPlot: FC = (): ReactElement => {
       }`}
       style={{ minHeight: "350px", maxHeight: "550px", overflow: "hidden" }}
     >
+      {/* Header with Toggle */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold mb-4">
           Top 10 {showBest ? "Best" : "Worst"} Words per Person
         </h2>
-
         <div className="flex items-center space-x-2">
           <CircleMinus
             className={`${
@@ -429,16 +534,20 @@ const SentimentWordsPlot: FC = (): ReactElement => {
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="flex-grow flex justify-center items-center flex-col w-full">
         {isUploading ? (
+          // If uploading, show loader spinner.
           <ClipLoader
             color={darkMode ? "#ffffff" : "#000000"}
             loading={true}
             size={50}
           />
         ) : aggregatedSentimentData.length === 0 ? (
+          // If no data is available.
           <span className="text-lg">No Data Available</span>
         ) : (
+          // Show the bar charts for the current page’s data.
           <>
             <div className="flex flex-col md:flex-row gap-4 w-full">
               {currentData.map((senderData) => {
@@ -454,6 +563,8 @@ const SentimentWordsPlot: FC = (): ReactElement => {
                 );
               })}
             </div>
+
+            {/* Pagination Controls (only if more than one page of data) */}
             {totalPages > 1 && (
               <Pagination
                 currentPage={currentPage}

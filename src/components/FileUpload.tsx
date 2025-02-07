@@ -3,7 +3,6 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ChevronDown, ChevronUp, Info, Moon, Sun } from "lucide-react";
 import InfoModal from "./InfoModal";
-import "./FileUpload.css";
 import { useChat } from "../context/ChatContext";
 import {
   useFileUploadLogic,
@@ -34,12 +33,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     setStartDate,
     endDate,
     setEndDate,
-    manualSenderSelection, // neu: für den Dropdown‑Status
+    manualSenderSelection,
     toggleDarkMode,
     selectedWeekdays,
     setSelectedWeekdays,
     isPanelOpen,
     setIsPanelOpen,
+    setManualSenderSelection,
+    minMessagePercentage,
+    originalMessages,
   } = useChat();
 
   const {
@@ -48,7 +50,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     senders,
     handleFileChange,
     handleDeleteFile,
-    handleSenderChange,
     handleWeekdayChange,
     handleApplyFilters,
     handleResetFilters,
@@ -178,7 +179,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
             {fileName && (
               <div className="flex flex-col space-y-2">
                 <h3 className="text-md font-semibold">Select Senders:</h3>
-                {/* Neuer Sender-Dropdown */}
+                {/* Sender-Dropdown */}
                 <div className="relative">
                   <button
                     onClick={() => setDropdownOpen((prev) => !prev)}
@@ -205,22 +206,62 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                         }`}
                       >
                         {senders.map((sender) => {
+                          // Prozent berechnen:
+                          const total = originalMessages.length;
+                          const count = originalMessages.filter(
+                            (m) => m.sender === sender
+                          ).length;
+                          const percentage = (count / total) * 100;
+
+                          // Status 3, wenn unter minMessagePercentage:
+                          const isDisabled = percentage < minMessagePercentage;
+
+                          // Status 2 (manuell deaktiviert) liegt vor, wenn
+                          // manualSenderSelection[sender] === false.
+                          // Status 1 (aktiv) = nicht disabled und kein manuelles false:
                           const isChecked =
-                            typeof manualSenderSelection[sender] !== "undefined"
-                              ? manualSenderSelection[sender]
-                              : true;
+                            !isDisabled &&
+                            manualSenderSelection[sender] !== false;
+
                           return (
                             <label
                               key={sender}
-                              className={`flex items-center px-4 py-2 cursor-pointer hover:${
-                                darkMode ? "bg-gray-700" : "bg-gray-100"
-                              }`}
+                              className={`
+                    flex items-center px-4 py-2 cursor-pointer
+                    ${
+                      isDisabled
+                        ? // Falls disabled, grau darstellen:
+                          darkMode
+                          ? "text-gray-400"
+                          : "text-gray-400"
+                        : // Falls aktivierbar, Hover-Effekt
+                        darkMode
+                        ? "hover:bg-gray-700"
+                        : "hover:bg-gray-100"
+                    }
+                  `}
                             >
                               <input
                                 type="checkbox"
                                 className="mr-2"
+                                disabled={isDisabled} // Kein Aktivieren möglich, wenn unter minMessagePercentage
                                 checked={isChecked}
-                                onChange={() => handleSenderChange(sender)}
+                                onChange={() => {
+                                  // Wenn disabled, nichts tun:
+                                  if (isDisabled) return;
+
+                                  // Toggle zwischen "manuell deaktiviert" und "kein Override":
+                                  setManualSenderSelection((prev) => {
+                                    // wenn manuell deaktiviert => override entfernen:
+                                    if (prev[sender] === false) {
+                                      const newState = { ...prev };
+                                      delete newState[sender];
+                                      return newState;
+                                    }
+                                    // sonst => manuell deaktivieren:
+                                    return { ...prev, [sender]: false };
+                                  });
+                                }}
                               />
                               <span>{sender}</span>
                             </label>

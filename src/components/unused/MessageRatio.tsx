@@ -16,7 +16,6 @@ const Plot3: React.FC = () => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
 
-  // Aggregiere die Anzahl der Nachrichten pro Sender
   const pieData: PieData[] = useMemo(() => {
     const totalMessages = messages.filter((msg) => msg.isUsed).length;
     const minMessages = (minMessagePercentage / 100) * totalMessages;
@@ -35,22 +34,21 @@ const Plot3: React.FC = () => {
       .filter((d) => d.count >= minMessages);
   }, [messages, minMessagePercentage]);
 
-  // Farbschema basierend auf den Sendern
   const colorScale = useMemo(() => {
     const senders = pieData.map((d) => d.sender);
     const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
 
     return d3.scaleOrdinal<string, string>(colors).domain(senders);
-  }, [pieData, darkMode]); // `darkMode` & `pieData` als Dependencies
+  }, [pieData, darkMode]);
 
   useEffect(() => {
     if (!dimensions || pieData.length === 0) return;
 
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
-    const radius = Math.min(width, height) / 2 - 100; // Padding für Labels
+    const radius = Math.min(width, height) / 2 - 100;
 
-    svg.selectAll("*").remove(); // Clear previous contents
+    svg.selectAll("*").remove();
 
     const g = svg
       .attr("width", width)
@@ -75,7 +73,6 @@ const Plot3: React.FC = () => {
       .append("g")
       .attr("class", "arc");
 
-    // Draw the pie slices
     arcs
       .append("path")
       .attr("d", arc)
@@ -89,29 +86,24 @@ const Plot3: React.FC = () => {
         };
       });
 
-    // Add labels
-    // Add external labels with lines
     const outerArc = d3
       .arc<d3.PieArcDatum<PieData>>()
       .innerRadius(radius * 0.7)
-      .outerRadius(radius * 1.5); // Position der Labels außerhalb des Pie-Charts
+      .outerRadius(radius * 1.5);
 
     const labelPositions = pieData.map((_, i) => {
       const centroid = outerArc.centroid(pie(pieData)[i]);
       return { x: centroid[0], y: centroid[1] };
     });
 
-    // Verwende eine Simulation zur automatischen Positionierung
     const simulation = d3
       .forceSimulation(labelPositions)
       .force("y", d3.forceY((d) => (d.y !== undefined ? d.y : 0)).strength(0.5))
-      .force("collide", d3.forceCollide(18)) // Abstand zwischen Labels erhöhen
+      .force("collide", d3.forceCollide(18))
       .stop();
 
-    // Starte Simulation
     for (let i = 0; i < 100; i++) simulation.tick();
 
-    // Labels korrekt positionieren
     arcs
       .append("text")
       .attr(
@@ -126,23 +118,18 @@ const Plot3: React.FC = () => {
       .style("fill", darkMode ? "white" : "black")
       .text((d) => d.data.sender);
 
-    // Linien zu den Labels hinzufügen
     arcs
       .append("polyline")
       .attr("points", (d, i) => {
-        const posA = arc.centroid(d); // Punkt in der Mitte des Segments
-        const posB = outerArc.centroid(d); // Punkt außerhalb des Segments
-        const posC = [simulation.nodes()[i].x, simulation.nodes()[i].y]; // Automatische Position des Labels
+        const posA = arc.centroid(d);
+        const posB = outerArc.centroid(d);
+        const posC = [simulation.nodes()[i].x, simulation.nodes()[i].y];
         return [posA, posB, posC].map((p) => p.join(",")).join(" ");
       })
       .attr("fill", "none")
       .attr("stroke", "gray")
       .attr("stroke-width", 1);
-
-    // Verwende eine Simulation zur automatischen Positionierung
-
-    // Add a legend
-  }, [pieData, dimensions, colorScale, darkMode]); // darkMode hinzugefügt
+  }, [pieData, dimensions, colorScale, darkMode]);
 
   return (
     <div
@@ -162,20 +149,16 @@ const Plot3: React.FC = () => {
         Message Ratio
       </h2>
 
-      {/* Bedingtes Rendering des Inhalts */}
       <div className="flex-grow flex justify-center items-center">
         {isUploading ? (
-          // Ladeanimation anzeigen, wenn Daten hochgeladen werden
           <ClipLoader
             color={darkMode ? "#ffffff" : "#000000"}
             loading={true}
             size={50}
           />
         ) : pieData.length === 0 ? (
-          // "No Data" anzeigen, wenn keine Daten vorhanden sind
           <span className="text-lg">No Data Available</span>
         ) : (
-          // Diagramm anzeigen, wenn Daten vorhanden sind
           <svg ref={svgRef} className="w-full h-full"></svg>
         )}
       </div>

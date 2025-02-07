@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo, ChangeEvent } from "react";
+import { useState, useEffect, useMemo, useRef, ChangeEvent } from "react";
 import { useChat } from "../context/ChatContext";
 import { franc } from "franc-min";
 import FilterWorker from "../workers/filterMessages.worker?worker";
 
-/** Default weekdays used for filtering. */
+/**
+ * Default weekdays used for filtering chat messages.
+ */
 export const DEFAULT_WEEKDAYS = [
   "Sun",
   "Mon",
@@ -26,12 +28,19 @@ export interface ChatMessage {
 }
 
 /**
- * Applies local filters to the provided messages based on date range,
- * sender selection and weekday selection.
+ * Applies local filters to a given array of messages. This function is used as a fallback
+ * if the user's browser does not support Web Workers (or if we do not want to rely on them).
  *
- * @param messages - Array of chat messages.
- * @param filters - Filter criteria.
- * @returns Filtered array with updated `isUsed` flags.
+ * It filters by:
+ * - Date range
+ * - Selected senders
+ * - Selected weekdays
+ *
+ * @param messages - The original array of ChatMessage objects.
+ * @param filters - Filter criteria including optional start/end dates, a list of selected senders,
+ *                  and a list of selected weekdays.
+ * @returns A new array of ChatMessage objects in which `isUsed` is updated to reflect
+ *          whether the message passed the filters.
  */
 export const applyLocalFilters = (
   messages: ChatMessage[],
@@ -47,11 +56,14 @@ export const applyLocalFilters = (
     const messageDay = messageDate.toLocaleString("en-US", {
       weekday: "short",
     });
+
     const isWithinDateRange =
       (!filters.startDate || messageDate >= filters.startDate) &&
       (!filters.endDate || messageDate <= filters.endDate);
+
     const isSenderSelected = filters.selectedSenders.includes(msg.sender);
     const isWeekdaySelected = filters.selectedWeekdays.includes(messageDay);
+
     return {
       ...msg,
       isUsed: isWithinDateRange && isSenderSelected && isWeekdaySelected,
@@ -60,16 +72,23 @@ export const applyLocalFilters = (
 };
 
 /**
- * Custom hook that encapsulates the common logic for:
- * - File upload and parsing (using a Web Worker)
- * - Filtering (delegated to a Web Worker oder lokal)
- * - Initial filter setup (Datum, Sender, etc.)
- * - Spracheerkennung (mit franc-min)
+ * A custom hook that encapsulates file-upload and filtering logic for WhatsApp chat data.
  *
- * @param onFileUpload Callback invoked when a file is uploaded.
- * @returns An object with handlers and states used von den UI-Komponenten.
+ * The hook is intended to manage:
+ * 1) File upload & parsing logic (via a worker for large files).
+ * 2) Message filtering (via a worker or local fallback).
+ * 3) Initial filter setup upon first file load (dates, senders, etc.).
+ * 4) Language detection (using `franc-min`) once messages are available.
+ *
+ * All relevant state is read from and written to the global ChatContext.
+ * The hook exposes handlers and states that can be connected to a UI component.
+ *
+ * @param onFileUpload - A callback function that is invoked when a file is uploaded.
+ * @returns An object containing states and handlers to be used by the UI.
  */
 export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
+  // -------------------------- CONTEXT STATE ---------------------------
+  // We pull in a range of state and setters from our ChatContext.
   const {
     setFileName,
     startDate,
@@ -92,24 +111,95 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
     originalMessages,
   } = useChat();
 
-  // Lokale Zustände, die in beiden Varianten gebraucht werden.
+  // ------------------------ LOCAL COMPONENT STATE ---------------------
+  /**
+   * This local state temporarily holds the user's minimum message percentage
+   * before finally applying it (e.g. if the user is typing in a slider or input field).
+   */
   const [tempMinMessagePercentage, setTempMinMessagePercentage] =
     useState<number>(minMessagePercentage);
+
+  /**
+   * Flag indicating whether this is the very first file load (true) or a subsequent load (false).
+   */
   const [isInitialLoad, setIsInitialLoad] = useState<boolean>(false);
+
+  /**
+   * When true, triggers the filter application process (via Web Worker or fallback).
+   * This is set to false once the filter process completes.
+   */
   const [applyFilters, setApplyFilters] = useState<boolean>(false);
+
+  /**
+   * Controls whether informational UI (e.g., a help popover) is displayed.
+   */
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
 
-  // Berechne aus den Nachrichten die Liste der Sender.
+  /**
+   * Stores the previous minMessagePercentage so that we can detect changes
+   * (e.g., if the new value is lower than the old value).
+   */
+  const prevMinMessagePercentage = useRef<number>(minMessagePercentage);
+
+  /**
+   * A memoized array of unique senders from the currently filtered `messages`.
+   */
   const senders = useMemo(
     () => Array.from(new Set(messages.map((msg) => msg.sender))),
     [messages]
   );
 
-  // Spracheerkennung: sobald Nachrichten vorhanden sind, wird die Sprache erkannt.
+  // -------------------------- EFFECTS ---------------------------------
+
+  /**
+   * Detect if `minMessagePercentage` has decreased. If so, we may need to
+   * include some senders that were previously excluded. We recalculate
+   * the default selection and update the manual sender selection accordingly.
+   */
+  useEffect(() => {
+    // Wenn die Grenze sinkt und wir bereits Originaldaten haben ...
+    if (
+      minMessagePercentage < prevMinMessagePercentage.current &&
+      originalMessages.length > 0
+    ) {
+      const totalMessages = originalMessages.length;
+      const allSenders = Array.from(
+        new Set(originalMessages.map((msg) => msg.sender))
+      );
+
+      // Für alle Sender, die jetzt neu >= minMessagePercentage liegen:
+      // Entferne manuelle Overrides, damit sie „auto-aktiv“ werden können.
+      setManualSenderSelection((prev) => {
+        const newManual = { ...prev };
+
+        allSenders.forEach((sender) => {
+          const count = originalMessages.filter(
+            (m) => m.sender === sender
+          ).length;
+          const percentage = (count / totalMessages) * 100;
+
+          if (percentage >= minMessagePercentage) {
+            delete newManual[sender];
+          }
+        });
+
+        return newManual;
+      });
+    }
+
+    // Referenzwert aktualisieren
+    prevMinMessagePercentage.current = minMessagePercentage;
+  }, [minMessagePercentage, originalMessages, setManualSenderSelection]);
+
+  /**
+   * Once messages are loaded, use the franc library to detect the primary language
+   * and update our language state in the ChatContext. This runs on changes to `messages`.
+   */
   useEffect(() => {
     if (messages.length > 0) {
       const allText = messages.map((msg) => msg.message).join(" ");
       const detectedLanguage = franc(allText, { minLength: 3 });
+
       if (detectedLanguage === "deu") {
         setLanguage("de");
       } else if (detectedLanguage === "fra") {
@@ -117,42 +207,39 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
       } else if (detectedLanguage === "spa") {
         setLanguage("es");
       } else {
+        // Default to English if detection is uncertain
         setLanguage("en");
       }
     }
   }, [messages, setLanguage]);
 
-  // Bei der initialen Datei‑Ladung: Datum und Sender filtern initial setzen.
+  /**
+   * For the very first file load, we auto-set the date range (startDate, endDate)
+   * and auto-select the senders whose share of total messages is at least `minMessagePercentage`.
+   */
   useEffect(() => {
     if (messages.length > 0 && isInitialLoad) {
-      // Setze Datumseinstellungen
       const firstMessageDate = new Date(messages[0].date);
       const lastMessageDate = new Date(messages[messages.length - 1].date);
       setStartDate(firstMessageDate);
       setEndDate(lastMessageDate);
 
-      // Berechne die Gesamtzahl der Nachrichten
       const totalMessages = messages.length;
-      // Ermittele alle Sender aus den Nachrichten
       const allSenders = Array.from(new Set(messages.map((msg) => msg.sender)));
 
-      // Berechne für jeden Sender den Anteil und wähle Sender aus, die ≥ minMessagePercentage haben
       const defaultSelected = allSenders.filter((sender) => {
         const count = messages.filter((msg) => msg.sender === sender).length;
         const percentage = (count / totalMessages) * 100;
         return percentage >= minMessagePercentage;
       });
 
-      // Erstelle den neuen manuellen Sender-Override-Status:
       const newManualSelection: Record<string, boolean> = {};
       allSenders.forEach((sender) => {
         newManualSelection[sender] = defaultSelected.includes(sender);
       });
 
-      // Setze den Context entsprechend
       setSelectedSender(defaultSelected);
       setManualSenderSelection(newManualSelection);
-
       setIsInitialLoad(false);
     }
   }, [
@@ -165,102 +252,110 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
     setManualSenderSelection,
   ]);
 
-  // Filterlogik: Wenn die Filter angewendet werden sollen, wird – wenn möglich – ein Web Worker
-  // zur Verarbeitung genutzt.
+  /**
+   * Whenever `applyFilters` is set to true, we recompute the final set of messages
+   * (including date range, senders, and weekdays). If `window.Worker` is supported, we
+   * use a dedicated worker for performance. Otherwise, we fall back to local filtering.
+   */
   useEffect(() => {
-    if (applyFilters) {
-      // Compute the final sender selection based on manual overrides and the minMessagePercentage threshold.
-      // Use the originalMessages as the base data.
-      const totalMessages = originalMessages.length;
+    if (!applyFilters) return;
 
-      // 'senders' is computed from messages; however, to be safe, use the ones from originalMessages.
-      const allSenders = Array.from(
-        new Set(originalMessages.map((msg) => msg.sender))
-      );
+    // 1) Compute total messages and all senders from the original unfiltered set
+    const totalMessages = originalMessages.length;
+    const allSenders = Array.from(
+      new Set(originalMessages.map((msg) => msg.sender))
+    );
 
-      const finalSelectedSenders = allSenders.filter((sender) => {
-        if (sender in manualSenderSelection) {
-          // Use the manual decision.
-          return manualSenderSelection[sender];
-        } else {
-          // Automatic selection: include if sender has at least tempMinMessagePercentage of total messages.
-          const count = originalMessages.filter(
-            (msg) => msg.sender === sender
-          ).length;
-          const percentage = (count / totalMessages) * 100;
-          return percentage >= tempMinMessagePercentage;
-        }
+    // 2) Determine the final set of selected senders:
+    //    - If manually set to false, the sender is excluded.
+    //    - Otherwise, we apply the minMessagePercentage threshold automatically.
+    const finalSelectedSenders = allSenders.filter((sender) => {
+      // Manual override exists and is set to false => exclude
+      if (
+        sender in manualSenderSelection &&
+        manualSenderSelection[sender] === false
+      ) {
+        return false;
+      }
+      const count = originalMessages.filter(
+        (msg) => msg.sender === sender
+      ).length;
+      const percentage = (count / totalMessages) * 100;
+      return percentage >= minMessagePercentage;
+    });
+
+    // 3) Build a new object that includes the final statuses
+    const newManualSelection: Record<string, boolean> = {};
+    allSenders.forEach((sender) => {
+      newManualSelection[sender] = finalSelectedSenders.includes(sender);
+    });
+
+    console.log("newManualSelection", newManualSelection);
+
+    // 4) If we have Worker support, offload the filtering
+    if (window.Worker) {
+      const worker = new FilterWorker();
+      worker.postMessage({
+        messages: originalMessages,
+        filters: {
+          startDate: startDate?.toISOString(),
+          endDate: endDate?.toISOString(),
+          selectedSenders: finalSelectedSenders,
+          selectedWeekdays,
+        },
       });
 
-      // Debug log for final sender selection:
-      console.debug("Final selected senders:", finalSelectedSenders);
-
-      if (window.Worker) {
-        const worker = new FilterWorker();
-        worker.postMessage({
-          messages: originalMessages,
-          filters: {
-            startDate: startDate?.toISOString(),
-            endDate: endDate?.toISOString(),
-            selectedSenders: finalSelectedSenders,
-            selectedWeekdays: selectedWeekdays,
-          },
-        });
-        worker.onmessage = (event: MessageEvent<ChatMessage[]>) => {
-          // Update the displayed (filtered) messages.
-          setMessages(event.data);
-
-          const newManualSelection: Record<string, boolean> = {};
-          allSenders.forEach((sender) => {
-            newManualSelection[sender] = finalSelectedSenders.includes(sender);
-          });
-
-          setSelectedSender(finalSelectedSenders);
-          setManualSenderSelection(newManualSelection);
-
-          setApplyFilters(false);
-          worker.terminate();
-        };
-      } else {
-        // Fallback: lokale Filterung
-        const filteredMessages = applyLocalFilters(originalMessages, {
-          startDate,
-          endDate,
-          selectedSenders: finalSelectedSenders,
-          selectedWeekdays: selectedWeekdays,
-        });
-        setMessages(filteredMessages);
-
-        const newManualSelection: Record<string, boolean> = {};
-        allSenders.forEach((sender) => {
-          newManualSelection[sender] = finalSelectedSenders.includes(sender);
-        });
-
+      worker.onmessage = (event: MessageEvent<ChatMessage[]>) => {
+        setMessages(event.data);
         setSelectedSender(finalSelectedSenders);
         setManualSenderSelection(newManualSelection);
-
         setApplyFilters(false);
-      }
+        worker.terminate();
+      };
+    } else {
+      // 4b) Otherwise do local filtering
+      const filteredMessages = applyLocalFilters(originalMessages, {
+        startDate,
+        endDate,
+        selectedSenders: finalSelectedSenders,
+        selectedWeekdays,
+      });
+
+      setMessages(filteredMessages);
+      setSelectedSender(finalSelectedSenders);
+      setManualSenderSelection(newManualSelection);
+      setApplyFilters(false);
     }
   }, [
+    applyFilters,
     startDate,
     endDate,
     selectedWeekdays,
     setMessages,
     manualSenderSelection,
-    applyFilters,
     originalMessages,
+    minMessagePercentage,
+    setSelectedSender,
+    setManualSenderSelection,
   ]);
 
+  // ---------------------------- HANDLERS ------------------------------
+
   /**
-   * Handler für Änderungen des File‑Inputs.
-   * Liest die Datei aus, startet den Parsing-Worker und setzt alle relevanten Zustände zurück.
+   * Handles changes in the file input (e.g., when the user selects a .txt file).
+   * 1) Clears existing messages.
+   * 2) Reads the file content and spawns a parser worker.
+   * 3) Updates application state once parsing is complete.
+   *
+   * @param event - The change event originating from the file input.
    */
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     setMessages([]);
     setOriginalMessages([]);
     const file = event.target.files?.[0];
+
     if (file) {
+      // Set UI states & context for new upload
       setFileName(file.name);
       onFileUpload(file);
       setSelectedSender([]);
@@ -271,63 +366,63 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
       setIsInitialLoad(true);
       setIsUploading(true);
 
+      // Read file content
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
           const fileContent = e.target.result.toString();
-          const worker = new Worker(
+
+          // Spawn our parsing worker
+          const parserWorker = new Worker(
             new URL("../workers/fileParser.worker.ts", import.meta.url)
           );
-          worker.postMessage(fileContent);
-          worker.onmessage = (event) => {
+          parserWorker.postMessage(fileContent);
+
+          parserWorker.onmessage = (event) => {
             setMessages(event.data);
             setOriginalMessages(event.data);
-            worker.terminate();
+            parserWorker.terminate();
             setIsUploading(false);
             setIsPanelOpen(false);
           };
         }
       };
       reader.readAsText(file, "UTF-8");
+      // Reset the file input value so users can re-select the same file if needed
       event.target.value = "";
     }
   };
 
   /**
-   * Toggles the manual selection override for a sender.
-   * If a sender is not present in the manual override, then no manual decision
-   * exists and the sender is auto-included if its message share is above the threshold.
+   * Toggles the manual selection state of a given sender. We cycle through
+   * three states: (a) no override, (b) manually excluded, (c) manually included.
    *
-   * On toggle:
-   * - If previously not overridden, set it to false (exclude sender manually).
-   * - If previously false, set it to true (explicitly include).
-   * - If previously true, remove the override (revert to automatic decision).
-   *
-   * @param sender The sender to toggle.
+   * @param sender - The sender to toggle.
    */
   const handleSenderChange = (sender: string) => {
     setManualSenderSelection((prev) => {
       if (sender in prev) {
-        // Cycle: true -> remove override, false -> true
+        // If we already have an override, toggle from false -> true -> remove
         const current = prev[sender];
         if (current === false) {
+          // false -> true
           return { ...prev, [sender]: true };
         } else {
-          // Remove override => use automatic decision
-          const { [sender]: removed, ...rest } = prev;
+          // true -> remove override (so that auto selection logic applies again)
+          const { [sender]: _, ...rest } = prev;
           return rest;
         }
       } else {
-        // No override yet: set to false to manually exclude.
+        // no override -> set to false (explicitly exclude)
         return { ...prev, [sender]: false };
       }
     });
   };
 
   /**
-   * Toggle‑Funktion für die Auswahl eines Wochentags.
+   * Toggles the inclusion of a weekday in the current weekday filter.
    *
-   * @param event ChangeEvent eines Checkbox-Inputs.
+   * @param event - The checkbox change event.
    */
   const handleWeekdayChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const day = event.target.value;
@@ -337,7 +432,8 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
   };
 
   /**
-   * Löst das Anwenden der aktuellen Filtereinstellungen aus.
+   * Applies all filters (date range, sender overrides, weekdays, minMessagePercentage).
+   * This triggers the filter logic in a useEffect above.
    */
   const handleApplyFilters = () => {
     setMinMessagePercentage(tempMinMessagePercentage);
@@ -346,12 +442,15 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
   };
 
   /**
-   * Setzt alle Filter auf die Standardwerte zurück.
+   * Resets all filters to default values. This does not remove messages from context,
+   * but it resets date range, weekdays, and manual sender overrides so that auto selection
+   * can occur again.
    */
   const handleResetFilters = () => {
-    // Reset manual overrides: so that automatic selection (by minMessagePercentage) is used.
+    // Clear manual overrides => re-apply automatic logic based on minMessagePercentage
     setManualSenderSelection({});
     setSelectedWeekdays([...DEFAULT_WEEKDAYS]);
+
     if (messages.length > 0) {
       const firstMessageDate = new Date(messages[0].date);
       const lastMessageDate = new Date(messages[messages.length - 1].date);
@@ -361,7 +460,8 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
   };
 
   /**
-   * Löscht die aktuell geladene Datei und setzt alle zugehörigen Zustände zurück.
+   * Deletes the currently loaded file and resets all associated state, effectively returning
+   * the user interface to its pre-upload state.
    */
   const handleDeleteFile = () => {
     setFileName("");
@@ -373,7 +473,9 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
     setIsUploading(false);
   };
 
+  // -------------------------- RETURN API ------------------------------
   return {
+    // Expose local states / setters so that a UI component can bind them
     tempMinMessagePercentage,
     setTempMinMessagePercentage,
     selectedWeekdays,
@@ -381,6 +483,8 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
     isInfoOpen,
     setIsInfoOpen,
     senders,
+
+    // Handlers that the UI can call
     handleFileChange,
     handleDeleteFile,
     handleSenderChange,
