@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ChevronDown, ChevronUp, Info, Moon, Sun } from "lucide-react";
@@ -68,6 +68,26 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   // Neuer lokaler State für das Öffnen/Schließen des Sender-Dropdowns:
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Schließt das Dropdown, wenn außerhalb geklickt wird
+  useEffect(() => {
+    console.log("useEffect");
+    const handleClickOutside = (event: MouseEvent) => {
+      console.log("handleClickOutside");
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="file-upload-wrapper">
@@ -194,6 +214,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                   </button>
                   {dropdownOpen && (
                     <div
+                      ref={dropdownRef}
                       className={`absolute z-10 mt-1 w-full rounded-none  ${
                         darkMode
                           ? "bg-gray-800 border border-white"

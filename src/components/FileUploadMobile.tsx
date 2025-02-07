@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Info, ChevronDown, ChevronUp, Moon, Sun, Trash2 } from "lucide-react";
@@ -59,6 +59,26 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   // Innerhalb der FileUploadMobile-Komponente (oberhalb der Rückgabe):
   const [senderDropdownOpen, setSenderDropdownOpen] = useState(false);
+  // Neuer lokaler State für das Sender-Dropdown:
+
+  const senderDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Schließt das Dropdown, wenn außerhalb geklickt wird
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        senderDropdownRef.current &&
+        !senderDropdownRef.current.contains(event.target as Node)
+      ) {
+        setSenderDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Automatisch das Panel einklappen, wenn eine Datei gesetzt wurde.
   useEffect(() => {
@@ -182,6 +202,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           </button>
           {senderDropdownOpen && (
             <div
+              ref={senderDropdownRef}
               className={`absolute z-10 mt-1 w-full rounded-none  ${
                 darkMode
                   ? "bg-gray-800 border border-white"
