@@ -232,24 +232,77 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
 
     const fileName = `ignore_lines_${lang}_${fmt}.txt`;
 
-    fetch(`src/assets/${fileName}`)
-      .then((response) => response.text())
+    const primaryPath = `src/assets/${fileName}`;
+    const fallbackPath = `/files/${fileName}`;
+
+    console.log(`🔍 Starte den Datei-Load: ${primaryPath}`);
+
+    fetch(primaryPath)
+      .then((response) => {
+        console.log(`📡 Antwort von ${primaryPath}:`, response);
+
+        if (!response.ok) {
+          console.error(
+            `❌ Datei nicht gefunden: ${primaryPath} (Status: ${response.status})`
+          );
+          throw new Error(`Datei nicht gefunden: ${primaryPath}`);
+        }
+
+        console.log(`✅ Datei erfolgreich geladen: ${primaryPath}`);
+        return response.text();
+      })
+      .catch((error) => {
+        console.warn(
+          `⚠️ Fehler beim Laden aus '${primaryPath}', versuche Fallback...`,
+          error
+        );
+
+        console.log(`🔄 Fallback auf: ${fallbackPath}`);
+        return fetch(fallbackPath).then((response) => {
+          console.log(`📡 Antwort von ${fallbackPath}:`, response);
+
+          if (!response.ok) {
+            console.error(
+              `❌ Fallback-Datei nicht gefunden: ${fallbackPath} (Status: ${response.status})`
+            );
+            throw new Error(`Datei nicht gefunden: ${fallbackPath}`);
+          }
+
+          console.log(`✅ Fallback-Datei erfolgreich geladen: ${fallbackPath}`);
+          return response.text();
+        });
+      })
       .then((text) => {
+        console.log(`📄 Dateiinhalt empfangen (${text.length} Zeichen)`);
+
         const ignoreLines = text
           .split("\n")
           .map((line) => line.trim())
           .filter(Boolean);
 
-        // Neue Nachrichtenliste basierend auf dem aktuellen Zustand erstellen
+        console.log(
+          `📝 ${ignoreLines.length} Zeilen in der Ignorierliste geladen:`,
+          ignoreLines
+        );
+
         const filteredMessages = messages.filter(
           (msg) => !ignoreLines.some((ignore) => msg.message.includes(ignore))
         );
 
-        // Direkte Zuweisung (ohne setMessages mit prevMessages-Funktion)
+        console.log(
+          `🔍 ${
+            messages.length - filteredMessages.length
+          } Nachrichten entfernt.`
+        );
+        console.log(`📩 Verbleibende Nachrichten: ${filteredMessages.length}`);
+
         setMessages(filteredMessages);
       })
-      .catch((error) => {
-        console.error(`Fehler beim Laden der Datei ${fileName}:`, error);
+      .catch((finalError) => {
+        console.error(
+          `🚨 Fehler beim Laden der Datei aus beiden Pfaden:`,
+          finalError
+        );
       });
   }, [language, format, setMessages]);
 
