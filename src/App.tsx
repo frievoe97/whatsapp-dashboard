@@ -1,3 +1,4 @@
+// src/App.tsx
 import React, { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import FileUpload from "./components/FileUpload";
@@ -11,26 +12,18 @@ import Emoji from "./components/plots/Emoji";
 import BarChartComp from "./components/plots/BarChartComp";
 import SentimentWord from "./components/plots/SentimentWord";
 import ChordDiagram from "./components/plots/ChordDiagram";
+import HeatmapMonthWeekday from "./components/plots/Heatmap";
 import { useChat } from "./context/ChatContext";
 import "./index.css";
-import HeatmapMonthWeekday from "./components/plots/Heatmap";
 
 /**
- * Custom hook to update the document's dark mode class and theme-color meta tag.
- *
- * This hook toggles the "dark" class on the document root and ensures the
- * theme-color meta tag reflects the current mode (dark/light). If the meta tag
- * is missing, it creates one.
- *
- * @param darkMode - A boolean indicating whether dark mode is enabled.
+ * Hook, der den Dark‑Mode in HTML (und Meta‑Tags) setzt.
  */
 function useDarkModeThemeEffect(darkMode: boolean) {
-  // Toggle dark mode class on the document root element.
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  // Update the theme-color meta tag.
   useEffect(() => {
     let metaThemeColor = document.querySelector("meta[name='theme-color']");
     if (!metaThemeColor) {
@@ -43,96 +36,56 @@ function useDarkModeThemeEffect(darkMode: boolean) {
 }
 
 /**
- * Custom hook that ensures all child elements within a container have equal heights
- * per row. This is especially useful when using flexbox layouts to maintain UI consistency.
- *
- * @param containerRef - A React ref object that points to the container element.
- * @param dependencies - An optional dependency array that re-runs the effect when changed.
+ * Hook zur Angleichung der Höhen aller Kinder in einem Container (z. B. für die Analyse‑Komponenten).
  */
 function useEqualRowHeights(
   containerRef: React.RefObject<HTMLDivElement>,
   dependencies: any[] = []
 ) {
   useEffect(() => {
-    /**
-     * Iterates over the container’s children, groups them by rows based on their
-     * top offset, and then sets each element’s height in a row to the maximum height found.
-     */
-    function setEqualRowHeights() {
+    function setEqualHeights() {
       const container = containerRef.current;
       if (!container) return;
-
-      // Get all children elements.
-      const items = Array.from(container.children) as HTMLDivElement[];
-
-      // Reset heights to auto to calculate natural heights.
-      items.forEach((item) => (item.style.height = "auto"));
-
-      // Group items into rows based on their top offset.
-      const rows: HTMLDivElement[][] = [];
-      let currentRow: HTMLDivElement[] = [];
+      const children = Array.from(container.children) as HTMLElement[];
+      children.forEach((child) => (child.style.height = "auto"));
+      let rows: HTMLElement[][] = [];
+      let currentRow: HTMLElement[] = [];
       let lastTop: number | null = null;
-
-      items.forEach((item) => {
-        const top = item.offsetTop;
+      children.forEach((child) => {
+        const top = child.offsetTop;
         if (lastTop === null || top === lastTop) {
-          currentRow.push(item);
+          currentRow.push(child);
         } else {
           rows.push(currentRow);
-          currentRow = [item];
+          currentRow = [child];
         }
         lastTop = top;
       });
       if (currentRow.length) rows.push(currentRow);
-
-      // For each row, calculate the maximum height and assign it to all items.
       rows.forEach((row) => {
-        const maxHeight = Math.max(...row.map((item) => item.offsetHeight));
-        row.forEach((item) => (item.style.height = `${maxHeight}px`));
+        const maxHeight = Math.max(...row.map((child) => child.offsetHeight));
+        row.forEach((child) => (child.style.height = `${maxHeight}px`));
       });
     }
-
-    // Execute the height equalization on mount and whenever dependencies change.
-    setEqualRowHeights();
-
-    // Re-calculate heights on window resize.
-    window.addEventListener("resize", setEqualRowHeights);
-    return () => window.removeEventListener("resize", setEqualRowHeights);
+    setEqualHeights();
+    window.addEventListener("resize", setEqualHeights);
+    return () => window.removeEventListener("resize", setEqualHeights);
   }, dependencies);
 }
 
-/**
- * Main Application Component.
- *
- * This component serves as the entry point for the WhatsApp Dashboard application.
- * It handles SEO meta tags, theme settings (dark/light), responsive file upload components,
- * and renders various chat analysis visualizations based on the uploaded messages.
- *
- * All existing functionalities (dark mode, SEO, equal row heights, file uploads, and chat analysis)
- * have been preserved while cleaning up the code structure.
- *
- * @returns A JSX element representing the complete application UI.
- */
 const App: React.FC = () => {
   const { darkMode, messages } = useChat();
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * Custom hook to scroll to the top of the page on component mount.
-   */
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Apply dark mode and update the theme-color meta tag.
   useDarkModeThemeEffect(darkMode);
-
-  // Ensure all analysis components in the container have equal heights per row.
   useEqualRowHeights(containerRef, [messages.length]);
 
   return (
     <>
-      {/* SEO Meta-Tags */}
       <Helmet>
         <title>WhatsApp Dashboard – Visualize your Chats</title>
         <meta
@@ -155,20 +108,24 @@ const App: React.FC = () => {
         <meta name="robots" content="index, follow" />
       </Helmet>
 
-      {/* Main Container */}
       <div className="p-4 flex flex-col min-h-screen md:h-screen">
-        {/* File Upload Components (Desktop & Mobile) */}
+        {/* Desktop & Mobile FileUpload-Komponenten */}
         <div className="hidden md:block">
-          <FileUpload onFileUpload={(_: File) => {}} />
-        </div>
-        <div className="md:hidden">
-          <FileUploadMobile onFileUpload={(_: File) => {}} />
+          <FileUpload
+            onFileUpload={(file) => {
+              /* z. B. logging oder leere Funktion */
+            }}
+          />
         </div>
 
-        {/* Chat Analysis Components */}
+        <div className="md:hidden">
+          <FileUploadMobile />
+        </div>
+
+        {/* Chat Analyse-Komponenten */}
         <div
           ref={containerRef}
-          className="mt-4  md:h-full flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-between items-stretch"
+          className="mt-4 md:h-full flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-between items-stretch"
         >
           {messages.length === 0 ? (
             <div

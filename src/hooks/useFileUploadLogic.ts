@@ -86,7 +86,7 @@ export const applyLocalFilters = (
  * @param onFileUpload - A callback function that is invoked when a file is uploaded.
  * @returns An object containing states and handlers to be used by the UI.
  */
-export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
+export const useFileUploadLogic = () => {
   // -------------------------- CONTEXT STATE ---------------------------
   // We pull in a range of state and setters from our ChatContext.
   const {
@@ -453,7 +453,7 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
     if (file) {
       // Set UI states & context for new upload
       setFileName(file.name);
-      onFileUpload(file);
+
       setSelectedSender([]);
       setStartDate(undefined);
       setEndDate(undefined);

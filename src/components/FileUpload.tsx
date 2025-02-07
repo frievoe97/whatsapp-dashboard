@@ -8,6 +8,8 @@ import {
   useFileUploadLogic,
   DEFAULT_WEEKDAYS,
 } from "../hooks/useFileUploadLogic";
+// Neuer Import für den aktualisierten Datei‑Prozess-Flow:
+import { useChatProcessing } from "../hooks/useChatProcessing";
 
 /**
  * Props for the FileUpload (Desktop) component.
@@ -48,14 +50,28 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     tempMinMessagePercentage,
     setTempMinMessagePercentage,
     senders,
-    handleFileChange,
     handleDeleteFile,
     handleWeekdayChange,
     handleApplyFilters,
     handleResetFilters,
     isInfoOpen,
     setIsInfoOpen,
-  } = useFileUploadLogic(onFileUpload);
+  } = useFileUploadLogic(); // Ohne Parameter!
+
+  // Neuer Hook für den Datei-Verarbeitungs-Flow
+  const { processFile } = useChatProcessing();
+
+  // Neuer onChange-Handler, der den neuen Flow startet und den Dateinamen setzt
+  const handleFileChangeNew = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // In processFile sollte intern auch setFileName(file.name) erfolgen.
+      processFile(file);
+      onFileUpload(file);
+    }
+    // Damit dieselbe Datei erneut ausgewählt werden kann:
+    event.target.value = "";
+  };
 
   const borderColor = darkMode ? "border-white" : "border-black";
   const textColor = darkMode ? "text-white" : "text-black";
@@ -162,7 +178,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                   id="file-upload"
                   type="file"
                   accept=".txt"
-                  onChange={handleFileChange}
+                  onChange={handleFileChangeNew}
                   className="hidden"
                 />
                 {fileName && (
@@ -231,17 +247,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                             (m) => m.sender === sender
                           ).length;
                           const percentage = (count / total) * 100;
-
                           // Status 3, wenn unter minMessagePercentage:
                           const isDisabled = percentage < minMessagePercentage;
-
                           // Status 2 (manuell deaktiviert) liegt vor, wenn
                           // manualSenderSelection[sender] === false.
                           // Status 1 (aktiv) = nicht disabled und kein manuelles false:
                           const isChecked =
                             !isDisabled &&
                             manualSenderSelection[sender] !== false;
-
                           return (
                             <label
                               key={sender}
@@ -249,12 +262,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                     flex items-center px-4 py-2 cursor-pointer
                     ${
                       isDisabled
-                        ? // Falls disabled, grau darstellen:
-                          darkMode
+                        ? darkMode
                           ? "text-gray-400"
                           : "text-gray-400"
-                        : // Falls aktivierbar, Hover-Effekt
-                        darkMode
+                        : darkMode
                         ? "hover:bg-gray-700"
                         : "hover:bg-gray-100"
                     }
@@ -263,21 +274,16 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                               <input
                                 type="checkbox"
                                 className="mr-2"
-                                disabled={isDisabled} // Kein Aktivieren möglich, wenn unter minMessagePercentage
+                                disabled={isDisabled}
                                 checked={isChecked}
                                 onChange={() => {
-                                  // Wenn disabled, nichts tun:
                                   if (isDisabled) return;
-
-                                  // Toggle zwischen "manuell deaktiviert" und "kein Override":
                                   setManualSenderSelection((prev) => {
-                                    // wenn manuell deaktiviert => override entfernen:
                                     if (prev[sender] === false) {
                                       const newState = { ...prev };
                                       delete newState[sender];
                                       return newState;
                                     }
-                                    // sonst => manuell deaktivieren:
                                     return { ...prev, [sender]: false };
                                   });
                                 }}
