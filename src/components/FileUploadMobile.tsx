@@ -50,7 +50,6 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     senders,
     handleFileChange,
     handleDeleteFile,
-    handleSenderChange,
     handleWeekdayChange,
     handleApplyFilters,
     handleResetFilters,

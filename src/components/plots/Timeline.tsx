@@ -1,13 +1,6 @@
 // src/components/Plot2.tsx
 
-import React, {
-  useEffect,
-  useRef,
-  useMemo,
-  useState,
-  RefObject,
-  MutableRefObject,
-} from "react";
+import React, { useEffect, useRef, useMemo, useState, RefObject } from "react";
 import * as d3 from "d3";
 import { Hash, Percent, Maximize2, Minimize2 } from "lucide-react";
 import Switch from "react-switch";

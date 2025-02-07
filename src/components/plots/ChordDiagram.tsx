@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-  useMemo,
-  useState,
-  MutableRefObject,
-} from "react";
+import React, { useEffect, useRef, useMemo, useState } from "react";
 import * as d3 from "d3";
 import { useChat } from "../../context/ChatContext";
 import useResizeObserver from "../../hooks/useResizeObserver";
@@ -30,16 +24,6 @@ interface ChordDatum {
   source: string;
   target: string;
   value: number;
-}
-
-/**
- * Hook or context shape for the message data.
- * You may adjust this interface if your real message structure differs.
- */
-interface Message {
-  sender: string;
-  isUsed: boolean;
-  // Other properties can be added here if needed
 }
 
 /**

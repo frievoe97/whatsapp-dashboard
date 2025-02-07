@@ -1,11 +1,4 @@
-import React, {
-  FC,
-  useEffect,
-  useRef,
-  useMemo,
-  useState,
-  MutableRefObject,
-} from "react";
+import { FC, useEffect, useRef, useMemo, useState } from "react";
 import Select from "react-select";
 import * as d3 from "d3";
 import { useChat } from "../../context/ChatContext"; // Context providing messages, darkMode, and isUploading
