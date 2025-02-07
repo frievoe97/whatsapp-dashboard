@@ -110,6 +110,9 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
     manualSenderSelection,
     originalMessages,
     setIsWorking,
+    language,
+    format,
+    setFormat,
   } = useChat();
 
   // ------------------------ LOCAL COMPONENT STATE ---------------------
@@ -213,6 +216,10 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
       }
     }
   }, [messages, setLanguage]);
+
+  useEffect(() => {
+    console.log("Language and format", language, format);
+  }, [language, format]);
 
   /**
    * For the very first file load, we auto-set the date range (startDate, endDate)
@@ -381,11 +388,16 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
           const parserWorker = new Worker(
             new URL("../workers/fileParser.worker.ts", import.meta.url)
           );
-          parserWorker.postMessage(fileContent);
+          parserWorker.postMessage({ fileContent, format: "" });
 
           parserWorker.onmessage = (event) => {
-            setMessages(event.data);
-            setOriginalMessages(event.data);
+            console.log("Worker message", event.data);
+            if (event.data.chosenFormat) {
+              setFormat(event.data.chosenFormat);
+            }
+
+            setMessages(event.data.messages);
+            setOriginalMessages(event.data.messages);
             parserWorker.terminate();
             setIsUploading(false);
             setIsPanelOpen(false);
@@ -455,6 +467,8 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
     // Clear manual overrides => re-apply automatic logic based on minMessagePercentage
     setManualSenderSelection({});
     setSelectedWeekdays([...DEFAULT_WEEKDAYS]);
+    setMinMessagePercentage(3);
+    setTempMinMessagePercentage(3);
 
     if (messages.length > 0) {
       const firstMessageDate = new Date(messages[0].date);

@@ -251,56 +251,61 @@ function detectFormat(lines: string[]): "ios" | "android" {
  *   4. Filters out ignored messages.
  *   5. Sends the array of parsed messages (or an error) back to the main thread.
  */
-self.addEventListener("message", (event: MessageEvent<string>) => {
-  try {
-    // 1) Extract raw file content
-    const fileContent: string = event.data;
-    // 2) Split content into lines
-    const lines = fileContent.split("\n");
-    // This will hold the final list of parsed messages
-    const messages: ParsedMessage[] = [];
-    // This will track the current multi-line message we are building
-    let currentMessage: ParsedMessage | null = null;
 
-    // 3) Detect whether this is iOS or Android format
-    const chosenFormat = detectFormat(lines);
-    console.log(`Worker: Detected format "${chosenFormat}". Parsing...`);
+self.addEventListener(
+  "message",
+  (event: MessageEvent<{ fileContent: string; format: string }>) => {
+    try {
+      // 1) Extract raw file content
+      const { fileContent } = event.data;
+      // 2) Split content into lines
+      const lines = fileContent.split("\n");
+      // This will hold the final list of parsed messages
+      const messages: ParsedMessage[] = [];
+      // This will track the current multi-line message we are building
+      let currentMessage: ParsedMessage | null = null;
 
-    // 4) Go through each line and parse
-    lines.forEach((line: string) => {
-      const parsedLine = parseLineWithFormat(line, chosenFormat);
+      // 3) Detect whether this is iOS or Android format
+      const chosenFormat = detectFormat(lines);
 
-      if (parsedLine) {
-        // We encountered a "new" message, so close off the old one
-        processCurrentMessage(currentMessage, messages);
+      console.log(`Worker: Detected format "${chosenFormat}". Parsing...`);
 
-        // Start a new message object
-        currentMessage = {
-          date: parsedLine.date,
-          sender: parsedLine.sender,
-          message: parsedLine.message,
-          isUsed: true,
-        };
-      } else {
-        // This line doesn't match a new message format
-        // -> could be a continuation of the current multi-line message
-        if (currentMessage) {
-          const cleanedLine = line.replace(UNWANTED_UNICODE_REGEX, "").trim();
-          currentMessage.message += `\n${cleanedLine}`;
+      // 4) Go through each line and parse
+      lines.forEach((line: string) => {
+        const parsedLine = parseLineWithFormat(line, chosenFormat);
+
+        if (parsedLine) {
+          // We encountered a "new" message, so close off the old one
+          processCurrentMessage(currentMessage, messages);
+
+          // Start a new message object
+          currentMessage = {
+            date: parsedLine.date,
+            sender: parsedLine.sender,
+            message: parsedLine.message,
+            isUsed: true,
+          };
         } else {
-          // If there's no currentMessage, it's likely a system or irrelevant line -> ignore
+          // This line doesn't match a new message format
+          // -> could be a continuation of the current multi-line message
+          if (currentMessage) {
+            const cleanedLine = line.replace(UNWANTED_UNICODE_REGEX, "").trim();
+            currentMessage.message += `\n${cleanedLine}`;
+          } else {
+            // If there's no currentMessage, it's likely a system or irrelevant line -> ignore
+          }
         }
-      }
-    });
+      });
 
-    // 5) Make sure the last message is accounted for
-    processCurrentMessage(currentMessage, messages);
+      // 5) Make sure the last message is accounted for
+      processCurrentMessage(currentMessage, messages);
 
-    // 6) Post the resulting parsed messages array back
-    self.postMessage(messages);
-  } catch (error) {
-    const errorMessage: ErrorMessage = { error: (error as Error).message };
-    console.error("Worker: Error processing file:", error);
-    self.postMessage(errorMessage);
+      // 6) Post the resulting parsed messages array back
+      self.postMessage({ messages, chosenFormat });
+    } catch (error) {
+      const errorMessage: ErrorMessage = { error: (error as Error).message };
+      console.error("Worker: Error processing file:", error);
+      self.postMessage(errorMessage);
+    }
   }
-});
+);

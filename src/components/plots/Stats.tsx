@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
 import ClipLoader from "react-spinners/ClipLoader";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 /**
  * Represents statistics for a single sender.
@@ -299,37 +300,32 @@ const Pagination: React.FC<PaginationProps> = ({
 }) => {
   const { darkMode } = useChat();
 
-  // Combine classes for disabled buttons.
-  const disabledClasses = "text-gray-400 cursor-not-allowed border-gray-400";
-
   return (
     <div className="flex justify-center items-center mt-4 space-x-2">
       <button
         onClick={onPrev}
         disabled={currentPage === 1}
-        className={`px-2 py-1 rounded-none border ${
-          darkMode
-            ? "border-gray-300 text-white hover:border-gray-400"
-            : "border-black text-black hover:border-black"
-        } ${currentPage === 1 ? disabledClasses : ""}`}
+        className={`px-2 py-1 border ${
+          darkMode ? "bg-gray-800 text-white " : "text-black bg-white "
+        } ${
+          currentPage === 1 ? "text-gray-400 cursor-not-allowed" : ""
+        } focus:outline-none focus:ring-0 focus:border-none active:border-none hover:border-none`}
       >
-        Previous
+        <ChevronLeft className="w-6 h-6" />
       </button>
-
       <span className={darkMode ? "text-white" : "text-black"}>
         Page {currentPage} of {totalPages}
       </span>
-
       <button
         onClick={onNext}
         disabled={currentPage === totalPages}
-        className={`px-2 py-1 rounded-none border ${
-          darkMode
-            ? "border-gray-300 text-white hover:border-gray-400"
-            : "border-black text-black hover:border-black"
-        } ${currentPage === totalPages ? disabledClasses : ""}`}
+        className={`px-2 py-1 border ${
+          darkMode ? "bg-gray-800 text-white " : "text-black bg-white "
+        } ${
+          currentPage === totalPages ? "text-gray-400 cursor-not-allowed" : ""
+        } focus:outline-none focus:ring-0 focus:border-none active:border-none hover:border-none`}
       >
-        Next
+        <ChevronRight className="w-6 h-6" />
       </button>
     </div>
   );

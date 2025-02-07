@@ -327,12 +327,28 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           Minimum Message Share (%):
         </h3>
         <input
-          type="number"
-          min="0"
-          max="100"
+          type="tel"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={tempMinMessagePercentage}
-          onChange={(e) => setTempMinMessagePercentage(Number(e.target.value))}
-          className={`p-2 border ${
+          onChange={(e) => {
+            let num;
+
+            if (isNaN(Number(e.target.value))) {
+              num = 3;
+            } else {
+              num = Number(e.target.value);
+            }
+
+            setTempMinMessagePercentage(num);
+          }}
+          onBlur={() => {
+            console.log("onBlur");
+            let num = Number(tempMinMessagePercentage);
+            if (isNaN(num) || num < 0 || num > 100) num = 3; // Falls ungültig, auf 3 setzen
+            setTempMinMessagePercentage(num); // Immer als Nummer speichern
+          }}
+          className={`focus:outline-none focus:ring-0 focus:border-current active:border-current hover:border-current p-2 border rounded-none ${
             darkMode ? "border-white" : "border-black"
           } w-full ${bgColor} ${textColor}`}
         />

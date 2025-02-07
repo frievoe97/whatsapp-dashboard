@@ -1,7 +1,7 @@
 import { FC, ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
-import Switch from "react-switch";
-import { CirclePlus, CircleMinus } from "lucide-react";
+import Select from "react-select";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import ClipLoader from "react-spinners/ClipLoader";
 import Sentiment from "sentiment";
 import { removeStopwords, deu } from "stopword";
@@ -166,37 +166,27 @@ const Pagination: FC<PaginationProps> = ({
       <button
         onClick={onPrev}
         disabled={currentPage === 1}
-        className={`px-2 py-1 rounded-none border ${
-          darkMode
-            ? "border-gray-300 text-white hover:border-gray-400"
-            : "border-black text-black hover:border-black"
+        className={`px-2 py-1 border ${
+          darkMode ? "bg-gray-800 text-white " : "text-black bg-white "
         } ${
-          currentPage === 1
-            ? "text-gray-400 cursor-not-allowed border-gray-400"
-            : ""
-        }`}
+          currentPage === 1 ? "text-gray-400 cursor-not-allowed" : ""
+        } focus:outline-none focus:ring-0 focus:border-none active:border-none hover:border-none`}
       >
-        Previous
+        <ChevronLeft className="w-6 h-6" />
       </button>
-
       <span className={darkMode ? "text-white" : "text-black"}>
         Page {currentPage} of {totalPages}
       </span>
-
       <button
         onClick={onNext}
         disabled={currentPage === totalPages}
-        className={`px-2 py-1 rounded-none border ${
-          darkMode
-            ? "border-gray-300 text-white hover:border-gray-400"
-            : "border-black text-black hover:border-black"
+        className={`px-2 py-1 border ${
+          darkMode ? "bg-gray-800 text-white " : "text-black bg-white "
         } ${
-          currentPage === totalPages
-            ? "text-gray-400 cursor-not-allowed border-gray-400"
-            : ""
-        }`}
+          currentPage === totalPages ? "text-gray-400 cursor-not-allowed" : ""
+        } focus:outline-none focus:ring-0 focus:border-none active:border-none hover:border-none`}
       >
-        Next
+        <ChevronRight className="w-6 h-6" />
       </button>
     </div>
   );
@@ -485,6 +475,75 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     return scale;
   }, [aggregatedSentimentData, darkMode]);
 
+  const options = [
+    { value: "Best", label: "Best" },
+    { value: "Worst", label: "Worst" },
+  ];
+
+  // -------------
+  // React-Select Styles
+  // -------------
+  /**
+   * Shared React-Select styles for both X and Y dropdowns.
+   * Adjusts colors, sizing, and layout for better integration with Tailwind & dark mode.
+   */
+  const customSelectStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      backgroundColor: "transparent",
+      border: "none",
+      boxShadow: "none",
+      display: "flex",
+      justifyContent: "space-between",
+      marginLeft: "4px",
+    }),
+    valueContainer: (provided: any) => ({
+      ...provided,
+      padding: "0px",
+      flex: "1 1 auto",
+    }),
+    indicatorSeparator: () => ({
+      display: "none",
+    }),
+    dropdownIndicator: (provided: any) => ({
+      ...provided,
+      padding: "6px",
+      marginLeft: "-5px",
+      color: darkMode ? "white" : "black",
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: darkMode ? "#333" : "white",
+      color: darkMode ? "white" : "black",
+      boxShadow: "none",
+      width: "auto",
+      minWidth: "fit-content",
+      border: darkMode ? "1px solid white" : "1px solid black",
+      borderRadius: "0",
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? darkMode
+          ? "#777"
+          : "#ddd"
+        : window.innerWidth >= 768 &&
+          state.isFocused &&
+          state.selectProps.menuIsOpen
+        ? darkMode
+          ? "#555"
+          : "grey"
+        : darkMode
+        ? "#333"
+        : "white",
+      color: darkMode ? "white" : "black",
+    }),
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: darkMode ? "white" : "black",
+    }),
+  };
+
   //
   // ---------------------------------------------------------------------------
   // RENDERING
@@ -501,40 +560,25 @@ const SentimentWordsPlot: FC = (): ReactElement => {
       style={{ minHeight: "350px", maxHeight: "550px", overflow: "hidden" }}
     >
       {/* Header with Toggle */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold mb-4">
-          Top 10 {showBest ? "Best" : "Worst"} Words per Person
-        </h2>
-        <div className="flex items-center space-x-2">
-          <CircleMinus
-            className={`${
-              darkMode ? "text-white" : "text-gray-700"
-            } w-4 h-4 md:w-5 md:h-5`}
-          />
-          <Switch
-            onChange={() => setShowBest(!showBest)}
-            checked={showBest}
-            offColor={darkMode ? "#444" : "#ccc"}
-            onColor="#000"
-            uncheckedIcon={false}
-            checkedIcon={false}
-            height={20}
-            width={48}
-            handleDiameter={16}
-            borderRadius={20}
-            boxShadow="none"
-            activeBoxShadow="none"
-            className="custom-switch mx-1 md:mx-2"
-          />
-          <CirclePlus
-            className={`${
-              darkMode ? "text-white" : "text-gray-700"
-            } w-4 h-4 md:w-5 md:h-5`}
-          />
-        </div>
-      </div>
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold flex items-center space-x-0">
+          <span>Top 10</span>
 
-      {/* Main Content */}
+          <Select
+            value={options.find(
+              (option) => option.value === (showBest ? "Best" : "Worst")
+            )}
+            onChange={(selected) => setShowBest(selected?.value === "Best")}
+            options={options}
+            isSearchable={false}
+            styles={customSelectStyles}
+          />
+
+          <span>Words per Person</span>
+        </h2>
+        ;
+      </div>
+      ;{/* Main Content */}
       <div className="flex-grow flex justify-center items-center flex-col w-full">
         {isUploading ? (
           // If uploading, show loader spinner.

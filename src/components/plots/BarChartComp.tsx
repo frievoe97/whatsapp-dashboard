@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo, useRef, useState, ChangeEvent } from "react";
 import * as d3 from "d3";
 import ClipLoader from "react-spinners/ClipLoader";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, ChevronRight, ChevronLeft } from "lucide-react";
 import { useChat } from "../../context/ChatContext";
 import useResizeObserver from "../../hooks/useResizeObserver";
 
@@ -521,18 +521,18 @@ const SenderComparisonBarChart: FC = () => {
       {totalPages > 1 && (
         <div
           id="bar-chart-pagination"
-          className="flex justify-center items-center mt-4 space-x-2"
+          className="flex justify-center items-center space-x-2"
         >
           <button
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
             className={`px-2 py-1 border ${
-              darkMode
-                ? "border-gray-300 text-white"
-                : "border-black text-black"
-            } ${currentPage === 1 ? "text-gray-400 cursor-not-allowed" : ""}`}
+              darkMode ? "bg-gray-800 text-white " : "text-black bg-white "
+            } ${
+              currentPage === 1 ? "text-gray-400 cursor-not-allowed" : ""
+            } focus:outline-none focus:ring-0 focus:border-none active:border-none hover:border-none`}
           >
-            Previous
+            <ChevronLeft className="w-6 h-6" />
           </button>
           <span className={darkMode ? "text-white" : "text-black"}>
             Page {currentPage} of {totalPages}
@@ -541,16 +541,14 @@ const SenderComparisonBarChart: FC = () => {
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
             className={`px-2 py-1 border ${
-              darkMode
-                ? "border-gray-300 text-white"
-                : "border-black text-black"
+              darkMode ? "bg-gray-800 text-white " : "text-black bg-white "
             } ${
               currentPage === totalPages
                 ? "text-gray-400 cursor-not-allowed"
                 : ""
-            }`}
+            } focus:outline-none focus:ring-0 focus:border-none active:border-none hover:border-none`}
           >
-            Next
+            <ChevronRight className="w-6 h-6" />
           </button>
         </div>
       )}

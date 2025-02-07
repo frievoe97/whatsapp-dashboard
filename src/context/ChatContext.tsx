@@ -129,6 +129,9 @@ export interface ChatContextType {
 
   isWorking: boolean;
   setIsWorking: (isWorking: boolean) => void;
+
+  format: string;
+  setFormat: (language: string) => void;
 }
 
 /**
@@ -248,6 +251,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
   const [isWorking, setIsWorking] = useState<boolean>(false);
 
+  const [format, setFormat] = useState<string>("");
+
   // ---------------------- Memoized context value -------------------------
   /**
    * Gathers all chat-related state and actions into a memoized object to provide
@@ -302,6 +307,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
       isWorking,
       setIsWorking,
+
+      format,
+      setFormat,
     };
   }, [
     messages,
@@ -319,6 +327,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     originalMessages,
     manualSenderSelection,
     isWorking,
+    format,
   ]);
 
   /**
