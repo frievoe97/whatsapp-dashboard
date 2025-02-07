@@ -488,7 +488,7 @@ const SenderComparisonBarChart: FC = () => {
           onChange={handlePropertyChange}
           className={`mt-1.5 w-fit border text-sm font-medium outline-none focus:ring-0 appearance-none p-2 ${
             darkMode
-              ? "border-gray-300 bg-black text-white"
+              ? "border-gray-300 bg-gray-800 text-white"
               : "border-black bg-white text-black"
           }`}
           style={{ fontFamily: "Arial, sans-serif" }}
