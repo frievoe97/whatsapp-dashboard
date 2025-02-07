@@ -74,12 +74,12 @@ const UNWANTED_UNICODE_REGEX = /[\u200E\u200F\u202A-\u202E]/gu;
  * Typically these are system messages or lines we do not need to parse.
  */
 const IGNORE_STRINGS: string[] = [
-  "weggelassen",
-  "hast den Gruppennamen",
-  "hat dich hinzugefügt",
-  "sicherheitsnummer",
-  "Ende-zu-Ende-verschlüssel",
-  "erheitsnummer für alle Mitglieder hat sich geänd",
+  //"weggelassen",
+  //"hast den Gruppennamen",
+  //"hat dich hinzugefügt",
+  //"sicherheitsnummer",
+  //"Ende-zu-Ende-verschlüssel",
+  //"erheitsnummer für alle Mitglieder hat sich geänd",
 ];
 
 // ------------------ HELPER / UTILITY FUNCTIONS ----------------------

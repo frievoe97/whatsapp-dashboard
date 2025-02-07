@@ -218,8 +218,40 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
   }, [messages, setLanguage]);
 
   useEffect(() => {
-    console.log("Language and format", language, format);
-  }, [language, format]);
+    if (!language || !format) {
+      // Wenn eines der beiden leer ist, wird nichts gemacht
+      return;
+    }
+
+    // Falls eine ungültige Kombination existiert, Standardwerte setzen
+    const validLanguages = ["en", "de", "fr", "es"];
+    const validFormats = ["ios", "android"];
+
+    const lang = validLanguages.includes(language) ? language : "en";
+    const fmt = validFormats.includes(format) ? format : "ios";
+
+    const fileName = `ignore_lines_${lang}_${fmt}.txt`;
+
+    fetch(`src/assets/${fileName}`)
+      .then((response) => response.text())
+      .then((text) => {
+        const ignoreLines = text
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean);
+
+        // Neue Nachrichtenliste basierend auf dem aktuellen Zustand erstellen
+        const filteredMessages = messages.filter(
+          (msg) => !ignoreLines.some((ignore) => msg.message.includes(ignore))
+        );
+
+        // Direkte Zuweisung (ohne setMessages mit prevMessages-Funktion)
+        setMessages(filteredMessages);
+      })
+      .catch((error) => {
+        console.error(`Fehler beim Laden der Datei ${fileName}:`, error);
+      });
+  }, [language, format, setMessages]);
 
   /**
    * For the very first file load, we auto-set the date range (startDate, endDate)
