@@ -126,6 +126,9 @@ export interface ChatContextType {
   setManualSenderSelection: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
   >;
+
+  isWorking: boolean;
+  setIsWorking: (isWorking: boolean) => void;
 }
 
 /**
@@ -243,6 +246,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
    */
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
 
+  const [isWorking, setIsWorking] = useState<boolean>(false);
+
   // ---------------------- Memoized context value -------------------------
   /**
    * Gathers all chat-related state and actions into a memoized object to provide
@@ -294,6 +299,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       setOriginalMessages,
       manualSenderSelection,
       setManualSenderSelection,
+
+      isWorking,
+      setIsWorking,
     };
   }, [
     messages,
@@ -310,6 +318,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     isPanelOpen,
     originalMessages,
     manualSenderSelection,
+    isWorking,
   ]);
 
   /**

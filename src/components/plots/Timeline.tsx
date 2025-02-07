@@ -424,7 +424,7 @@ function useTimelineChart(
         .append("path")
         .attr("class", "line")
         .attr("fill", "none")
-        .attr("stroke-width", 30)
+        .attr("stroke-width", 2)
         .attr("stroke", "gray") // will be updated below
         .attr("d", (d) => {
           const initialValues = d.values.map((v) => ({ ...v, y: innerHeight }));

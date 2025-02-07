@@ -47,7 +47,8 @@ interface ChordDiagramProps {}
  */
 const ChordDiagram: React.FC<ChordDiagramProps> = () => {
   // Access data and theme info from context
-  const { messages, darkMode, isUploading } = useChat();
+  const { messages, darkMode, isUploading, isWorking, minMessagePercentage } =
+    useChat();
 
   // Refs for container (for measuring dimensions) and the <svg> element
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -71,17 +72,33 @@ const ChordDiagram: React.FC<ChordDiagramProps> = () => {
    */
   const { chordData, uniqueSenders } = useMemo(() => {
     const counts: Record<string, Record<string, number>> = {};
-    const participants = new Set<string>();
+    const participants = new Map<string, number>(); // Map für Nachrichtenzählung
 
-    // First collect all participants from messages that have isUsed = true
+    // Gesamtanzahl der Nachrichten berechnen
+    const totalMessages = messages.length;
+
+    // Zähle Nachrichten für jeden Sender
     messages.forEach((msg) => {
       if (msg.isUsed) {
-        participants.add(msg.sender);
+        participants.set(msg.sender, (participants.get(msg.sender) || 0) + 1);
       }
     });
 
-    // Count transitions between consecutive used messages
-    // (i.e., from previousMessage.sender to currentMessage.sender)
+    // Bestimme gültige Sender basierend auf `minMessagePercentage`
+    const validSenders = new Set(
+      Array.from(participants.entries())
+        .filter(
+          ([_, count]) => (count / totalMessages) * 100 >= minMessagePercentage
+        )
+        .map(([sender]) => sender)
+    );
+
+    // Falls zu wenige Sender übrig bleiben, Diagramm nicht rendern
+    if (validSenders.size < MIN_SENDERS) {
+      return { chordData: [], uniqueSenders: 0 };
+    }
+
+    // Zähle Übergänge zwischen Nachrichten für gültige Sender
     messages.forEach((msg, index) => {
       if (!msg.isUsed || index === 0) return;
 
@@ -90,6 +107,10 @@ const ChordDiagram: React.FC<ChordDiagramProps> = () => {
 
       const sender = msg.sender;
       const previousSender = previousMessage.sender;
+
+      if (!validSenders.has(sender) || !validSenders.has(previousSender)) {
+        return; // Ignoriere Übergänge mit ungültigen Sendern
+      }
 
       if (!counts[previousSender]) {
         counts[previousSender] = {};
@@ -100,7 +121,7 @@ const ChordDiagram: React.FC<ChordDiagramProps> = () => {
       counts[previousSender][sender] += 1;
     });
 
-    // Convert the counts object into a flat array of chord data
+    // Konvertiere die Zählung in ein Array von Chord-Daten
     const flatChordData: ChordDatum[] = Object.entries(counts).flatMap(
       ([source, targets]) =>
         Object.entries(targets).map(([target, value]) => ({
@@ -112,9 +133,9 @@ const ChordDiagram: React.FC<ChordDiagramProps> = () => {
 
     return {
       chordData: flatChordData,
-      uniqueSenders: participants.size,
+      uniqueSenders: validSenders.size,
     };
-  }, [messages]);
+  }, [messages, isWorking, minMessagePercentage]);
 
   /**
    * Decide whether to render the chord diagram based on the number of unique senders.
@@ -321,7 +342,7 @@ const ChordDiagram: React.FC<ChordDiagramProps> = () => {
       group.selectAll("path").transition().duration(500).style("opacity", 1);
       ribbons.transition().duration(500).style("opacity", 1);
     });
-  }, [chordData, dimensions, darkMode]);
+  }, [chordData, dimensions, darkMode, messages]);
 
   /**
    * If the chord diagram is rendered, force a resize event if needed.

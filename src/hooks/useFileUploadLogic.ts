@@ -109,6 +109,7 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
     setManualSenderSelection,
     manualSenderSelection,
     originalMessages,
+    setIsWorking,
   } = useChat();
 
   // ------------------------ LOCAL COMPONENT STATE ---------------------
@@ -310,6 +311,7 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
         setSelectedSender(finalSelectedSenders);
         setManualSenderSelection(newManualSelection);
         setApplyFilters(false);
+        setIsWorking(false);
         worker.terminate();
       };
     } else {
@@ -325,6 +327,7 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
       setSelectedSender(finalSelectedSenders);
       setManualSenderSelection(newManualSelection);
       setApplyFilters(false);
+      setIsWorking(false);
     }
   }, [
     applyFilters,
@@ -350,6 +353,7 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
    * @param event - The change event originating from the file input.
    */
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setIsWorking(true);
     setMessages([]);
     setOriginalMessages([]);
     const file = event.target.files?.[0];
@@ -370,6 +374,7 @@ export const useFileUploadLogic = (onFileUpload: (file: File) => void) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
+          setIsWorking(false);
           const fileContent = e.target.result.toString();
 
           // Spawn our parsing worker
