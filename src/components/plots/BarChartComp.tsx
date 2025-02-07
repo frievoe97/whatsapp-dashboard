@@ -332,11 +332,6 @@ const SenderComparisonBarChart: FC = () => {
       "bar-chart-pagination"
     );
 
-    console.log("Height: ", height);
-    console.log("Header Height: ", headerHeight);
-    console.log("Property Select Height: ", propertySelectHeight);
-    console.log("Pagination Height: ", paginationHeight);
-
     height = height - headerHeight - propertySelectHeight - paginationHeight;
 
     // Define margins and inner chart area
@@ -460,7 +455,7 @@ const SenderComparisonBarChart: FC = () => {
           ? "border-gray-300 bg-gray-800 text-white"
           : "border-black bg-white text-black"
       } ${expanded ? "md:basis-[3000px]" : "md:basis-[550px]"}`}
-      style={{ minHeight: "400px", maxHeight: "550px", overflow: "hidden" }}
+      style={{ minHeight: "500px", maxHeight: "550px", overflow: "hidden" }}
     >
       {/* Header with title and expand/minimize button */}
       <div id="bar-chart-header" className="flex items-center justify-between">

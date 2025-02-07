@@ -2,7 +2,14 @@
 
 import React, { useEffect, useRef, useMemo, useState, RefObject } from "react";
 import * as d3 from "d3";
-import { Hash, Percent, Maximize2, Minimize2 } from "lucide-react";
+import {
+  Hash,
+  Percent,
+  Maximize2,
+  Minimize2,
+  Split,
+  Merge,
+} from "lucide-react";
 import Switch from "react-switch";
 import ClipLoader from "react-spinners/ClipLoader";
 
@@ -204,13 +211,15 @@ function useTimelineChart(
   containerRef: RefObject<HTMLDivElement>,
   dimensions: { width: number; height: number } | undefined,
   aggregatedData: TimeAggregatedData[],
+  mergedData: TimeAggregatedData[], // ⬅️ Neu hinzugefügt
   mode: Mode,
   showPercentage: boolean,
   darkMode: boolean,
   startDate: Date | undefined,
   endDate: Date | undefined,
   setMode: React.Dispatch<React.SetStateAction<Mode>>,
-  setUniqueYearsLessThanThree: React.Dispatch<React.SetStateAction<boolean>>
+  setUniqueYearsLessThanThree: React.Dispatch<React.SetStateAction<boolean>>,
+  showMerged: boolean // ⬅️ Neu hinzugefügt
 ): void {
   useEffect(() => {
     // If no valid dimensions or no data, do not render.
@@ -220,30 +229,35 @@ function useTimelineChart(
 
     // 1) Filter data to respect the date range [startDate, endDate].
     //    This is done so we only plot points that lie within the selected date range.
-    const filteredData = aggregatedData.map((d) => ({
-      sender: d.sender,
-      values: d.values.filter((v) => {
-        if (mode === "year") {
-          const startYear = startDate
-            ? new Date(startDate).getFullYear()
-            : -Infinity;
-          const endYear = endDate ? new Date(endDate).getFullYear() : Infinity;
-          return (
-            v.date.getFullYear() >= startYear && v.date.getFullYear() <= endYear
-          );
-        } else {
-          const startMonth = startDate
-            ? new Date(startDate.getFullYear(), startDate.getMonth(), 1)
-            : null;
-          const endMonth = endDate
-            ? new Date(endDate.getFullYear(), endDate.getMonth(), 1)
-            : null;
-          if (startMonth && v.date < startMonth) return false;
-          if (endMonth && v.date > endMonth) return false;
-          return true;
-        }
-      }),
-    }));
+    const filteredData = (showMerged ? mergedData : aggregatedData).map(
+      (d) => ({
+        sender: d.sender,
+        values: d.values.filter((v) => {
+          if (mode === "year") {
+            const startYear = startDate
+              ? new Date(startDate).getFullYear()
+              : -Infinity;
+            const endYear = endDate
+              ? new Date(endDate).getFullYear()
+              : Infinity;
+            return (
+              v.date.getFullYear() >= startYear &&
+              v.date.getFullYear() <= endYear
+            );
+          } else {
+            const startMonth = startDate
+              ? new Date(startDate.getFullYear(), startDate.getMonth(), 1)
+              : null;
+            const endMonth = endDate
+              ? new Date(endDate.getFullYear(), endDate.getMonth(), 1)
+              : null;
+            if (startMonth && v.date < startMonth) return false;
+            if (endMonth && v.date > endMonth) return false;
+            return true;
+          }
+        }),
+      })
+    );
 
     // 2) Gather all dates from the filtered data and determine min/max.
     const filteredDates = filteredData.flatMap((d) =>
@@ -275,6 +289,7 @@ function useTimelineChart(
     const uniqueYears = new Set(
       filteredDates.map((date) => date.getFullYear())
     );
+
     const hasLessThanThreeYears = uniqueYears.size < 3;
     setUniqueYearsLessThanThree(hasLessThanThreeYears);
     if (hasLessThanThreeYears) {
@@ -286,7 +301,7 @@ function useTimelineChart(
     const svg = d3.select(svgRef.current);
 
     // Calculate leftover space after margins and header/legend.
-    const margin = { top: 20, right: 30, bottom: 30, left: 30 };
+    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
 
     // Adjust side margins for small screens
     if (window.innerWidth <= 768) {
@@ -313,9 +328,12 @@ function useTimelineChart(
 
     // Y-scale depends on whether we show percentage or absolute counts
     const yMax = showPercentage
-      ? d3.max(aggregatedData, (d) => d3.max(d.values, (v) => v.percentage)) ||
-        100
-      : d3.max(aggregatedData, (d) => d3.max(d.values, (v) => v.count)) || 10;
+      ? d3.max(showMerged ? mergedData : aggregatedData, (d) =>
+          d3.max(d.values, (v) => v.percentage)
+        ) || 100
+      : d3.max(showMerged ? mergedData : aggregatedData, (d) =>
+          d3.max(d.values, (v) => v.count)
+        ) || 10;
 
     const yScale = d3
       .scaleLinear()
@@ -406,7 +424,7 @@ function useTimelineChart(
         .append("path")
         .attr("class", "line")
         .attr("fill", "none")
-        .attr("stroke-width", 3)
+        .attr("stroke-width", 30)
         .attr("stroke", "gray") // will be updated below
         .attr("d", (d) => {
           const initialValues = d.values.map((v) => ({ ...v, y: innerHeight }));
@@ -473,15 +491,20 @@ function useTimelineChart(
     // 8) Update existing lines or create/remove lines for new/old senders
     const lines = chartGroup
       .selectAll<SVGPathElement, TimeAggregatedData>(".line")
-      .data(aggregatedData, (d) => d.sender);
+      .data(showMerged ? mergedData : aggregatedData, (d) => d.sender);
 
     // Color scale for lines (we re-instantiate here each render)
     const senders = aggregatedData.map((d) => d.sender);
-    const colorScale = d3
-      .scaleOrdinal<string>()
-      .domain(senders)
-      // Dark mode and light mode can use different color sets
-      .range(darkMode ? d3.schemeSet2 : d3.schemePaired);
+
+    const getColorScale = () => {
+      if (showMerged) {
+        return () => (darkMode ? "#fff" : "#000");
+      }
+      const colorRange = darkMode ? d3.schemeSet2 : d3.schemePaired;
+      return d3.scaleOrdinal<string, string>(colorRange).domain(senders);
+    };
+
+    const colorScale = getColorScale();
 
     lines.join(
       (enter) =>
@@ -489,41 +512,17 @@ function useTimelineChart(
           .append("path")
           .attr("class", "line")
           .attr("fill", "none")
-          .attr("stroke-width", 3)
           .attr("stroke", (d) => colorScale(d.sender))
-          .attr("d", (d) => {
-            // Animate from bottom
-            const initialValues = d.values.map((v) => ({
-              ...v,
-              y: innerHeight,
-            }));
-            const initialLine = d3
-              .line<TimeDataPoint>()
-              .x((d) => xScale(d.date))
-              .y(() => innerHeight)
-              .curve(d3.curveMonotoneX);
-            return initialLine(initialValues) as string;
-          })
-          .transition()
-          .duration(2000)
-          .ease(d3.easeCubic)
+          .attr("stroke-width", showMerged ? 2 : 2) // Dickere Linie für summierte Darstellung
           .attr("d", (d) => lineGenerator(d.values) as string),
       (update) =>
         update
           .transition()
           .duration(1000)
-          .ease(d3.easeCubic)
           .attr("stroke", (d) => colorScale(d.sender))
+          .attr("stroke-width", showMerged ? 2 : 2) // Dickere Linie für summierte Darstellung
           .attr("d", (d) => lineGenerator(d.values) as string),
-      (exit) =>
-        exit
-          .transition()
-          .duration(1000)
-          .attr("stroke-dashoffset", function (this: SVGPathElement) {
-            // Animate out
-            return this.getTotalLength();
-          })
-          .remove()
+      (exit) => exit.remove()
     );
 
     // 9) Tooltip handling
@@ -665,6 +664,7 @@ const Plot2: React.FC = () => {
     useState(false);
   const [mode, setMode] = useState<Mode>("year");
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
+  const [showMerged, setShowMerged] = useState(false);
 
   /**
    * Create the tooltip element once on mount (if it doesn't exist).
@@ -726,35 +726,67 @@ const Plot2: React.FC = () => {
     [messages, mode, categories, minMessagePercentage, showPercentage]
   );
 
-  // 3) Extract sender names for the legend and color scale
-  const senders = useMemo(
-    () => aggregatedData.map((d) => d.sender),
-    [aggregatedData]
-  );
+  // Summierte Daten für alle Sender berechnen, falls `showMerged` aktiv ist
+  const mergedData = useMemo(() => {
+    if (!showMerged) return aggregatedData;
 
-  // 4) Use the custom hook to render or update the timeline chart
+    // Alle einzigartigen Zeitstempel aus aggregatedData sammeln
+    const allDates = Array.from(
+      new Set(
+        aggregatedData.flatMap((d) => d.values.map((v) => v.date.getTime()))
+      )
+    ).sort((a, b) => a - b); // Sortieren nach Zeitstempel
+
+    const mergedValues = allDates.map((timestamp) => {
+      const date = new Date(timestamp);
+      const totalCount = aggregatedData.reduce((sum, senderData) => {
+        const value = senderData.values.find(
+          (v) => v.date.getTime() === timestamp
+        );
+        return sum + (value ? value.count : 0);
+      }, 0);
+
+      return { date, count: totalCount };
+    });
+
+    return [{ sender: "Total", values: mergedValues }];
+  }, [aggregatedData, showMerged]);
+
+  // 3) Extract sender names for the legend and color scale
+  const senders = useMemo(() => {
+    if (showMerged) return ["Total"];
+    return aggregatedData.map((d) => d.sender);
+  }, [aggregatedData, showMerged]);
+
   useTimelineChart(
     svgRef,
     containerRef,
     dimensions,
-    aggregatedData,
+    showMerged ? mergedData : aggregatedData,
+    mergedData,
     mode,
     showPercentage,
     darkMode,
     startDate,
     endDate,
     setMode,
-    setUniqueYearsLessThanThree
+    setUniqueYearsLessThanThree,
+    showMerged
   );
 
   /**
    * Determines the color for each sender. Re-created after each render to keep
    * legend colors consistent with the lines in the chart.
    */
-  const colorScale = useMemo(() => {
+  const getColorScale = () => {
+    if (showMerged) {
+      return () => (darkMode ? "#fff" : "#000");
+    }
     const colorRange = darkMode ? d3.schemeSet2 : d3.schemePaired;
     return d3.scaleOrdinal<string, string>(colorRange).domain(senders);
-  }, [senders, darkMode]);
+  };
+
+  const colorScale = getColorScale();
 
   return (
     <div
@@ -816,28 +848,136 @@ const Plot2: React.FC = () => {
 
         {/* Switch for Absolute vs. Percentage */}
         <div className="flex items-center w-fit md:w-auto justify-center md:justify-end">
-          <Hash
-            className={`${
+          <Split
+            className={`hidden md:inline-block ${
               darkMode ? "text-white" : "text-gray-700"
             } w-4 h-4 md:w-5 md:h-5`}
           />
-          <Switch
-            onChange={() => setShowPercentage(!showPercentage)}
-            checked={showPercentage}
-            offColor={darkMode ? "#444" : "#ccc"}
-            onColor="#000"
-            uncheckedIcon={false}
-            checkedIcon={false}
-            height={20}
-            width={48}
-            handleDiameter={16}
-            borderRadius={20}
-            boxShadow="none"
-            activeBoxShadow="none"
-            className="custom-switch mx-1 md:mx-2"
+
+          {/* Switch für Desktop, Button für Mobile */}
+          <div className="mx-1 md:mx-2 hidden md:inline-block h-[20px]">
+            <Switch
+              onChange={() => {
+                if (showPercentage) {
+                  setShowPercentage(false);
+                }
+                setShowMerged(!showMerged);
+              }}
+              checked={showMerged}
+              offColor={darkMode ? "#444" : "#ccc"}
+              onColor="#000"
+              uncheckedIcon={false}
+              checkedIcon={false}
+              height={20}
+              width={48}
+              handleDiameter={16}
+              borderRadius={20}
+              boxShadow="none"
+              activeBoxShadow="none"
+              className="custom-switch"
+            />
+          </div>
+
+          {/* Mobile Button */}
+          <button
+            onClick={() => {
+              if (showPercentage) {
+                setShowPercentage(false);
+              }
+              setShowMerged(!showMerged);
+            }}
+            className={`md:hidden p-2 rounded-none border ${
+              darkMode ? "border-white bg-gray-700" : "border-black bg-white"
+            }`}
+          >
+            {showMerged ? (
+              <Split
+                className={`w-3 h-3 ${
+                  darkMode
+                    ? "text-white border-white"
+                    : "text-gray-700 border-black"
+                }`}
+              />
+            ) : (
+              <Merge
+                className={`w-3 h-3 ${
+                  darkMode
+                    ? "text-white border-white"
+                    : "text-gray-700 border-black"
+                }`}
+              />
+            )}
+          </button>
+
+          <Merge
+            className={`hidden md:inline-block ${
+              darkMode ? "text-white" : "text-gray-700"
+            } w-4 h-4 md:w-5 md:h-5`}
           />
+
+          <Hash
+            className={`ml-4 hidden md:inline-block ${
+              darkMode ? "text-white" : "text-gray-700"
+            } w-4 h-4 md:w-5 md:h-5`}
+          />
+
+          {/* Switch für Desktop, Button für Mobile */}
+          <div className="mx-1 md:mx-2 hidden md:inline-block h-[20px]">
+            <Switch
+              onChange={() => {
+                if (showMerged) {
+                  setShowMerged(false);
+                }
+                setShowPercentage(!showPercentage);
+              }}
+              checked={showPercentage}
+              offColor={darkMode ? "#444" : "#ccc"}
+              onColor="#000"
+              uncheckedIcon={false}
+              checkedIcon={false}
+              height={20}
+              width={48}
+              handleDiameter={16}
+              borderRadius={20}
+              boxShadow="none"
+              activeBoxShadow="none"
+              className="custom-switch"
+            />
+          </div>
+
+          {/* Mobile Button */}
+          <button
+            onClick={() => {
+              if (showMerged) {
+                setShowMerged(false);
+              }
+              setShowPercentage(!showPercentage);
+            }}
+            className={`ml-1 md:hidden p-2 rounded-none border ${
+              darkMode ? "border-white bg-gray-700" : "border-black bg-white"
+            }`}
+          >
+            {showPercentage ? (
+              <Hash
+                className={`w-3 h-3 ${
+                  darkMode
+                    ? "text-white border-white"
+                    : "text-gray-700 border-black"
+                }`}
+              />
+            ) : (
+              <Percent
+                className={`w-3 h-3 ${
+                  darkMode
+                    ? "text-white border-white"
+                    : "text-gray-700 border-black"
+                }`}
+              />
+            )}
+          </button>
+
           <Percent
-            className={`${
+            className={`hidden md:inline-block ${
               darkMode ? "text-white" : "text-gray-700"
             } w-4 h-4 md:w-5 md:h-5`}
           />
@@ -849,7 +989,7 @@ const Plot2: React.FC = () => {
             }`}
             onClick={() => {
               setExpanded(!expanded);
-              // Re-trigger the resize observer so D3 rerenders correctly
+              // Resize Event für D3-Render-Update auslösen
               setTimeout(() => {
                 window.dispatchEvent(new Event("resize"));
               }, 200);
@@ -875,20 +1015,22 @@ const Plot2: React.FC = () => {
         id="timeline-plot-legend"
         className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2 px-4 md:px-0"
       >
-        {senders.map((sender) => (
-          <div key={sender} className="flex items-center mr-4 mb-2">
-            <div
-              className="w-4 h-4 mr-1"
-              style={{ backgroundColor: colorScale(sender) }}
-            ></div>
-            <span
-              className="text-sm text-nowrap"
-              style={{ color: darkMode ? "#fff" : "#000" }}
-            >
-              {sender}
-            </span>
-          </div>
-        ))}
+        {senders
+          .filter((sender) => sender !== "Total") // 👈 "Total" aus der Legende entfernen
+          .map((sender) => (
+            <div key={sender} className="flex items-center mr-4 mb-2">
+              <div
+                className="w-4 h-4 mr-1"
+                style={{ backgroundColor: colorScale(sender) }}
+              ></div>
+              <span
+                className="text-sm text-nowrap"
+                style={{ color: darkMode ? "#fff" : "#000" }}
+              >
+                {sender}
+              </span>
+            </div>
+          ))}
       </div>
 
       {/* Chart or Loader / No Data Message */}

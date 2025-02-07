@@ -63,6 +63,11 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   const senderDropdownRef = useRef<HTMLDivElement | null>(null);
 
+  const truncateFileName = (name: string, maxLength: number) => {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + "...";
+  };
+
   // Schließt das Dropdown, wenn außerhalb geklickt wird
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -119,7 +124,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
       </div>
       <button
         onClick={toggleDarkMode}
-        className={`px-2 py-1 mr-4 border rounded-none flex items-center ${borderColor} ${bgColor} ${textColor}`}
+        className={`px-2 py-1 mr-1 border rounded-none flex items-center ${borderColor} ${bgColor} ${textColor}`}
       >
         {darkMode ? (
           <Sun size={16} className="text-white" />
@@ -161,7 +166,7 @@ const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
         />
         {fileName && (
           <p className="mt-2 text-sm ml-4">
-            <span className={textColor}>{fileName}</span>
+            <span className={textColor}>{truncateFileName(fileName, 10)}</span>
           </p>
         )}
       </div>

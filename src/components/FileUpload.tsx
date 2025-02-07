@@ -72,9 +72,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
 
   // Schließt das Dropdown, wenn außerhalb geklickt wird
   useEffect(() => {
-    console.log("useEffect");
     const handleClickOutside = (event: MouseEvent) => {
-      console.log("handleClickOutside");
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)

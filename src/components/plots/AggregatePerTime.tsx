@@ -6,7 +6,14 @@ import { ChatMessage } from "../../context/ChatContext";
 import useResizeObserver from "../../hooks/useResizeObserver";
 import Switch from "react-switch";
 import ClipLoader from "react-spinners/ClipLoader";
-import { Hash, Percent, Maximize2, Minimize2 } from "lucide-react";
+import {
+  Hash,
+  Percent,
+  Maximize2,
+  Minimize2,
+  Split,
+  Merge,
+} from "lucide-react";
 
 /**
  * DataPoint interface for a single category value.
@@ -202,6 +209,7 @@ const AggregatePerTimePlot: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
   const [mode, setMode] = useState<Mode>("hour");
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
+  const [showMerged, setShowMerged] = useState<boolean>(false);
 
   // Get the categories for the current mode
   const categories = useMemo(() => getCategories(mode), [mode]);
@@ -237,6 +245,28 @@ const AggregatePerTimePlot: React.FC = () => {
     const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
     return d3.scaleOrdinal<string, string>(colors).domain(senders);
   }, [senders, darkMode]);
+
+  const getLineColor = (sender: string) => {
+    if (showMerged) {
+      return darkMode ? "#fff" : "#000"; // Schwarz oder Weiß
+    }
+    return colorScale(sender); // Normale Farben für einzelne Sender
+  };
+
+  const mergedData = useMemo(() => {
+    if (!showMerged) return aggregatedData;
+
+    // Summiere die Werte über alle Sender
+    const mergedValues = categories.map((category) => {
+      const sum = aggregatedData.reduce((acc, senderData) => {
+        const value = senderData.values.find((v) => v.category === category);
+        return acc + (value ? value.count : 0);
+      }, 0);
+      return { category, count: sum };
+    });
+
+    return [{ sender: "Total", values: mergedValues }];
+  }, [aggregatedData, showMerged, categories]);
 
   // Create the tooltip element (only once)
   useEffect(() => {
@@ -274,7 +304,7 @@ const AggregatePerTimePlot: React.FC = () => {
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
 
-    let margin = { top: 20, right: 30, bottom: 30, left: 30 };
+    let margin = { top: 20, right: 20, bottom: 30, left: 40 };
 
     if (window.innerWidth <= 768) {
       margin.right = 20;
@@ -300,9 +330,9 @@ const AggregatePerTimePlot: React.FC = () => {
       .padding(0);
 
     const yMax = showPercentage
-      ? d3.max(aggregatedData, (d) => d3.max(d.values, (v) => v.percentage)) ||
-        100
-      : d3.max(aggregatedData, (d) => d3.max(d.values, (v) => v.count)) || 10;
+      ? // @ts-ignore
+        d3.max(mergedData, (d) => d3.max(d.values, (v) => v.percentage)) || 100
+      : d3.max(mergedData, (d) => d3.max(d.values, (v) => v.count)) || 10;
 
     const yScale = d3
       .scaleLinear()
@@ -338,9 +368,7 @@ const AggregatePerTimePlot: React.FC = () => {
         .attr("transform", `translate(${margin.left},${margin.top})`);
     } else {
       // Remove previous overlays, axes, and grid lines to avoid duplication.
-      chartGroup
-        .selectAll(".overlay, .hover-line, .x-grid, .y-grid, .x-axis, .y-axis")
-        .remove();
+      chartGroup.selectAll(".x-grid, .y-grid, .x-axis, .y-axis").remove();
     }
 
     // Select the tooltip element.
@@ -386,11 +414,13 @@ const AggregatePerTimePlot: React.FC = () => {
         const nearestCategory = categories[minIndex];
 
         // Prepare tooltip content for each sender.
-        const tooltipData = aggregatedData.map((d) => {
+        const tooltipData = mergedData.map((d) => {
           const point = d.values.find((v) => v.category === nearestCategory);
           const value =
+            // @ts-ignore
             showPercentage && point?.percentage !== undefined
-              ? point.percentage.toFixed(2) + "%"
+              ? // @ts-ignore
+                point.percentage.toFixed(2) + "%"
               : point?.count;
           return { sender: d.sender, value };
         });
@@ -468,7 +498,7 @@ const AggregatePerTimePlot: React.FC = () => {
     // Bind aggregated data to path elements for each sender and apply transitions.
     const lines = chartGroup
       .selectAll<SVGPathElement, AggregatedData>(".line")
-      .data(aggregatedData, (d) => d.sender);
+      .data(mergedData, (d) => d.sender); // Verwende jetzt mergedData
 
     lines.join(
       (enter) =>
@@ -476,50 +506,26 @@ const AggregatePerTimePlot: React.FC = () => {
           .append("path")
           .attr("class", "line")
           .attr("fill", "none")
-          .style("z-index", "500")
-          .attr("stroke", (d) => colorScale(d.sender))
-          .attr("stroke-width", 3)
-          // Start from the bottom (for the initial animation)
-          .attr("d", (d) => {
-            const initialValues = d.values.map((v) => ({
-              ...v,
-              y: innerHeight,
-            }));
-            const initialLine = d3
-              .line<DataPoint>()
-              .x((v) => xScale(v.category) as number)
-              .y(() => innerHeight)
-              .curve(d3.curveMonotoneX);
-            return initialLine(initialValues) as string;
-          })
-          .transition()
-          .duration(2000)
-          .ease(d3.easeCubic)
+          .attr("stroke", (d) => getLineColor(d.sender)) // Nutze die neue Farb-Funktion
+          .attr("stroke-width", showMerged ? 2 : 2) // Dickere Linie für summierte Darstellung
           .attr("d", (d) => lineGenerator(d.values) as string),
       (update) =>
         update
           .transition()
           .duration(1000)
-          .ease(d3.easeCubic)
-          .attr("stroke", (d) => colorScale(d.sender))
+          .attr("stroke", (d) => getLineColor(d.sender))
+          .attr("stroke-width", showMerged ? 2 : 2) // Aktualisiere die Breite
           .attr("d", (d) => lineGenerator(d.values) as string),
-      (exit) =>
-        exit
-          .transition()
-          .duration(1000)
-          .attr("stroke-dashoffset", function (this: SVGPathElement) {
-            return this.getTotalLength();
-          })
-          .remove()
+      (exit) => exit.remove()
     );
   }, [
-    aggregatedData,
     dimensions,
     colorScale,
     mode,
     showPercentage,
     darkMode,
     categories,
+    showMerged,
   ]);
 
   function getTotalHeightIncludingMargin(elementId: string) {
@@ -579,31 +585,136 @@ const AggregatePerTimePlot: React.FC = () => {
           })}
         </div>
         <div className="flex items-center w-fit md:w-auto justify-center md:justify-end">
+          <Split
+            className={`hidden md:inline-block ${
+              darkMode ? "text-white" : "text-gray-700"
+            } w-4 h-4 md:w-5 md:h-5`}
+          />
+
+          {/* Switch für Desktop, Button für Mobile */}
+          <div className="mx-1 md:mx-2 hidden md:inline-block h-[20px]">
+            <Switch
+              onChange={() => {
+                if (showPercentage) {
+                  setShowPercentage(false);
+                }
+                setShowMerged(!showMerged);
+              }}
+              checked={showMerged}
+              offColor={darkMode ? "#444" : "#ccc"}
+              onColor="#000"
+              uncheckedIcon={false}
+              checkedIcon={false}
+              height={20}
+              width={48}
+              handleDiameter={16}
+              borderRadius={20}
+              boxShadow="none"
+              activeBoxShadow="none"
+              className="custom-switch" // Switch nur auf Desktop
+            />
+          </div>
+
+          {/* Mobile Button */}
+          <button
+            onClick={() => {
+              if (showPercentage) {
+                setShowPercentage(false);
+              }
+              setShowMerged(!showMerged);
+            }}
+            className={`md:hidden p-2 rounded-none border ${
+              darkMode ? "border-white bg-gray-700" : "border-black bg-white"
+            }`}
+          >
+            {showMerged ? (
+              <Split
+                className={`w-3 h-3 ${
+                  darkMode
+                    ? "text-white border-white"
+                    : "text-gray-700 border-black"
+                }`}
+              />
+            ) : (
+              <Merge
+                className={`w-3 h-3 ${
+                  darkMode
+                    ? "text-white border-white"
+                    : "text-gray-700 border-black"
+                }`}
+              />
+            )}
+          </button>
+
+          <Merge
+            className={`hidden md:inline-block ${
+              darkMode ? "text-white" : "text-gray-700"
+            } w-4 h-4 md:w-5 md:h-5`}
+          />
+
           <Hash
-            className={`${
+            className={`ml-4 hidden md:inline-block ${
               darkMode ? "text-white" : "text-gray-700"
             } w-4 h-4 md:w-5 md:h-5`}
           />
-          <Switch
-            onChange={() => setShowPercentage(!showPercentage)}
-            checked={showPercentage}
-            offColor={darkMode ? "#444" : "#ccc"}
-            onColor="#000"
-            uncheckedIcon={false}
-            checkedIcon={false}
-            height={20}
-            width={48}
-            handleDiameter={16}
-            borderRadius={20}
-            boxShadow="none"
-            activeBoxShadow="none"
-            className="custom-switch mx-1 md:mx-2"
-          />
+
+          {/* Switch für Desktop, Button für Mobile */}
+          <div className="mx-1 md:mx-2 hidden md:inline-block h-[20px]">
+            <Switch
+              onChange={() => {
+                setShowPercentage(!showPercentage);
+                if (!showPercentage) setShowMerged(false);
+              }}
+              checked={showPercentage}
+              offColor={darkMode ? "#444" : "#ccc"}
+              onColor="#000"
+              uncheckedIcon={false}
+              checkedIcon={false}
+              height={20}
+              width={48}
+              handleDiameter={16}
+              borderRadius={20}
+              boxShadow="none"
+              activeBoxShadow="none"
+              className="custom-switch" // Switch nur auf Desktop
+            />
+          </div>
+
+          {/* Mobile Button */}
+          <button
+            onClick={() => {
+              setShowPercentage(!showPercentage);
+              if (!showPercentage) setShowMerged(false);
+            }}
+            className={`ml-1 md:hidden p-2 rounded-none border ${
+              darkMode ? "border-white bg-gray-700" : "border-black bg-white"
+            }`}
+          >
+            {showPercentage ? (
+              <Hash
+                className={`w-3 h-3 ${
+                  darkMode
+                    ? "text-white border-white"
+                    : "text-gray-700 border-black"
+                }`}
+              />
+            ) : (
+              <Percent
+                className={`w-3 h-3 ${
+                  darkMode
+                    ? "text-white border-white"
+                    : "text-gray-700 border-black"
+                }`}
+              />
+            )}
+          </button>
+
           <Percent
-            className={`${
+            className={`hidden md:inline-block ${
               darkMode ? "text-white" : "text-gray-700"
             } w-4 h-4 md:w-5 md:h-5`}
           />
+
           <button
             className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
               darkMode ? "text-white" : "text-black"
@@ -631,25 +742,29 @@ const AggregatePerTimePlot: React.FC = () => {
         </div>
       </div>
       {/* Legend showing sender names with their corresponding colors */}
-      <div
-        id="aggregate-per-time-plot-legend"
-        className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2 px-4 md:px-0"
-      >
-        {senders.map((sender) => (
-          <div key={sender} className="flex items-center mr-4 mb-2">
-            <div
-              className="w-4 h-4 mr-1"
-              style={{ backgroundColor: colorScale(sender) }}
-            ></div>
-            <span
-              className="text-sm whitespace-nowrap"
-              style={{ color: darkMode ? "#fff" : "#000" }}
-            >
-              {sender}
-            </span>
-          </div>
-        ))}
-      </div>
+      {/* Zeige die Legende nur, wenn showMerged deaktiviert ist */}
+      {!showMerged && (
+        <div
+          id="aggregate-per-time-plot-legend"
+          className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2 px-4 md:px-0"
+        >
+          {senders.map((sender) => (
+            <div key={sender} className="flex items-center mr-4 mb-2">
+              <div
+                className="w-4 h-4 mr-1"
+                style={{ backgroundColor: colorScale(sender) }}
+              ></div>
+              <span
+                className="text-sm whitespace-nowrap"
+                style={{ color: darkMode ? "#fff" : "#000" }}
+              >
+                {sender}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Chart container: shows a spinner while uploading, a message when no data is available,
           or the SVG chart otherwise. */}
       <div className="flex-grow flex justify-center items-center">
