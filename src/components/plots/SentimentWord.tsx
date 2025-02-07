@@ -576,9 +576,8 @@ const SentimentWordsPlot: FC = (): ReactElement => {
 
           <span>Words per Person</span>
         </h2>
-        ;
       </div>
-      ;{/* Main Content */}
+      {/* Main Content */}
       <div className="flex-grow flex justify-center items-center flex-col w-full">
         {isUploading ? (
           // If uploading, show loader spinner.
