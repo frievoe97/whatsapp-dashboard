@@ -115,6 +115,52 @@ The dashboard includes a variety of charts to help analyze chat data.
 - Enables discovering peak activity times.
 <img src="public/images/10.png" alt="Interactive Heatmap" width="400">
 
+## Project Structure 
+
+```
+whatsapp-dashboard/
+├── public/
+│   ├── images/                 # Contains all static images used in the README
+│   │   ├── page.png            # Overview screenshot of the dashboard
+│   │   ├── 1.png               # Image for Message Trends Over Time
+│   │   ├── 2.png               # Image for Message Timeline
+│   │   ├── 3.png               # Image for Sender Comparison
+│   │   ├── 4.png               # Image for Top 10 Emojis
+│   │   ├── 5.png               # Image for Reply Patterns
+│   │   ├── 6.png               # Image for Most Used Words
+│   │   ├── 7.png               # Image for Message Statistics
+│   │   ├── 8.png               # Image for Sentiment Analysis
+│   │   ├── 9.png               # Image for Best and Worst Words
+│   │   ├── 10.png              # Image for Interactive Heatmap
+├── src/
+│   ├── components/             # React components for UI and plots
+│   │   ├── plots/              # All visualization components
+│   │   │   ├── AggregatePerTime.tsx
+│   │   │   ├── Timeline.tsx
+│   │   │   ├── BarChartComp.tsx
+│   │   │   ├── Emoji.tsx
+│   │   │   ├── ChordDiagram.tsx
+│   │   │   ├── WordCount.tsx
+│   │   │   ├── Stats.tsx
+│   │   │   ├── Sentiment.tsx
+│   │   │   ├── SentimentWord.tsx
+│   │   │   ├── Heatmap.tsx
+│   │   ├── FileUpload.tsx      # Component for uploading chat files
+│   │   ├── InfoModal.tsx       # Modal for displaying extra information
+│   ├── context/                # Context API for managing global state
+│   ├── hooks/                  # Custom hooks for reusability
+│   ├── workers/                # Web workers for background processing
+│   ├── App.tsx                 # Main entry point of the app
+│   ├── index.css               # Global styles
+│   ├── main.tsx                # Renders the React app
+├── package.json                # Project metadata and dependencies
+├── tsconfig.json               # TypeScript configuration
+├── vite.config.ts              # Vite configuration for the development server
+├── README.md                   # Documentation for the project
+```
+
+
+
 ## Installation
 
 1. **Clone the Repository**
