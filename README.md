@@ -1,10 +1,16 @@
 # WhatsApp Dashboard
 
-A React application that visually represents WhatsApp chats. Upload your `.txt` chat files and explore interactive plots—all processed locally without any data being uploaded to external servers.
+<img src="public/images/page.png" alt="WhatsApp Dashboard Overview" width="600">
+
+WhatsApp Dashboard is a powerful, interactive web application built with React that allows users to analyze and visualize WhatsApp chat data in an intuitive and engaging way. It provides deep insights into messaging patterns, sender statistics, sentiment trends, and much more. Whether you're curious about your own messaging habits, want to explore group dynamics, or simply enjoy data visualization, this tool offers a rich and user-friendly experience.
+
+The application is designed to work seamlessly with `.txt` files exported from WhatsApp and supports multiple languages, including German, English, French, and Spanish. The entire data processing pipeline runs locally in the user's browser, ensuring privacy and security by never uploading any data to external servers. Users can filter messages based on sender, date range, and minimum message contribution to refine their analysis.
+
+A variety of interactive plots and charts are available to visualize data in different ways, from tracking message activity over time to exploring sentiment analysis and emoji usage. The app is particularly useful for identifying communication trends, detecting high-activity periods, and understanding the distribution of messages among participants in group chats.
 
 ## Live Demo
 
-[Whatsapp-Dashboard](https://whatsapp-dashboard.friedrichvoelkers.de/)
+[WhatsApp Dashboard](https://whatsapp-dashboard.friedrichvoelkers.de/)
 
 ## Table of Contents
 
@@ -19,32 +25,95 @@ A React application that visually represents WhatsApp chats. Upload your `.txt` 
 
 ## Features
 
-- **Local Processing**: All data is processed locally in your browser. No data is sent to any server.
-- **File Upload**: Easily upload `.txt` files exported from WhatsApp chats.
-- **Interactive Visualizations**:
-  - **Timeline**: View message counts over time.
-  - **Heatmap**: Analyze message activity across different days and months.
-  - **Message Ratio**: Understand the distribution of messages among participants.
-  - **Word Count**: Explore the most frequently used words by each sender.
-  - **Emoji Usage**: Discover the top emojis used by each participant.
-  - **Statistics**: Gain insights into various message metrics per sender.
-- **Dark Mode**: Toggle between light and dark themes for a comfortable viewing experience.
-- **Responsive Design**: Optimized for various screen sizes and devices.
+### Local Processing
 
-## Demo
+- No data is sent to any external server; all processing is done locally in the browser.
 
-<div align="center">
-  <img width="600" alt="screenshot_01" src="https://github.com/user-attachments/assets/845c072e-4c38-4f49-83ca-c2ed3500f32a">
-</div>
-<div align="center">
-  <img width="600" alt="screenshot_02" src="https://github.com/user-attachments/assets/ebba500d-2382-4959-ad46-a64ebeeae931">
-</div>
-<div align="center">
-  <img width="600" alt="screenshot_03" src="https://github.com/user-attachments/assets/b2cce540-0757-4bd5-a57c-bbf396120496">
-</div>
-<div align="center">
-  <img width="600" alt="screenshot_04" src="https://github.com/user-attachments/assets/d25dac69-886f-4edb-ad3a-73bc5fe1a189">
-</div>
+### File Upload
+
+- Supports `.txt` files exported from WhatsApp.
+- Works with both iOS and Android exported chat files.
+
+### Advanced Filtering Options
+
+- Filter messages by:
+  - Specific senders
+  - Certain weekdays
+  - Start and end date range
+  - Minimum percentage of messages per person
+
+### Interactive Visualizations
+
+The dashboard includes a variety of charts to help analyze chat data.
+
+#### 1. **Message Trends Over Time (AggregatePerTime.tsx)**
+
+- Displays the number of messages sent per sender over different time frames:
+  - **By hour of the day** (e.g., when are users most active?)
+  - **By day of the week** (e.g., which days see the most conversations?)
+  - **By month** (e.g., how does chat activity vary by month?)
+- Users can toggle between:
+  - Absolute message counts
+  - Percentage-based representation (how much each person contributed overall)
+  - Summation of messages
+- <img src="public/images/1.png" alt="Message Trends Over Time" width="400">
+
+#### 2. **Message Timeline (Timeline.tsx)**
+
+- Visualizes the number of messages sent by each user over time.
+- Users can toggle between absolute values and percentages.
+- Allows users to see message trends across different months and years.
+- <img src="public/images/2.png" alt="Message Timeline" width="400">
+
+#### 3. **Sender Comparison (BarChartComp.tsx)**
+
+- Compares different participants based on various message-related statistics.
+- <img src="public/images/3.png" alt="Sender Comparison" width="400">
+
+#### 4. **Top 10 Emojis per Person (Emoji.tsx)**
+
+- Shows the most frequently used emojis per sender.
+- Helps analyze the emoji preferences of different participants.
+- <img src="public/images/4.png" alt="Top 10 Emojis" width="400">
+
+#### 5. **Reply Patterns (ChordDiagram.tsx)**
+
+- Visualizes which users respond most frequently to whom using a chord diagram.
+- Helps understand conversation dynamics in group chats.
+- <img src="public/images/5.png" alt="Reply Patterns" width="400">
+
+#### 6. **Most Used Words (WordCount.tsx)**
+
+- Displays the most commonly used words for each sender.
+- Stopwords (e.g., "the," "and," "or") are automatically removed based on the selected language.
+- Available for German, English, French, and Spanish.
+- <img src="public/images/6.png" alt="Most Used Words" width="400">
+
+#### 7. **Message Statistics per Person (Stats.tsx)**
+
+- Displays detailed message statistics for each user.
+- <img src="public/images/7.png" alt="Message Statistics" width="400">
+
+#### 8. **Sentiment Analysis Over Time (Sentiment.tsx)**
+
+- Analyzes the overall sentiment of messages using AFINN-based sentiment scoring.
+- Messages are classified as positive, negative, or neutral.
+- The sentiment trend is displayed over time.
+- <img src="public/images/8.png" alt="Sentiment Analysis" width="400">
+
+#### 9. **Best and Worst Words per Person (SentimentWord.tsx)**
+
+- Identifies the words that contribute most to positive and negative sentiment per person.
+- Displays the top 10 most positive and top 10 most negative words for each participant.
+- <img src="public/images/9.png" alt="Best and Worst Words" width="400">
+
+#### 10. **Interactive Heatmap (Heatmap.tsx)**
+
+- Allows users to compare message frequency across different time dimensions.
+- Users can select different granularities for both axes:
+  - Hour, Day, Month, Year, Weekday
+- Enables discovering peak activity times.
+- <img src="public/images/10.png" alt="Interactive Heatmap" width="400">
 
 ## Installation
 
@@ -57,7 +126,7 @@ cd whatsapp-dashboard
 
 2. **Install Dependencies**
 
-Ensure you have [Node.js](https://nodejs.org/) installed. Then, install the required dependencies:
+Ensure you have [Node.js](https://nodejs.org/) installed, then run:
 
 ```bash
 npm install
@@ -69,109 +138,24 @@ npm install
 npm run dev
 ```
 
-Open your browser and navigate to `http://localhost:5173` to view the application.
+Open `http://localhost:5173` in your browser.
 
 4. **Build for Production**
-
-To build the application for production:
 
 ```bash
 npm run build
 ```
 
-The optimized build will be available in the `dist` folder.
-
-## Usage
-
-1. **Upload a WhatsApp Chat File**
-
-   - Click on the "Select File" button.
-   - Choose a `.txt` file exported from WhatsApp.
-
-2. **Explore the Dashboard**
-
-   - **Filters**: Use the filter options to select specific senders, date ranges, and weekdays.
-   - **Visualizations**: Navigate through different plots to analyze your chat data.
-   - **Dark Mode**: Toggle between light and dark themes using the switch provided.
-
-3. **Reset or Delete Data**
-
-   - Use the "Reset" button to clear filters.
-   - Click on "Delete File" to remove the uploaded chat and start fresh.
-
-## Project Structure
-
-```plaintext
-whatsapp-dashboard/
-├── node_modules/
-├── public/
-├── src/
-│   ├── components/
-│   │   ├── AggregatePerTime.tsx
-│   │   ├── Emoji.tsx
-│   │   ├── FileUpload.tsx
-│   │   ├── Heatmap.tsx
-│   │   ├── MessageRatio.tsx
-│   │   ├── Stats.tsx
-│   │   ├── Timeline.tsx
-│   │   └── WordCount.tsx
-│   ├── context/
-│   │   └── ChatContext.tsx
-│   ├── hooks/
-│   │   └── useResizeObserver.ts
-│   ├── workers/
-│   │   └── fileParser.worker.ts
-│   ├── App.tsx
-│   ├── index.css
-│   └── main.tsx
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-└── README.md
-```
-
-## Technologies Used
-
-- **React**: Frontend library for building user interfaces.
-- **TypeScript**: Superset of JavaScript for type safety.
-- **Vite**: Fast frontend build tool.
-- **D3.js**: Powerful library for creating dynamic and interactive data visualizations.
-- **Tailwind CSS**: Utility-first CSS framework for rapid UI development.
-- **React Context**: State management for handling chat data and theme settings.
-- **Web Workers**: Background thread for parsing large chat files without blocking the UI.
-- **Additional Libraries**:
-  - `react-datepicker`
-  - `react-spinners`
-  - `react-switch`
-  - `stopword`
-  - `emoji-regex`
-
 ## Contributing
 
-Contributions are welcome! Please follow these steps:
+Contributions are highly encouraged! If you'd like to add new features or fix bugs, follow these steps:
 
 1. **Fork the Repository**
-
-2. **Create a Feature Branch**
-
-```bash
-git checkout -b feature/YourFeature
-```
-
-3. **Commit Your Changes**
-
-```bash
-git commit -m "Add some feature"
-```
-
-4. **Push to the Branch**
-
-```bash
-git push origin feature/YourFeature
-```
-
+2. **Create a Feature Branch** (`git checkout -b feature/new-feature`)
+3. **Commit Your Changes** (`git commit -m "Added a new feature"`)
+4. **Push to Your Branch** (`git push origin feature/new-feature`)
 5. **Open a Pull Request**
 
 ## License
 
-This project is licensed under the MIT License with attribution requirement – see the [LICENSE](./LICENSE.txt) file for details.
+This project is licensed under the MIT License.
