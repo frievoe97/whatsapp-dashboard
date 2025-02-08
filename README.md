@@ -63,49 +63,49 @@ The dashboard includes a variety of charts to help analyze chat data.
 - Visualizes the number of messages sent by each user over time.
 - Users can toggle between absolute values and percentages.
 - Allows users to see message trends across different months and years.
-- <img src="public/images/2.png" alt="Message Timeline" width="400">
+<img src="public/images/2.png" alt="Message Timeline" width="400">
 
 #### 3. **Sender Comparison (BarChartComp.tsx)**
 
 - Compares different participants based on various message-related statistics.
-- <img src="public/images/3.png" alt="Sender Comparison" width="400">
+<img src="public/images/3.png" alt="Sender Comparison" width="400">
 
 #### 4. **Top 10 Emojis per Person (Emoji.tsx)**
 
 - Shows the most frequently used emojis per sender.
 - Helps analyze the emoji preferences of different participants.
-- <img src="public/images/4.png" alt="Top 10 Emojis" width="400">
+<img src="public/images/4.png" alt="Top 10 Emojis" width="400">
 
 #### 5. **Reply Patterns (ChordDiagram.tsx)**
 
 - Visualizes which users respond most frequently to whom using a chord diagram.
 - Helps understand conversation dynamics in group chats.
-- <img src="public/images/5.png" alt="Reply Patterns" width="400">
+<img src="public/images/5.png" alt="Reply Patterns" width="400">
 
 #### 6. **Most Used Words (WordCount.tsx)**
 
 - Displays the most commonly used words for each sender.
 - Stopwords (e.g., "the," "and," "or") are automatically removed based on the selected language.
 - Available for German, English, French, and Spanish.
-- <img src="public/images/6.png" alt="Most Used Words" width="400">
+<img src="public/images/6.png" alt="Most Used Words" width="400">
 
 #### 7. **Message Statistics per Person (Stats.tsx)**
 
 - Displays detailed message statistics for each user.
-- <img src="public/images/7.png" alt="Message Statistics" width="400">
+<img src="public/images/7.png" alt="Message Statistics" width="400">
 
 #### 8. **Sentiment Analysis Over Time (Sentiment.tsx)**
 
 - Analyzes the overall sentiment of messages using AFINN-based sentiment scoring.
 - Messages are classified as positive, negative, or neutral.
 - The sentiment trend is displayed over time.
-- <img src="public/images/8.png" alt="Sentiment Analysis" width="400">
+<img src="public/images/8.png" alt="Sentiment Analysis" width="400">
 
 #### 9. **Best and Worst Words per Person (SentimentWord.tsx)**
 
 - Identifies the words that contribute most to positive and negative sentiment per person.
 - Displays the top 10 most positive and top 10 most negative words for each participant.
-- <img src="public/images/9.png" alt="Best and Worst Words" width="400">
+<img src="public/images/9.png" alt="Best and Worst Words" width="400">
 
 #### 10. **Interactive Heatmap (Heatmap.tsx)**
 
@@ -113,7 +113,7 @@ The dashboard includes a variety of charts to help analyze chat data.
 - Users can select different granularities for both axes:
   - Hour, Day, Month, Year, Weekday
 - Enables discovering peak activity times.
-- <img src="public/images/10.png" alt="Interactive Heatmap" width="400">
+<img src="public/images/10.png" alt="Interactive Heatmap" width="400">
 
 ## Installation
 
