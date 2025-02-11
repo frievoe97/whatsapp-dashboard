@@ -1,11 +1,8 @@
-// src/components/AggregatePerTimePlot.tsx
 import React, { useEffect, useRef, useMemo, useState } from "react";
 import { useChat } from "../../context/ChatContext";
 import * as d3 from "d3";
-import { ChatMessage } from "../../context/ChatContext";
 import useResizeObserver from "../../hooks/useResizeObserver";
 import Switch from "react-switch";
-import ClipLoader from "react-spinners/ClipLoader";
 import {
   Hash,
   Percent,
@@ -14,6 +11,7 @@ import {
   Split,
   Merge,
 } from "lucide-react";
+import { ChatMessage } from "../../types/chatTypes";
 
 /**
  * DataPoint interface for a single category value.
@@ -39,9 +37,6 @@ type Mode = "weekday" | "hour" | "month";
 
 /**
  * Returns the list of categories based on the current mode.
- *
- * @param mode - The current mode ("weekday", "hour", or "month")
- * @returns An array of category names.
  */
 const getCategories = (mode: Mode): string[] => {
   switch (mode) {
@@ -79,15 +74,10 @@ const getCategories = (mode: Mode): string[] => {
 
 /**
  * Returns the category for a given message based on the current mode.
- *
- * @param msg - A ChatMessage object.
- * @param mode - The current mode ("weekday", "hour", or "month").
- * @returns The category (e.g. "Monday", "14", "March").
  */
 const getCategoryFromMessage = (msg: ChatMessage, mode: Mode): string => {
-  const date = new Date(msg.date);
+  const date = typeof msg.date === "string" ? new Date(msg.date) : msg.date;
   if (mode === "weekday") {
-    // Adjust so that Monday is the first day (getDay returns 0 for Sunday)
     return [
       "Monday",
       "Tuesday",
@@ -98,7 +88,7 @@ const getCategoryFromMessage = (msg: ChatMessage, mode: Mode): string => {
       "Sunday",
     ][(date.getDay() + 6) % 7];
   } else if (mode === "hour") {
-    return date.getHours().toString();
+    return parseInt(msg.time.split(":")[0], 10).toString();
   } else if (mode === "month") {
     return [
       "January",
@@ -121,37 +111,24 @@ const getCategoryFromMessage = (msg: ChatMessage, mode: Mode): string => {
 /**
  * Aggregates chat messages by sender and category.
  *
- * Only messages with `isUsed` set to true are considered.
- * A sender is only included if its total count exceeds the configured
- * minimum percentage of all messages.
- *
- * If `showPercentage` is true, each category count is converted to a percentage.
- *
- * @param messages - Array of ChatMessage objects.
- * @param mode - Current mode.
- * @param categories - Array of categories.
- * @param minMessagePercentage - Minimum percentage threshold for a sender.
- * @param showPercentage - Flag to indicate if percentages should be calculated.
- * @returns An array of AggregatedData.
+ * Es werden alle Nachrichten aus filteredMessages verwendet.
+ * Die Prozentwerte werden nur berechnet, wenn showPercentage aktiv ist.
  */
 const aggregateMessages = (
   messages: ChatMessage[],
   mode: Mode,
   categories: string[],
-  minMessagePercentage: number,
   showPercentage: boolean
 ): AggregatedData[] => {
   if (messages.length === 0) return [];
 
-  // Calculate threshold based on percentage of used messages
-  const totalMessages = messages.filter((msg) => msg.isUsed).length;
-  const minMessagesThreshold = (minMessagePercentage / 100) * totalMessages;
+  console.log("Messages", messages);
 
   // Build a nested object: sender -> category -> count
   const dataMap: Record<string, Record<string, number>> = {};
   messages.forEach((msg) => {
-    if (!msg.isUsed) return;
     const sender = msg.sender;
+    console.log();
     const category = getCategoryFromMessage(msg, mode);
     if (!dataMap[sender]) {
       dataMap[sender] = {};
@@ -160,20 +137,14 @@ const aggregateMessages = (
     dataMap[sender][category] = (dataMap[sender][category] || 0) + 1;
   });
 
-  // Convert the dataMap into an array of AggregatedData, filtering by total count
-  let result: AggregatedData[] = Object.keys(dataMap)
-    .map((sender) => {
-      const values = categories.map((category) => ({
-        category,
-        count: dataMap[sender][category],
-      }));
-      const total = values.reduce((sum, val) => sum + val.count, 0);
-      return { sender, values, total };
-    })
-    .filter((d) => d.total >= minMessagesThreshold)
-    .map(({ sender, values }) => ({ sender, values }));
+  let result: AggregatedData[] = Object.keys(dataMap).map((sender) => {
+    const values = categories.map((category) => ({
+      category,
+      count: dataMap[sender][category],
+    }));
+    return { sender, values };
+  });
 
-  // If showing percentages, calculate and add the percentage to each data point.
   if (showPercentage) {
     result = result.map((senderData) => {
       const total = d3.sum(senderData.values, (d) => d.count);
@@ -193,53 +164,44 @@ const aggregateMessages = (
 /**
  * AggregatePerTimePlot Component
  *
- * This component renders an interactive D3 line chart displaying aggregated chat data.
- * It supports toggling between different time modes (hour, weekday, month), a percentage view,
- * tooltips, smooth transitions, a dynamic legend, and a expand/collapse feature.
+ * Rendert den interaktiven D3-Plot für zeitbasierte Aggregation.
  */
-const AggregatePerTimePlot: React.FC = () => {
-  const { messages, darkMode, isUploading, minMessagePercentage } = useChat();
+const AggregatePerTime: React.FC = () => {
+  // Statt "messages" nun ausschließlich "filteredMessages" verwenden
+  const { filteredMessages, darkMode } = useChat();
 
-  // Refs for container and SVG elements
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
 
-  // Local state for expand toggle, mode selection, and percentage view
+  // Lokale Zustände für expand, Modus und Prozent-/Merge-Ansicht
   const [expanded, setExpanded] = useState(false);
   const [mode, setMode] = useState<Mode>("hour");
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
   const [showMerged, setShowMerged] = useState<boolean>(false);
 
-  // Get the categories for the current mode
+  // Kategorien basierend auf dem aktuellen Modus
   const categories = useMemo(() => getCategories(mode), [mode]);
 
-  // Aggregate data from chat messages
+  // Aggregiere die Daten aus filteredMessages
   const aggregatedData = useMemo(
-    () =>
-      aggregateMessages(
-        messages,
-        mode,
-        categories,
-        minMessagePercentage,
-        showPercentage
-      ),
-    [messages, mode, categories, minMessagePercentage, showPercentage]
+    () => aggregateMessages(filteredMessages, mode, categories, showPercentage),
+    [filteredMessages, mode, categories, showPercentage]
   );
 
-  // Extract sender names for legend and color scaling
+  // Extrahiere Sendernamen für Legende und Farbskala
   const senders = useMemo(
     () => aggregatedData.map((d) => d.sender),
     [aggregatedData]
   );
 
-  // Reset mode and percentage view if there are no messages.
+  // Setze den Modus zurück, falls keine Nachrichten vorhanden sind
   useEffect(() => {
-    if (messages.length === 0) {
+    if (filteredMessages.length === 0) {
       setMode("hour");
       setShowPercentage(false);
     }
-  }, [messages]);
+  }, [filteredMessages]);
 
   const colorScale = useMemo(() => {
     const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
@@ -248,15 +210,14 @@ const AggregatePerTimePlot: React.FC = () => {
 
   const getLineColor = (sender: string) => {
     if (showMerged) {
-      return darkMode ? "#fff" : "#000"; // Schwarz oder Weiß
+      return darkMode ? "#fff" : "#000";
     }
-    return colorScale(sender); // Normale Farben für einzelne Sender
+    return colorScale(sender);
   };
 
+  // Falls "showMerged" aktiv: Summiere die Werte über alle Sender
   const mergedData = useMemo(() => {
     if (!showMerged) return aggregatedData;
-
-    // Summiere die Werte über alle Sender
     const mergedValues = categories.map((category) => {
       const sum = aggregatedData.reduce((acc, senderData) => {
         const value = senderData.values.find((v) => v.category === category);
@@ -264,11 +225,10 @@ const AggregatePerTimePlot: React.FC = () => {
       }, 0);
       return { category, count: sum };
     });
-
     return [{ sender: "Total", values: mergedValues }];
   }, [aggregatedData, showMerged, categories]);
 
-  // Create the tooltip element (only once)
+  // Erstelle einmalig das Tooltip-Element
   useEffect(() => {
     if (!containerRef.current) return;
     const tooltipSelection = d3
@@ -288,7 +248,7 @@ const AggregatePerTimePlot: React.FC = () => {
     }
   }, []);
 
-  // Update tooltip style when dark mode changes
+  // Passe Tooltip-Stile bei Dark Mode an
   useEffect(() => {
     if (!containerRef.current) return;
     d3.select(containerRef.current)
@@ -297,13 +257,12 @@ const AggregatePerTimePlot: React.FC = () => {
       .style("color", darkMode ? "#fff" : "#000");
   }, [darkMode]);
 
-  // D3 chart drawing effect: draws and updates the chart based on aggregated data and dimensions.
+  // D3-Rendering
   useEffect(() => {
     if (!dimensions || aggregatedData.length === 0) return;
 
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
-
     let margin = { top: 20, right: 20, bottom: 30, left: 40 };
 
     if (window.innerWidth <= 768) {
@@ -322,7 +281,6 @@ const AggregatePerTimePlot: React.FC = () => {
     const innerHeight =
       height - margin.top - margin.bottom - headerHeight - legendHeight;
 
-    // Define scales for the chart.
     const xScale = d3
       .scalePoint<string>()
       .domain(categories)
@@ -330,8 +288,8 @@ const AggregatePerTimePlot: React.FC = () => {
       .padding(0);
 
     const yMax = showPercentage
-      ? // @ts-ignore
-        d3.max(mergedData, (d) => d3.max(d.values, (v) => v.percentage)) || 100
+      ? d3.max(mergedData, (d) => d3.max(d.values, (v) => v.percentage ?? 0)) ||
+        100
       : d3.max(mergedData, (d) => d3.max(d.values, (v) => v.count)) || 10;
 
     const yScale = d3
@@ -342,16 +300,12 @@ const AggregatePerTimePlot: React.FC = () => {
 
     const tickSpacing = mode === "hour" ? 20 : mode === "weekday" ? 55 : 55;
     const maxTicks = Math.max(2, Math.floor(innerWidth / tickSpacing));
-
     const xTickValues = categories.filter(
       (_, i) => i % Math.ceil(categories.length / maxTicks) === 0
     );
-
     const xAxis = d3.axisBottom(xScale).tickValues(xTickValues);
-
     const yAxis = d3.axisLeft(yScale).ticks(5).tickFormat(d3.format(".2s"));
 
-    // Create a line generator.
     const lineGenerator = d3
       .line<DataPoint>()
       .defined((d) => d.count !== null && d.count !== undefined)
@@ -359,7 +313,6 @@ const AggregatePerTimePlot: React.FC = () => {
       .y((d) => yScale(showPercentage ? d.percentage || 0 : d.count))
       .curve(d3.curveMonotoneX);
 
-    // Select or create the main chart group.
     let chartGroup = svg.select<SVGGElement>(".chart-group");
     if (chartGroup.empty()) {
       chartGroup = svg
@@ -367,16 +320,14 @@ const AggregatePerTimePlot: React.FC = () => {
         .attr("class", "chart-group")
         .attr("transform", `translate(${margin.left},${margin.top})`);
     } else {
-      // Remove previous overlays, axes, and grid lines to avoid duplication.
       chartGroup.selectAll(".x-grid, .y-grid, .x-axis, .y-axis").remove();
     }
 
-    // Select the tooltip element.
     const tooltip = d3
       .select(containerRef.current)
       .select<HTMLDivElement>(".tooltip");
 
-    // Append an overlay rectangle to capture mouse events.
+    // Overlay für Maus-Events
     const overlay = chartGroup
       .append("rect")
       .attr("class", "overlay")
@@ -385,7 +336,7 @@ const AggregatePerTimePlot: React.FC = () => {
       .style("fill", "none")
       .style("pointer-events", "all");
 
-    // Append a hover line to indicate the current mouse position.
+    // Hover-Linie
     const hoverLine = chartGroup
       .append("line")
       .attr("class", "hover-line")
@@ -393,7 +344,6 @@ const AggregatePerTimePlot: React.FC = () => {
       .attr("stroke-width", 1)
       .style("opacity", 0);
 
-    // Mouse event handlers for the overlay.
     overlay
       .on("mouseover", () => {
         hoverLine.style("opacity", 1);
@@ -407,20 +357,17 @@ const AggregatePerTimePlot: React.FC = () => {
           .attr("y1", 0)
           .attr("y2", innerHeight);
 
-        // Determine the nearest category for the mouse x-coordinate.
+        // Bestimme die nächstgelegene Kategorie
         const xPositions = categories.map((cat) => xScale(cat) as number);
         const distances = xPositions.map((xPos) => Math.abs(xPos - mx));
         const minIndex = distances.indexOf(Math.min(...distances));
         const nearestCategory = categories[minIndex];
 
-        // Prepare tooltip content for each sender.
         const tooltipData = mergedData.map((d) => {
           const point = d.values.find((v) => v.category === nearestCategory);
           const value =
-            // @ts-ignore
             showPercentage && point?.percentage !== undefined
-              ? // @ts-ignore
-                point.percentage.toFixed(2) + "%"
+              ? (point.percentage ?? 0).toFixed(2) + "%"
               : point?.count;
           return { sender: d.sender, value };
         });
@@ -445,8 +392,7 @@ const AggregatePerTimePlot: React.FC = () => {
         tooltip.style("display", "none");
       });
 
-    // Draw grid lines and axes.
-    // X Grid
+    // X-Grid
     const xGrid = chartGroup
       .append("g")
       .attr("class", "x-grid")
@@ -462,7 +408,7 @@ const AggregatePerTimePlot: React.FC = () => {
       .attr("stroke", darkMode ? "#606060" : "#e0e0e0")
       .attr("stroke-width", 1);
 
-    // Y Grid
+    // Y-Grid
     const yGrid = chartGroup
       .append("g")
       .attr("class", "y-grid")
@@ -474,7 +420,7 @@ const AggregatePerTimePlot: React.FC = () => {
       );
     yGrid.selectAll("line").attr("stroke", darkMode ? "#606060" : "#e0e0e0");
 
-    // Draw X Axis
+    // X-Achse
     chartGroup
       .append("g")
       .attr("class", "x-axis")
@@ -486,7 +432,7 @@ const AggregatePerTimePlot: React.FC = () => {
       .style("font-size", "14px")
       .style("fill", darkMode ? "white" : "black");
 
-    // Draw Y Axis
+    // Y-Achse
     chartGroup
       .append("g")
       .attr("class", "y-axis")
@@ -495,10 +441,10 @@ const AggregatePerTimePlot: React.FC = () => {
       .style("font-size", "14px")
       .style("fill", darkMode ? "white" : "black");
 
-    // Bind aggregated data to path elements for each sender and apply transitions.
+    // Zeichne bzw. update die Linien
     const lines = chartGroup
       .selectAll<SVGPathElement, AggregatedData>(".line")
-      .data(mergedData, (d) => d.sender); // Verwende jetzt mergedData
+      .data(mergedData, (d) => d.sender);
 
     lines.join(
       (enter) =>
@@ -506,15 +452,15 @@ const AggregatePerTimePlot: React.FC = () => {
           .append("path")
           .attr("class", "line")
           .attr("fill", "none")
-          .attr("stroke", (d) => getLineColor(d.sender)) // Nutze die neue Farb-Funktion
-          .attr("stroke-width", showMerged ? 2 : 2) // Dickere Linie für summierte Darstellung
+          .attr("stroke", (d) => getLineColor(d.sender))
+          .attr("stroke-width", showMerged ? 2 : 2)
           .attr("d", (d) => lineGenerator(d.values) as string),
       (update) =>
         update
           .transition()
           .duration(1000)
           .attr("stroke", (d) => getLineColor(d.sender))
-          .attr("stroke-width", showMerged ? 2 : 2) // Aktualisiere die Breite
+          .attr("stroke-width", showMerged ? 2 : 2)
           .attr("d", (d) => lineGenerator(d.values) as string),
       (exit) => exit.remove()
     );
@@ -526,18 +472,16 @@ const AggregatePerTimePlot: React.FC = () => {
     darkMode,
     categories,
     showMerged,
+    aggregatedData,
   ]);
 
   function getTotalHeightIncludingMargin(elementId: string) {
     const element = document.getElementById(elementId);
     if (!element) return 0;
-
     const rect = element.getBoundingClientRect();
     const computedStyle = window.getComputedStyle(element);
-
     const marginTop = parseFloat(computedStyle.marginTop) || 0;
     const marginBottom = parseFloat(computedStyle.marginBottom) || 0;
-
     return rect.height + marginTop + marginBottom;
   }
 
@@ -558,7 +502,7 @@ const AggregatePerTimePlot: React.FC = () => {
         overflow: "hidden",
       }}
     >
-      {/* Control Panel: Mode buttons, percentage toggle, and expand/collapse button */}
+      {/* Control Panel */}
       <div
         id="aggregate-per-time-plot-header"
         className="flex items-center justify-between mb-2 px-4 md:px-0"
@@ -591,7 +535,7 @@ const AggregatePerTimePlot: React.FC = () => {
             } w-4 h-4 md:w-5 md:h-5`}
           />
 
-          {/* Switch für Desktop, Button für Mobile */}
+          {/* Desktop Switch */}
           <div className="mx-1 md:mx-2 hidden md:inline-block h-[20px]">
             <Switch
               onChange={() => {
@@ -611,7 +555,7 @@ const AggregatePerTimePlot: React.FC = () => {
               borderRadius={20}
               boxShadow="none"
               activeBoxShadow="none"
-              className="custom-switch" // Switch nur auf Desktop
+              className="custom-switch"
             />
           </div>
 
@@ -651,14 +595,13 @@ const AggregatePerTimePlot: React.FC = () => {
               darkMode ? "text-white" : "text-gray-700"
             } w-4 h-4 md:w-5 md:h-5`}
           />
-
           <Hash
             className={`ml-4 hidden md:inline-block ${
               darkMode ? "text-white" : "text-gray-700"
             } w-4 h-4 md:w-5 md:h-5`}
           />
 
-          {/* Switch für Desktop, Button für Mobile */}
+          {/* Desktop Switch */}
           <div className="mx-1 md:mx-2 hidden md:inline-block h-[20px]">
             <Switch
               onChange={() => {
@@ -676,7 +619,7 @@ const AggregatePerTimePlot: React.FC = () => {
               borderRadius={20}
               boxShadow="none"
               activeBoxShadow="none"
-              className="custom-switch" // Switch nur auf Desktop
+              className="custom-switch"
             />
           </div>
 
@@ -721,7 +664,6 @@ const AggregatePerTimePlot: React.FC = () => {
             }`}
             onClick={() => {
               setExpanded(!expanded);
-              // Dispatch a resize event for layout update after expanding/collapsing.
               setTimeout(() => {
                 window.dispatchEvent(new Event("resize"));
               }, 200);
@@ -741,8 +683,8 @@ const AggregatePerTimePlot: React.FC = () => {
           </button>
         </div>
       </div>
-      {/* Legend showing sender names with their corresponding colors */}
-      {/* Zeige die Legende nur, wenn showMerged deaktiviert ist */}
+
+      {/* Legende (nur wenn nicht gemergt) */}
       {!showMerged && (
         <div
           id="aggregate-per-time-plot-legend"
@@ -765,16 +707,9 @@ const AggregatePerTimePlot: React.FC = () => {
         </div>
       )}
 
-      {/* Chart container: shows a spinner while uploading, a message when no data is available,
-          or the SVG chart otherwise. */}
+      {/* Chart-Container: Wird nur angezeigt, wenn filteredMessages vorhanden sind */}
       <div className="flex-grow flex justify-center items-center">
-        {isUploading ? (
-          <ClipLoader
-            color={darkMode ? "#ffffff" : "#000000"}
-            loading={true}
-            size={50}
-          />
-        ) : messages.length === 0 ? (
+        {filteredMessages.length === 0 ? (
           <span className="text-lg">No Data Available</span>
         ) : (
           <svg
@@ -788,4 +723,4 @@ const AggregatePerTimePlot: React.FC = () => {
   );
 };
 
-export default AggregatePerTimePlot;
+export default AggregatePerTime;

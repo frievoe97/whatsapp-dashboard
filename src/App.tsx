@@ -15,6 +15,8 @@ import { useChat } from "./context/ChatContext";
 import "./index.css";
 import HeatmapMonthWeekday from "./components/plots/Heatmap";
 
+import NewFileUploader from "./components/NewFileUploader";
+
 /**
  * Custom hook to update the document's dark mode class and theme-color meta tag.
  *
@@ -114,7 +116,7 @@ function useEqualRowHeights(
  * @returns A JSX element representing the complete application UI.
  */
 const App: React.FC = () => {
-  const { darkMode, messages } = useChat();
+  const { darkMode, filteredMessages } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   /**
@@ -128,7 +130,7 @@ const App: React.FC = () => {
   useDarkModeThemeEffect(darkMode);
 
   // Ensure all analysis components in the container have equal heights per row.
-  useEqualRowHeights(containerRef, [messages.length]);
+  useEqualRowHeights(containerRef, [filteredMessages.length]);
 
   return (
     <>
@@ -159,10 +161,11 @@ const App: React.FC = () => {
       <div className="p-4 flex flex-col min-h-screen md:h-screen">
         {/* File Upload Components (Desktop & Mobile) */}
         <div className="hidden md:block">
-          <FileUpload onFileUpload={(_: File) => {}} />
+          {/*<FileUpload onFileUpload={(_: File) => {}} /> */}
+          <NewFileUploader />
         </div>
         <div className="md:hidden">
-          <FileUploadMobile onFileUpload={(_: File) => {}} />
+          <FileUploadMobile />
         </div>
 
         {/* Chat Analysis Components */}
@@ -170,7 +173,7 @@ const App: React.FC = () => {
           ref={containerRef}
           className="mt-4  md:h-full flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-between items-stretch"
         >
-          {messages.length === 0 ? (
+          {filteredMessages.length === 0 ? (
             <div
               className={`w-full flex text-lg items-center justify-center h-full border rounded-none text-center ${
                 darkMode ? "border-white" : "border-black"
@@ -188,8 +191,10 @@ const App: React.FC = () => {
               <WordCount />
               <Stats />
               <Sentiment />
-              <SentimentWord />
+              {/*<SentimentWord />  */}
               <HeatmapMonthWeekday />
+              {/*
+               */}
             </>
           )}
         </div>
