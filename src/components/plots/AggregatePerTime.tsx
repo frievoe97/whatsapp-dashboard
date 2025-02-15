@@ -634,7 +634,7 @@ const AggregatePerTimePlot: React.FC = () => {
             );
           })}
         </div>
-        <div className="flex items-center w-fit md:w-auto justify-center md:justify-end">
+        <div className="flex items-center w-fit md:w-auto justify-center md:justify-end space-x-2">
           <Split
             className={`hidden md:inline-block ${
               darkMode ? 'text-white' : 'text-gray-700'
