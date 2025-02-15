@@ -416,7 +416,7 @@ const FileUploadMobile: React.FC = () => {
                     }`}
                     onMouseDown={(e) => e.stopPropagation()}
                   >
-                    <div className="max-h-60 overflow-auto">
+                    <div className="max-h-70 overflow-auto">
                       {DEFAULT_WEEKDAYS.map((day) => (
                         <label
                           key={day}

@@ -750,7 +750,7 @@ const AggregatePerTimePlot: React.FC = () => {
           id="aggregate-per-time-plot-legend"
           className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2 px-4 md:px-0"
         >
-          <div className="flex items-center mr-4 mb-2">
+          <div className="flex items-center mr-0 mb-2">
             <div
               className="w-4 h-4 mr-1"
               style={{ backgroundColor: darkMode ? '#fff' : '#000' }}
@@ -774,7 +774,7 @@ const AggregatePerTimePlot: React.FC = () => {
                 ? metadata.sendersShort[sender]
                 : sender;
             return (
-              <div key={sender} className="flex items-center mr-4 mb-2">
+              <div key={sender} className="flex items-center mr-0 mb-2">
                 <div className="w-4 h-4 mr-1" style={{ backgroundColor: colorScale(sender) }}></div>
                 <span
                   className="text-sm whitespace-nowrap"

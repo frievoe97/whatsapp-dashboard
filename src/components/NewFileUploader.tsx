@@ -367,7 +367,7 @@ const FileUpload: React.FC = () => {
               {/* <label className="text-md font-semibold rounded-none">Select Weekdays:</label> */}
               <button
                 onClick={() => setWeekdaysDropdownOpen((prev) => !prev)}
-                className={`w-full px-2 py-2 border rounded-none flex justify-between items-center hover:border-current ${
+                className={`w-full px-4 py-2 border rounded-none flex justify-between items-center hover:border-current ${
                   darkMode
                     ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
                     : 'bg-white text-black border-black hover:bg-gray-200'
@@ -384,7 +384,7 @@ const FileUpload: React.FC = () => {
                       : 'bg-white text-black border-black'
                   }`}
                 >
-                  <div className="max-h-60 overflow-auto" onMouseDown={(e) => e.stopPropagation()}>
+                  <div className="max-h-70 overflow-auto" onMouseDown={(e) => e.stopPropagation()}>
                     {DEFAULT_WEEKDAYS.map((day) => (
                       <div
                         key={day}
