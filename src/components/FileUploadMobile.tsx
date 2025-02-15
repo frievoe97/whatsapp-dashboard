@@ -1,442 +1,497 @@
-import React, { useState, useEffect, useRef } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { Info, ChevronDown, ChevronUp, Moon, Sun, Trash2 } from "lucide-react";
-import InfoModal from "./InfoModal";
-import { useChat } from "../context/ChatContext";
+import React, { ChangeEvent, useRef, useEffect, useState } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { Info, ChevronDown, ChevronUp, Moon, Sun, Trash2 } from 'lucide-react';
+import InfoModal from './InfoModal';
+import { useChat } from '../context/ChatContext';
+import { DEFAULT_WEEKDAYS, SenderStatus } from '../config/constants';
 import {
-  useFileUploadLogic,
-  DEFAULT_WEEKDAYS,
-} from "../hooks/useFileUploadLogic";
+  handleDateChange,
+  handleMinPercentageChange,
+  handleWeekdayChange,
+  handleSenderChange,
+  handleFileUpload,
+  handleDeleteFile,
+} from '../utils/chatUtils';
 
-/**
- * Props for the FileUploadMobile component.
- */
-interface FileUploadProps {
-  onFileUpload: (file: File) => void;
-}
+import { useTranslation } from 'react-i18next';
+import '../../i18n';
 
-/**
- * FileUploadMobile
- *
- * Mobile-Variante des File-Upload-Components. Bietet ein
- * ausklappbares Panel für Datei‑Auswahl, Löschen und Filterung.
- *
- * @param onFileUpload Callback, der beim Upload einer Datei aufgerufen wird.
- */
-const FileUploadMobile: React.FC<FileUploadProps> = ({ onFileUpload }) => {
+const PIXEL_PER_CHAR = 7;
+
+const FileUploadMobile: React.FC = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const senderDropdownRef = useRef<HTMLDivElement>(null);
+  const weekdaysDropdownRef = useRef<HTMLDivElement>(null);
+  const filenameRef = useRef<HTMLSpanElement | null>(null);
+  const [weekdaysDropdownOpen, setWeekdaysDropdownOpen] = useState(false);
+  const [filenameWidth, setFilenameWidth] = useState(0);
+
   const {
     darkMode,
-    fileName,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    manualSenderSelection,
     toggleDarkMode,
-    selectedWeekdays,
+    metadata,
+    setOriginalMessages,
+    setMetadata,
+    tempFilters,
+    setTempFilters,
+    resetFilters,
+    applyFilters,
+    senderDropdownOpen,
+    setSenderDropdownOpen,
     isPanelOpen,
     setIsPanelOpen,
-    setManualSenderSelection,
-    originalMessages,
-    minMessagePercentage,
+    isInfoOpen,
+    setFilteredMessages,
+    setIsInfoOpen,
+    tempUseShortNames,
+    tempToggleUseShortNames,
+    setUseShortNames,
+    tempSetUseShortNames,
   } = useChat();
 
-  const [hasFileBeenSet, setHasFileBeenSet] = useState<boolean>(false);
-
-  const {
-    tempMinMessagePercentage,
-    setTempMinMessagePercentage,
-    senders,
-    handleFileChange,
-    handleDeleteFile,
-    handleWeekdayChange,
-    handleApplyFilters,
-    handleResetFilters,
-    isInfoOpen,
-    setIsInfoOpen,
-  } = useFileUploadLogic(onFileUpload);
-
-  // Innerhalb der FileUploadMobile-Komponente (oberhalb der Rückgabe):
-  const [senderDropdownOpen, setSenderDropdownOpen] = useState(false);
-  // Neuer lokaler State für das Sender-Dropdown:
-
-  const senderDropdownRef = useRef<HTMLDivElement | null>(null);
-
-  const truncateFileName = (name: string, maxLength: number) => {
-    if (name.length <= maxLength) return name;
-    return name.substring(0, maxLength) + "...";
-  };
-
-  // Schließt das Dropdown, wenn außerhalb geklickt wird
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        senderDropdownRef.current &&
-        !senderDropdownRef.current.contains(event.target as Node)
-      ) {
+      if (senderDropdownRef.current && !senderDropdownRef.current.contains(event.target as Node)) {
         setSenderDropdownOpen(false);
       }
     };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [setSenderDropdownOpen]);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+  useEffect(() => {
+    const handleWeekdaysClickOutside = (event: MouseEvent) => {
+      if (
+        weekdaysDropdownRef.current &&
+        !weekdaysDropdownRef.current.contains(event.target as Node)
+      ) {
+        setWeekdaysDropdownOpen(false);
+      }
     };
+    document.addEventListener('mousedown', handleWeekdaysClickOutside);
+    return () => document.removeEventListener('mousedown', handleWeekdaysClickOutside);
   }, []);
 
-  // Automatisch das Panel einklappen, wenn eine Datei gesetzt wurde.
   useEffect(() => {
-    if (fileName !== "" && !hasFileBeenSet) {
-      setHasFileBeenSet(true);
-    }
-    if (fileName === "") {
-      setHasFileBeenSet(false);
-    }
-  }, [fileName, hasFileBeenSet]);
-
-  // Deaktiviere das Scrollen, wenn das Info-Modal geöffnet ist.
-  useEffect(() => {
-    document.body.style.overflow = isInfoOpen ? "hidden" : "";
+    document.body.style.overflow = isInfoOpen ? 'hidden' : '';
   }, [isInfoOpen]);
+
+  useEffect(() => {
+    const filenameElement = filenameRef.current;
+
+    if (!filenameElement) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setFilenameWidth(
+          (entry.contentRect.width - (entry.contentRect.width % PIXEL_PER_CHAR)) / PIXEL_PER_CHAR,
+        );
+      }
+    });
+
+    // Beobachte das Element
+    resizeObserver.observe(filenameElement);
+
+    // Initiale Breite setzen
+    setFilenameWidth(filenameElement.getBoundingClientRect().width);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [metadata?.fileName, isPanelOpen]);
 
   const toggleExpanded = () => {
     setIsPanelOpen((prev) => !prev);
-    setTimeout(() => window.dispatchEvent(new Event("resize")), 50);
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
   };
 
-  const borderColor = darkMode ? "border-white" : "border-black";
-  const textColor = darkMode ? "text-white" : "text-black";
-  const bgColor = darkMode ? "bg-[#1f2937]" : "bg-white";
-  const activeColor = darkMode ? "active:bg-gray-600" : "active:bg-gray-300";
+  const senders = metadata ? Object.keys(metadata.senders) : [];
 
-  /** Header section with info, title, dark mode and expand/collapse toggle. */
-  const HeaderSection: React.FC = () => (
-    <div className="flex items-center h-8">
-      <button
-        onClick={() => setIsInfoOpen(true)}
-        className={`px-2 py-1 border rounded-none flex items-center ${borderColor} ${bgColor} ${textColor}`}
-      >
-        <Info size={16} />
-      </button>
-      <div className="flex-grow text-center text-lg font-semibold">
-        Whatsapp Dashboard
-      </div>
-      <button
-        onClick={toggleDarkMode}
-        className={`px-2 py-1 mr-1 border rounded-none flex items-center ${borderColor} ${bgColor} ${textColor}`}
-      >
-        {darkMode ? (
-          <Sun size={16} className="text-white" />
-        ) : (
-          <Moon size={16} className="text-black" />
-        )}
-      </button>
-      <button
-        onClick={toggleExpanded}
-        className={`px-2 py-1 border rounded-none flex items-center ${borderColor} ${bgColor} ${textColor}`}
-      >
-        {isPanelOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-      </button>
-    </div>
-  );
+  const truncateString = (str: string, n: number): string => {
+    return str.length > n - 3 ? str.substring(0, n - 3) + '...' : str;
+  };
 
-  /** File upload section with file input and delete button. */
-  const FileUploadSection: React.FC = () => (
-    <div className="w-full flex flex-row items-center justify-between">
-      <div className={`flex flex-row items-center ${fileName ? "" : "w-full"}`}>
-        <label
-          htmlFor="file-upload"
-          className={`cursor-pointer px-4 py-1 md:py-2 border ${
-            fileName ? "" : "w-full text-center"
-          } ${
-            darkMode
-              ? "border-white bg-gray-700 text-white"
-              : "border-black bg-white text-black"
-          }  hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 inline-block ${bgColor} ${textColor} ${borderColor}`}
-        >
-          Select File
-        </label>
-        <input
-          id="file-upload"
-          type="file"
-          accept=".txt"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        {fileName && (
-          <p className="mt-2 text-sm ml-4">
-            <span className={textColor}>{truncateFileName(fileName, 10)}</span>
-          </p>
-        )}
-      </div>
-      <div className="space-y-2">
-        {fileName && (
-          <button
-            onClick={handleDeleteFile}
-            className={`w-full py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
-          >
-            <Trash2
-              size={16}
-              className={darkMode ? "text-white" : "text-black"}
-            />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-
-  /** Filter section with sender selection, date pickers, numeric input and weekday checkboxes. */
-  const FilterSection: React.FC = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
-          Select Sender
-        </h3>
-        <div className="relative">
-          <button
-            onClick={() => setSenderDropdownOpen((prev) => !prev)}
-            className={`w-full px-4 py-2 border rounded-none flex justify-between items-center focus:outline-none ${
-              darkMode
-                ? "bg-gray-800 border-white text-white"
-                : "bg-white border-black text-black"
-            }`}
-          >
-            <span>Select Senders</span>
-            <ChevronDown size={16} />
-          </button>
-          {senderDropdownOpen && (
-            <div
-              ref={senderDropdownRef}
-              className={`absolute z-10 mt-1 w-full rounded-none  ${
-                darkMode
-                  ? "bg-gray-800 border border-white"
-                  : "bg-white border border-black"
-              }`}
-            >
-              <div
-                className={`max-h-60 overflow-auto ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
-              >
-                {senders.map((sender) => {
-                  // Prozent berechnen:
-                  const total = originalMessages.length;
-                  const count = originalMessages.filter(
-                    (m) => m.sender === sender
-                  ).length;
-                  const percentage = (count / total) * 100;
-
-                  // Status 3, wenn unter minMessagePercentage:
-                  const isDisabled = percentage < minMessagePercentage;
-
-                  // Status 2 (manuell deaktiviert) liegt vor, wenn
-                  // manualSenderSelection[sender] === false.
-                  // Status 1 (aktiv) = nicht disabled und kein manuelles false:
-                  const isChecked =
-                    !isDisabled && manualSenderSelection[sender] !== false;
-
-                  return (
-                    <label
-                      key={sender}
-                      className={`
-                    flex items-center px-4 py-2 cursor-pointer
-                    ${
-                      isDisabled
-                        ? // Falls disabled, grau darstellen:
-                          darkMode
-                          ? "text-gray-400"
-                          : "text-gray-400"
-                        : // Falls aktivierbar, Hover-Effekt
-                        darkMode
-                        ? "hover:bg-gray-700"
-                        : "hover:bg-gray-100"
-                    }
-                  `}
-                    >
-                      <input
-                        type="checkbox"
-                        className="mr-2"
-                        disabled={isDisabled} // Kein Aktivieren möglich, wenn unter minMessagePercentage
-                        checked={isChecked}
-                        onChange={() => {
-                          // Wenn disabled, nichts tun:
-                          if (isDisabled) return;
-
-                          // Toggle zwischen "manuell deaktiviert" und "kein Override":
-                          setManualSenderSelection((prev) => {
-                            // wenn manuell deaktiviert => override entfernen:
-                            if (prev[sender] === false) {
-                              const newState = { ...prev };
-                              delete newState[sender];
-                              return newState;
-                            }
-                            // sonst => manuell deaktivieren:
-                            return { ...prev, [sender]: false };
-                          });
-                        }}
-                      />
-                      <span>{sender}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-row gap-4">
-        <div>
-          <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
-            Select Date Range
-          </h3>
-          <div className="flex flex-row gap-2">
-            <div>
-              <label className={`text-sm block ${textColor}`}>
-                Start Date:
-              </label>
-              <DatePicker
-                selected={startDate}
-                onChange={(date: Date | null) =>
-                  setStartDate(date || undefined)
-                }
-                selectsStart
-                startDate={startDate}
-                endDate={endDate}
-                className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
-              />
-            </div>
-            <div>
-              <label className={`text-sm block ${textColor}`}>End Date:</label>
-              <DatePicker
-                selected={endDate}
-                onChange={(date: Date | null) => setEndDate(date || undefined)}
-                selectsEnd
-                startDate={startDate}
-                endDate={endDate}
-                minDate={startDate}
-                className={`mt-1 p-2 w-full rounded-none ${bgColor} ${borderColor} hover:${borderColor} border focus:outline-none`}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col w-fit">
-        <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
-          Minimum Message Share (%):
-        </h3>
-        <input
-          type="tel"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={tempMinMessagePercentage}
-          onChange={(e) => {
-            let num;
-
-            if (isNaN(Number(e.target.value))) {
-              num = 3;
-            } else {
-              num = Number(e.target.value);
-            }
-
-            setTempMinMessagePercentage(num);
-          }}
-          onBlur={() => {
-            console.log("onBlur");
-            let num = Number(tempMinMessagePercentage);
-            if (isNaN(num) || num < 0 || num > 100) num = 3; // Falls ungültig, auf 3 setzen
-            setTempMinMessagePercentage(num); // Immer als Nummer speichern
-          }}
-          className={`focus:outline-none focus:ring-0 focus:border-current active:border-current hover:border-current p-2 border rounded-none ${
-            darkMode ? "border-white" : "border-black"
-          } w-full ${bgColor} ${textColor}`}
-        />
-      </div>
-      <div>
-        <h3 className={`text-md font-semibold mb-2 ${textColor}`}>
-          Select Weekdays
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {DEFAULT_WEEKDAYS.map((day) => (
-            <label
-              key={day}
-              className="flex items-center space-x-2 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                value={day}
-                checked={selectedWeekdays.includes(day)}
-                onChange={handleWeekdayChange}
-                className="hidden"
-              />
-              <span
-                className={`flex items-center justify-center w-4 h-4 border ${
-                  darkMode ? "border-white" : "border-black"
-                } rounded-none relative`}
-              >
-                {selectedWeekdays.includes(day) && (
-                  <svg
-                    className={`w-3 h-3 ${
-                      darkMode ? "text-white" : "text-black"
-                    }`}
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M2 8L6 12L14 4"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </span>
-              <span
-                className={`text-sm ${darkMode ? "text-white" : "text-black"}`}
-              >
-                {day}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <button
-          onClick={handleResetFilters}
-          className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} ${activeColor} border focus:outline-none`}
-        >
-          Reset
-        </button>
-        <button
-          onClick={() => {
-            handleApplyFilters();
-            setSenderDropdownOpen(false);
-          }}
-          className={`flex-1 py-2 rounded-none ${bgColor} ${textColor} ${borderColor} hover:${borderColor} ${activeColor} border focus:outline-none`}
-        >
-          Apply
-        </button>
-      </div>
-    </div>
-  );
+  const { t } = useTranslation();
 
   return (
     <div
-      className={`p-4 min-h-fit flex flex-col space-y-4 ${bgColor} ${textColor} ${borderColor} hover:${borderColor} border`}
+      className={`p-4 min-h-fit flex flex-col space-y-4 rounded-none ${
+        darkMode
+          ? 'bg-[#1f2937] text-white border border-white'
+          : 'bg-white text-black border border-black'
+      }`}
     >
-      <InfoModal
-        isOpen={isInfoOpen}
-        onClose={() => setIsInfoOpen(false)}
-        darkMode={darkMode}
-      />
-      <HeaderSection />
+      {/* Header */}
+      <div className="flex items-center h-8 rounded-none">
+        <button
+          onClick={() => setIsInfoOpen((prev) => !prev)}
+          className={`px-1 py-1 border  rounded-none flex items-center hover:border-current ${
+            darkMode
+              ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+              : 'bg-white text-black border-black hover:bg-gray-200'
+          }`}
+        >
+          <Info size={16} />
+        </button>
+        <div className="flex-grow text-center text-lg font-semibold">Whatsapp Dashboard</div>
+
+        <button
+          onClick={toggleDarkMode}
+          className={`px-1 py-1 border mr-2 rounded-none flex items-center hover:border-current ${
+            darkMode
+              ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+              : 'bg-white text-black border-black hover:bg-gray-200'
+          }`}
+        >
+          {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+
+        <button
+          onClick={toggleExpanded}
+          className={`px-1 py-1 border rounded-none flex items-center hover:border-current ${
+            darkMode
+              ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+              : 'bg-white text-black border-black hover:bg-gray-200'
+          }`}
+        >
+          {isPanelOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+      </div>
+
+      <InfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} darkMode={darkMode} />
+
       {isPanelOpen && (
         <>
-          <FileUploadSection />
-          {fileName && <FilterSection />}
+          {/* File Upload Section */}
+          <div className="text-sm w-full flex items-center justify-between rounded-none">
+            <label
+              htmlFor="file-upload-mobile"
+              className={`whitespace-nowrap cursor-pointer px-4 py-2 border rounded-none ${
+                metadata?.fileName ? '' : 'w-full text-center'
+              } ${
+                darkMode
+                  ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+                  : 'bg-white text-black border-black hover:bg-gray-200'
+              } dark:hover:bg-gray-600 transition-all`}
+            >
+              {t('FileUpload.selectFile')}
+            </label>
+            <input
+              id="file-upload-mobile"
+              type="file"
+              accept=".txt"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                handleFileUpload(
+                  e,
+                  setOriginalMessages,
+                  setMetadata,
+                  setIsPanelOpen,
+                  setUseShortNames,
+                  tempSetUseShortNames,
+                )
+              }
+            />
+            {metadata?.fileName && (
+              <>
+                <span
+                  ref={filenameRef}
+                  id="fileupload-mobile-filename-text"
+                  className="w-full text-sm ml-2 rounded-none"
+                >
+                  {truncateString(metadata.fileName, filenameWidth)}
+                </span>
+
+                <button
+                  onClick={() =>
+                    handleDeleteFile(
+                      setOriginalMessages,
+                      setMetadata,
+                      setTempFilters,
+                      setFilteredMessages,
+                      setUseShortNames,
+                      tempSetUseShortNames,
+                      fileInputRef,
+                    )
+                  }
+                  className={`px-2 py-2 border rounded-none hover:border-current ${
+                    darkMode
+                      ? 'bg-gray-700 text-white border-white'
+                      : 'bg-white text-black border-black'
+                  } ml-2`}
+                >
+                  <Trash2 size={20} />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Filter Section */}
+          {metadata?.fileName && (
+            <div className="space-y-4 rounded-none">
+              {/* Sender Filter */}
+              <div className="relative rounded-none" ref={senderDropdownRef}>
+                <button
+                  onClick={() => {
+                    setSenderDropdownOpen((prev) => !prev);
+                  }}
+                  className={`text-sm w-full px-4 py-2 border rounded-none flex justify-between items-center hover:border-current ${
+                    darkMode
+                      ? 'bg-gray-700 text-white border-white hover:bg-gray-700 active:bg-gray-700'
+                      : 'bg-white text-black border-black hover:bg-white active:bg-white'
+                  }`}
+                >
+                  <span>{t('FileUpload.selectSenders')}</span>
+                  <ChevronDown size={16} />
+                </button>
+                {senderDropdownOpen && (
+                  <div
+                    className={`absolute z-10 mt-1 w-full border rounded-none ${
+                      darkMode
+                        ? 'text-white border-white bg-gray-700'
+                        : 'text-black border-black bg-white'
+                    }`}
+                  >
+                    <div
+                      className="max-h-60 overflow-auto rounded-none"
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      {senders.map((sender) => {
+                        const status = tempFilters.senderStatuses[sender];
+                        const disabled = status === SenderStatus.LOCKED;
+                        const checked = status === SenderStatus.ACTIVE;
+                        return (
+                          <label
+                            key={sender}
+                            onMouseDown={(e) => e.preventDefault()}
+                            className={`flex items-center px-4 py-2 cursor-pointer rounded-none ${
+                              disabled
+                                ? 'opacity-50 cursor-not-allowed'
+                                : darkMode
+                                ? 'hover:bg-gray-800'
+                                : 'hover:bg-gray-200'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              disabled={disabled}
+                              checked={checked}
+                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                handleSenderChange(e, sender, setTempFilters)
+                              }
+                              className="hidden" // Input verstecken
+                            />
+                            <span
+                              className={`flex items-center justify-center w-4 h-4 border ${
+                                darkMode ? 'border-white' : 'border-black'
+                              } rounded-none relative mr-2`}
+                            >
+                              {checked && (
+                                <svg
+                                  className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-black'}`}
+                                  viewBox="0 0 16 16"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M2 8L6 12L14 4"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              )}
+                            </span>
+                            {sender}{' '}
+                            {metadata?.sendersShort[sender]
+                              ? `(${metadata.sendersShort[sender]})`
+                              : ''}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => tempToggleUseShortNames()}
+                className={`text-sm w-full px-2 py-2 border rounded-none hover:border-current ${
+                  darkMode
+                    ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+                    : 'bg-white text-black border-black hover:bg-gray-200'
+                }`}
+              >
+                {tempUseShortNames ? <div>Use Full Names</div> : <div>Use abbreviations</div>}
+              </button>
+
+              {/* Minimum Message Share Input */}
+              <div className="flex flex-col rounded-none">
+                <label className="text-sm rounded-none">
+                  {t('FileUpload.minimumMessageShare')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={tempFilters.minPercentagePerSender}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    handleMinPercentageChange(e, setTempFilters)
+                  }
+                  className={`text-sm p-2 border rounded-none ${
+                    darkMode
+                      ? 'border-white bg-gray-700 hover:bg-gray-800'
+                      : 'border-black bg-white hover:bg-gray-100'
+                  }`}
+                />
+              </div>
+
+              {/* Date Selection */}
+              <div className="flex flex-row rounded-none gap-2">
+                <div className="flex flex-col flex-1">
+                  <label className="text-sm rounded-none">{t('FileUpload.startDate')}:</label>
+                  <DatePicker
+                    selected={tempFilters.startDate}
+                    onChange={(date: Date | null) =>
+                      handleDateChange(date, 'startDate', setTempFilters)
+                    }
+                    selectsStart
+                    startDate={tempFilters.startDate}
+                    endDate={tempFilters.endDate}
+                    className={`text-sm w-full p-2 border rounded-none ${
+                      darkMode
+                        ? 'border-white bg-gray-700 hover:bg-gray-800'
+                        : 'border-black bg-white hover:bg-gray-100'
+                    }`}
+                    minDate={metadata?.firstMessageDate}
+                    maxDate={tempFilters.endDate ? tempFilters.endDate : metadata?.lastMessageDate}
+                  />
+                </div>
+
+                <div className="flex flex-col flex-1">
+                  <label className="text-sm rounded-none">{t('FileUpload.endDate')}:</label>
+                  <DatePicker
+                    selected={tempFilters.endDate}
+                    onChange={(date: Date | null) =>
+                      handleDateChange(date, 'endDate', setTempFilters)
+                    }
+                    selectsEnd
+                    startDate={tempFilters.startDate}
+                    endDate={tempFilters.endDate}
+                    className={`text-sm w-full p-2 border rounded-none ${
+                      darkMode
+                        ? 'border-white bg-gray-700 hover:bg-gray-800'
+                        : 'border-black bg-white hover:bg-gray-100'
+                    }`}
+                    minDate={
+                      tempFilters.startDate ? tempFilters.startDate : metadata?.firstMessageDate
+                    }
+                    maxDate={metadata?.lastMessageDate}
+                  />
+                </div>
+              </div>
+
+              {/* Weekday Selection Dropdown */}
+              <div className="flex flex-col rounded-none relative" ref={weekdaysDropdownRef}>
+                <button
+                  onClick={() => setWeekdaysDropdownOpen((prev) => !prev)}
+                  className={`text-sm w-full px-4 py-2 border rounded-none flex justify-between items-center hover:border-current ${
+                    darkMode
+                      ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+                      : 'bg-white text-black border-black hover:bg-white'
+                  }`}
+                >
+                  <span>{t('FileUpload.selectWeekdays')}</span>
+                  <ChevronDown size={16} />
+                </button>
+                {weekdaysDropdownOpen && (
+                  <div
+                    className={`absolute top-full z-10 mt-1 w-full border rounded-none ${
+                      darkMode
+                        ? 'bg-gray-700 text-white border-white'
+                        : 'bg-white text-black border-black'
+                    }`}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <div className="max-h-60 overflow-auto">
+                      {DEFAULT_WEEKDAYS.map((day) => (
+                        <label
+                          key={day}
+                          className={`flex items-center px-4 py-2 cursor-pointer rounded-none ${
+                            darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={tempFilters.selectedWeekdays.includes(day)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              handleWeekdayChange(e, day, setTempFilters)
+                            }
+                            className="hidden"
+                          />
+                          <span
+                            className={`flex items-center justify-center w-4 h-4 border ${
+                              darkMode ? 'border-white' : 'border-black'
+                            } rounded-none relative`}
+                          >
+                            {tempFilters.selectedWeekdays.includes(day) && (
+                              <svg
+                                className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-black'}`}
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M2 8L6 12L14 4"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            )}
+                          </span>
+                          <span className="text-sm ml-1">{day}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Reset & Apply Buttons */}
+              <div className="flex gap-2 rounded-none ">
+                <button
+                  onClick={resetFilters}
+                  className={`text-sm py-2 flex-1 border rounded-none hover:border-current ${
+                    darkMode
+                      ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+                      : 'bg-white text-black border-black hover:bg-gray-100'
+                  }`}
+                >
+                  {t('FileUpload.reset')}
+                </button>
+                <button
+                  onClick={() => {
+                    applyFilters();
+                    setSenderDropdownOpen(false);
+                    setIsPanelOpen(false);
+                    setUseShortNames(tempUseShortNames);
+                  }}
+                  className={`text-sm py-2 flex-1 border rounded-none hover:border-current ${
+                    darkMode
+                      ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+                      : 'bg-white text-black border-black hover:bg-gray-100'
+                  }`}
+                >
+                  {t('FileUpload.apply')}
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
