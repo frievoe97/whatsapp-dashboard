@@ -9,7 +9,7 @@
  * @returns {ResizeObserverEntry | undefined} - An object containing the width and height of the observed element.
  */
 
-import { useState, useEffect, RefObject } from "react";
+import { useState, useEffect, RefObject } from 'react';
 
 // Define the structure of the ResizeObserver entry state
 interface ResizeObserverEntry {
@@ -17,9 +17,7 @@ interface ResizeObserverEntry {
   height: number;
 }
 
-const useResizeObserver = (
-  ref: RefObject<HTMLElement>
-): ResizeObserverEntry | undefined => {
+const useResizeObserver = (ref: RefObject<HTMLElement>): ResizeObserverEntry | undefined => {
   // State to store the current dimensions of the observed element
   const [dimensions, setDimensions] = useState<ResizeObserverEntry>();
 
@@ -44,7 +42,7 @@ const useResizeObserver = (
 
     // Create a new ResizeObserver instance to track element size changes
     const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         const { width, height } = entry.contentRect;
         setDimensions({ width, height });
       }

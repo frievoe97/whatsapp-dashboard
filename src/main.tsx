@@ -1,15 +1,16 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { HelmetProvider } from "react-helmet-async";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { HelmetProvider } from 'react-helmet-async';
 
-import App from "./App";
-import { ChatProvider } from "./context/ChatContext";
-import "./index.css";
+import App from './App';
+import { ChatProvider } from './context/ChatContext';
+import './index.css';
 
 /**
  * Wraps the application with necessary global providers.
  * This keeps the `index.tsx` clean and modular.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <HelmetProvider>
@@ -19,10 +20,10 @@ const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 // Ensure the root element exists before rendering
-const rootElement = document.getElementById("root");
+const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error(
-    "Root element not found. Make sure there is an element with id='root' in index.html"
+    "Root element not found. Make sure there is an element with id='root' in index.html",
   );
 }
 
@@ -39,5 +40,5 @@ root.render(
     <Providers>
       <App />
     </Providers>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

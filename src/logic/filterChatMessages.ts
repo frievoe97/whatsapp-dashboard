@@ -1,6 +1,6 @@
 // src/logic/filterChatMessages.ts
-import { ChatMessage, FilterOptions } from "../types/chatTypes";
-import { SenderStatus } from "../config/constants";
+import { ChatMessage, FilterOptions } from '../types/chatTypes';
+import { SenderStatus } from '../config/constants';
 
 /**
  * Berechnet für die gegebene Nachrichtenmenge den Status jedes Senders.
@@ -11,7 +11,7 @@ export const computeSenderStatuses = (
   messages: ChatMessage[],
   minPercentage: number,
   previousStatuses?: Record<string, SenderStatus>,
-  resetManual: boolean = false
+  resetManual: boolean = false,
 ): Record<string, SenderStatus> => {
   const senderCounts: Record<string, number> = {};
   messages.forEach((msg) => {
@@ -42,22 +42,15 @@ export const computeSenderStatuses = (
  * Filtert die Nachrichten basierend auf Datum, Wochentagen und Senderstatus.
  * Es werden nur Nachrichten von Sendern übernommen, deren Status ACTIVE ist.
  */
-export const filterMessages = (
-  messages: ChatMessage[],
-  filters: FilterOptions
-): ChatMessage[] => {
+export const filterMessages = (messages: ChatMessage[], filters: FilterOptions): ChatMessage[] => {
   // Zuerst nach Datum und Wochentag filtern
   const filteredByTime = messages.filter((msg) => {
     if (filters.startDate && msg.date < filters.startDate) return false;
     if (filters.endDate && msg.date > filters.endDate) return false;
-    const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
-      msg.date.getDay()
-    ];
+    const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][msg.date.getDay()];
     return filters.selectedWeekdays.includes(weekday);
   });
 
   // Anschließend nur Nachrichten von Sendern mit Status ACTIVE übernehmen.
-  return filteredByTime.filter(
-    (msg) => filters.senderStatuses[msg.sender] === SenderStatus.ACTIVE
-  );
+  return filteredByTime.filter((msg) => filters.senderStatuses[msg.sender] === SenderStatus.ACTIVE);
 };

@@ -1,5 +1,5 @@
 // src/types/chatTypes.ts
-import { SenderStatus } from "../config/constants";
+import { SenderStatus } from '../config/constants';
 
 export interface ChatMessage {
   date: Date;
@@ -9,11 +9,12 @@ export interface ChatMessage {
 }
 
 export interface ChatMetadata {
-  language: "de" | "en" | "fr" | "es";
-  os: "ios" | "android";
+  language: 'de' | 'en' | 'fr' | 'es';
+  os: 'ios' | 'android';
   firstMessageDate: Date;
   lastMessageDate: Date;
   senders: Record<string, number>;
+  sendersShort: Record<string, string>;
   fileName: string;
 }
 

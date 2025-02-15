@@ -8,13 +8,10 @@ import React, {
   ReactNode,
   Dispatch,
   SetStateAction,
-} from "react";
-import { ChatMessage, ChatMetadata, FilterOptions } from "../types/chatTypes";
-import {
-  filterMessages,
-  computeSenderStatuses,
-} from "../logic/filterChatMessages";
-import { DEFAULT_WEEKDAYS } from "../config/constants";
+} from 'react';
+import { ChatMessage, ChatMetadata, FilterOptions } from '../types/chatTypes';
+import { filterMessages, computeSenderStatuses } from '../logic/filterChatMessages';
+import { DEFAULT_WEEKDAYS } from '../config/constants';
 
 interface ChatContextType {
   darkMode: boolean;
@@ -37,15 +34,17 @@ interface ChatContextType {
   setIsPanelOpen: Dispatch<SetStateAction<boolean>>;
   isInfoOpen: boolean;
   setIsInfoOpen: Dispatch<SetStateAction<boolean>>;
-  language: string;
-  setLanguage: Dispatch<SetStateAction<string>>;
+  useShortNames: boolean;
+  toggleUseShortNames: () => void;
+  tempUseShortNames: boolean;
+  tempToggleUseShortNames: () => void;
+  setUseShortNames: Dispatch<SetStateAction<boolean>>;
+  tempSetUseShortNames: Dispatch<SetStateAction<boolean>>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-export const ChatProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const toggleDarkMode = useCallback(() => setDarkMode((prev) => !prev), []);
 
@@ -61,17 +60,19 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({
     senderStatuses: {},
   };
 
-  const [appliedFilters, setAppliedFilters] =
-    useState<FilterOptions>(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState<FilterOptions>(initialFilters);
   const [tempFilters, setTempFilters] = useState<FilterOptions>(initialFilters);
-  const [lastAppliedMinPercentage, setLastAppliedMinPercentage] =
-    useState<number>(3);
+  const [lastAppliedMinPercentage, setLastAppliedMinPercentage] = useState<number>(3);
 
   const [senderDropdownOpen, setSenderDropdownOpen] = useState<boolean>(false);
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
 
-  const [language, setLanguage] = useState<string>("en");
+  const [useShortNames, setUseShortNames] = useState<boolean>(false);
+  const toggleUseShortNames = useCallback(() => setUseShortNames((prev) => !prev), []);
+
+  const [tempUseShortNames, tempSetUseShortNames] = useState<boolean>(false);
+  const tempToggleUseShortNames = useCallback(() => tempSetUseShortNames((prev) => !prev), []);
 
   useEffect(() => {
     if (metadata && originalMessages.length > 0) {
@@ -84,7 +85,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({
           originalMessages,
           tempFilters.minPercentagePerSender,
           undefined,
-          true
+          true,
         ),
       };
       setTempFilters(newFilters);
@@ -94,6 +95,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({
         applyFilters(newFilters);
       }, 0);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metadata, originalMessages]);
 
   const applyFilters = useCallback(
@@ -105,19 +107,16 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({
         setLastAppliedMinPercentage(usedFilters.minPercentagePerSender);
       }
       const messagesByTime = originalMessages.filter((msg) => {
-        if (usedFilters.startDate && msg.date < usedFilters.startDate)
-          return false;
+        if (usedFilters.startDate && msg.date < usedFilters.startDate) return false;
         if (usedFilters.endDate && msg.date > usedFilters.endDate) return false;
-        const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
-          msg.date.getDay()
-        ];
+        const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][msg.date.getDay()];
         return usedFilters.selectedWeekdays.includes(weekday);
       });
       const newSenderStatuses = computeSenderStatuses(
         messagesByTime,
         usedFilters.minPercentagePerSender,
         resetManual ? undefined : usedFilters.senderStatuses,
-        resetManual
+        resetManual,
       );
       const newFilters: FilterOptions = {
         ...usedFilters,
@@ -128,7 +127,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({
       setFilteredMessages(result);
       setTempFilters(newFilters);
     },
-    [originalMessages, tempFilters, lastAppliedMinPercentage]
+    [originalMessages, tempFilters, lastAppliedMinPercentage],
   );
 
   const resetFilters = useCallback(() => {
@@ -137,16 +136,17 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({
         startDate: metadata.firstMessageDate,
         endDate: metadata.lastMessageDate,
         selectedWeekdays: DEFAULT_WEEKDAYS,
-        minPercentagePerSender: tempFilters.minPercentagePerSender,
+        minPercentagePerSender: 3,
         senderStatuses: computeSenderStatuses(
           originalMessages,
           tempFilters.minPercentagePerSender,
           undefined,
-          true
+          true,
         ),
       };
       setTempFilters(newFilters);
       setLastAppliedMinPercentage(tempFilters.minPercentagePerSender);
+      tempSetUseShortNames(false);
     }
   }, [metadata, originalMessages, tempFilters.minPercentagePerSender]);
 
@@ -172,8 +172,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({
       setIsPanelOpen,
       isInfoOpen,
       setIsInfoOpen,
-      language,
-      setLanguage,
+      useShortNames,
+      toggleUseShortNames,
+      tempUseShortNames,
+      tempToggleUseShortNames,
+      setUseShortNames,
+      tempSetUseShortNames,
     }),
     [
       darkMode,
@@ -187,17 +191,24 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({
       senderDropdownOpen,
       isPanelOpen,
       isInfoOpen,
-      language,
-    ]
+      useShortNames,
+      toggleDarkMode,
+      toggleUseShortNames,
+      tempUseShortNames,
+      tempToggleUseShortNames,
+      setUseShortNames,
+      tempSetUseShortNames,
+    ],
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useChat = (): ChatContextType => {
   const context = useContext(ChatContext);
   if (!context) {
-    throw new Error("useChat must be used within a ChatProvider");
+    throw new Error('useChat must be used within a ChatProvider');
   }
   return context;
 };

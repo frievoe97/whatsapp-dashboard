@@ -1,9 +1,16 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
+
+/**
+ * @deprecated This file is deprecated and will be removed in the next version.
+ */
+
 // src/components/Plot3.tsx
-import React, { useEffect, useRef, useMemo } from "react";
-import { useChat } from "../../context/ChatContext";
-import * as d3 from "d3";
-import useResizeObserver from "../../hooks/useResizeObserver";
-import ClipLoader from "react-spinners/ClipLoader";
+import React, { useEffect, useRef, useMemo } from 'react';
+import { useChat } from '../../context/ChatContext';
+import * as d3 from 'd3';
+import useResizeObserver from '../../hooks/useResizeObserver';
+import ClipLoader from 'react-spinners/ClipLoader';
 
 interface PieData {
   sender: string;
@@ -48,38 +55,30 @@ const Plot3: React.FC = () => {
     const { width, height } = dimensions;
     const radius = Math.min(width, height) / 2 - 100;
 
-    svg.selectAll("*").remove();
+    svg.selectAll('*').remove();
 
     const g = svg
-      .attr("width", width)
-      .attr("height", height)
-      .append("g")
-      .attr("transform", `translate(${width / 2}, ${height / 2})`);
+      .attr('width', width)
+      .attr('height', height)
+      .append('g')
+      .attr('transform', `translate(${width / 2}, ${height / 2})`);
 
     const pie = d3
       .pie<PieData>()
       .sort(null)
       .value((d) => d.count);
 
-    const arc = d3
-      .arc<d3.PieArcDatum<PieData>>()
-      .innerRadius(0)
-      .outerRadius(radius);
+    const arc = d3.arc<d3.PieArcDatum<PieData>>().innerRadius(0).outerRadius(radius);
 
-    const arcs = g
-      .selectAll(".arc")
-      .data(pie(pieData))
-      .enter()
-      .append("g")
-      .attr("class", "arc");
+    const arcs = g.selectAll('.arc').data(pie(pieData)).enter().append('g').attr('class', 'arc');
 
     arcs
-      .append("path")
-      .attr("d", arc)
-      .attr("fill", (d) => colorScale(d.data.sender) as string)
+      .append('path')
+      .attr('d', arc)
+      .attr('fill', (d) => colorScale(d.data.sender) as string)
       .transition()
       .duration(1000)
-      .attrTween("d", function (d) {
+      .attrTween('d', function (d) {
         const i = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
         return function (t) {
           return arc(i(t)) as string;
@@ -98,64 +97,51 @@ const Plot3: React.FC = () => {
 
     const simulation = d3
       .forceSimulation(labelPositions)
-      .force("y", d3.forceY((d) => (d.y !== undefined ? d.y : 0)).strength(0.5))
-      .force("collide", d3.forceCollide(18))
+      .force('y', d3.forceY((d) => (d.y !== undefined ? d.y : 0)).strength(0.5))
+      .force('collide', d3.forceCollide(18))
       .stop();
 
     for (let i = 0; i < 100; i++) simulation.tick();
 
     arcs
-      .append("text")
+      .append('text')
       .attr(
-        "transform",
-        (_, i) =>
-          `translate(${simulation.nodes()[i].x}, ${simulation.nodes()[i].y})`
+        'transform',
+        (_, i) => `translate(${simulation.nodes()[i].x}, ${simulation.nodes()[i].y})`,
       )
-      .attr("text-anchor", (d) =>
-        (d.startAngle + d.endAngle) / 2 > Math.PI ? "end" : "start"
-      )
-      .attr("font-size", "12px")
-      .style("fill", darkMode ? "white" : "black")
+      .attr('text-anchor', (d) => ((d.startAngle + d.endAngle) / 2 > Math.PI ? 'end' : 'start'))
+      .attr('font-size', '12px')
+      .style('fill', darkMode ? 'white' : 'black')
       .text((d) => d.data.sender);
 
     arcs
-      .append("polyline")
-      .attr("points", (d, i) => {
+      .append('polyline')
+      .attr('points', (d, i) => {
         const posA = arc.centroid(d);
         const posB = outerArc.centroid(d);
         const posC = [simulation.nodes()[i].x, simulation.nodes()[i].y];
-        return [posA, posB, posC].map((p) => p.join(",")).join(" ");
+        return [posA, posB, posC].map((p) => p.join(',')).join(' ');
       })
-      .attr("fill", "none")
-      .attr("stroke", "gray")
-      .attr("stroke-width", 1);
+      .attr('fill', 'none')
+      .attr('stroke', 'gray')
+      .attr('stroke-width', 1);
   }, [pieData, dimensions, colorScale, darkMode]);
 
   return (
     <div
       ref={containerRef}
       className={`border-[1px] ${
-        darkMode
-          ? "border-gray-300 bg-gray-800 text-white"
-          : "border-black bg-white text-black"
+        darkMode ? 'border-gray-300 bg-gray-800 text-white' : 'border-black bg-white text-black'
       } w-full md:min-w-[400px] md:basis-[400px] flex-grow p-4 h-96 flex flex-col`}
-      style={{ minHeight: "300px", maxHeight: "550px", overflow: "hidden" }}
+      style={{ minHeight: '300px', maxHeight: '550px', overflow: 'hidden' }}
     >
-      <h2
-        className={`text-lg font-semibold mb-4 ${
-          darkMode ? "text-white" : "text-black"
-        }`}
-      >
+      <h2 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
         Message Ratio
       </h2>
 
       <div className="flex-grow flex justify-center items-center">
         {isUploading ? (
-          <ClipLoader
-            color={darkMode ? "#ffffff" : "#000000"}
-            loading={true}
-            size={50}
-          />
+          <ClipLoader color={darkMode ? '#ffffff' : '#000000'} loading={true} size={50} />
         ) : pieData.length === 0 ? (
           <span className="text-lg">No Data Available</span>
         ) : (

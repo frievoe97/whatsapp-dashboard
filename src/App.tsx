@@ -1,21 +1,23 @@
-import React, { useEffect, useRef } from "react";
-import { Helmet } from "react-helmet-async";
-import FileUpload from "./components/FileUpload";
-import FileUploadMobile from "./components/FileUploadMobile";
-import AggregatePerTime from "./components/plots/AggregatePerTime";
-import Timeline from "./components/plots/Timeline";
-import WordCount from "./components/plots/WordCount";
-import Stats from "./components/plots/Stats";
-import Sentiment from "./components/plots/Sentiment";
-import Emoji from "./components/plots/Emoji";
-import BarChartComp from "./components/plots/BarChartComp";
-import SentimentWord from "./components/plots/SentimentWord";
-import ChordDiagram from "./components/plots/ChordDiagram";
-import { useChat } from "./context/ChatContext";
-import "./index.css";
-import HeatmapMonthWeekday from "./components/plots/Heatmap";
+import React, { useEffect, useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
+import FileUploadMobile from './components/FileUploadMobile';
+import AggregatePerTime from './components/plots/AggregatePerTime';
+import Timeline from './components/plots/Timeline';
+import WordCount from './components/plots/WordCount';
+import Stats from './components/plots/Stats';
+import Sentiment from './components/plots/Sentiment';
+import Emoji from './components/plots/Emoji';
+import BarChartComp from './components/plots/BarChartComp';
+import SentimentWord from './components/plots/SentimentWord';
+import ChordDiagram from './components/plots/ChordDiagram';
+import { useChat } from './context/ChatContext';
+import './index.css';
+import HeatmapMonthWeekday from './components/plots/Heatmap';
 
-import NewFileUploader from "./components/NewFileUploader";
+import NewFileUploader from './components/NewFileUploader';
+
+import { useTranslation } from 'react-i18next';
+import '../i18n';
 
 /**
  * Custom hook to update the document's dark mode class and theme-color meta tag.
@@ -29,18 +31,18 @@ import NewFileUploader from "./components/NewFileUploader";
 function useDarkModeThemeEffect(darkMode: boolean) {
   // Toggle dark mode class on the document root element.
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
+    document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
   // Update the theme-color meta tag.
   useEffect(() => {
     let metaThemeColor = document.querySelector("meta[name='theme-color']");
     if (!metaThemeColor) {
-      metaThemeColor = document.createElement("meta");
-      metaThemeColor.setAttribute("name", "theme-color");
+      metaThemeColor = document.createElement('meta');
+      metaThemeColor.setAttribute('name', 'theme-color');
       document.head.appendChild(metaThemeColor);
     }
-    metaThemeColor.setAttribute("content", darkMode ? "#1f2937" : "#ffffff");
+    metaThemeColor.setAttribute('content', darkMode ? '#1f2937' : '#ffffff');
   }, [darkMode]);
 }
 
@@ -53,7 +55,7 @@ function useDarkModeThemeEffect(darkMode: boolean) {
  */
 function useEqualRowHeights(
   containerRef: React.RefObject<HTMLDivElement>,
-  dependencies: any[] = []
+  dependencies: number[] = [],
 ) {
   useEffect(() => {
     /**
@@ -68,7 +70,7 @@ function useEqualRowHeights(
       const items = Array.from(container.children) as HTMLDivElement[];
 
       // Reset heights to auto to calculate natural heights.
-      items.forEach((item) => (item.style.height = "auto"));
+      items.forEach((item) => (item.style.height = 'auto'));
 
       // Group items into rows based on their top offset.
       const rows: HTMLDivElement[][] = [];
@@ -98,8 +100,9 @@ function useEqualRowHeights(
     setEqualRowHeights();
 
     // Re-calculate heights on window resize.
-    window.addEventListener("resize", setEqualRowHeights);
-    return () => window.removeEventListener("resize", setEqualRowHeights);
+    window.addEventListener('resize', setEqualRowHeights);
+    return () => window.removeEventListener('resize', setEqualRowHeights);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 }
 
@@ -132,6 +135,8 @@ const App: React.FC = () => {
   // Ensure all analysis components in the container have equal heights per row.
   useEqualRowHeights(containerRef, [filteredMessages.length]);
 
+  const { t } = useTranslation();
+
   return (
     <>
       {/* SEO Meta-Tags */}
@@ -150,10 +155,7 @@ const App: React.FC = () => {
           property="og:image"
           content="https://whatsapp-dashboard.friedrichvoelkers.de/preview.png"
         />
-        <meta
-          property="og:url"
-          content="https://whatsapp-dashboard.friedrichvoelkers.de"
-        />
+        <meta property="og:url" content="https://whatsapp-dashboard.friedrichvoelkers.de" />
         <meta name="robots" content="index, follow" />
       </Helmet>
 
@@ -168,6 +170,8 @@ const App: React.FC = () => {
           <FileUploadMobile />
         </div>
 
+        {/* <h1>{t("App.welcome")}</h1> */}
+
         {/* Chat Analysis Components */}
         <div
           ref={containerRef}
@@ -175,23 +179,24 @@ const App: React.FC = () => {
         >
           {filteredMessages.length === 0 ? (
             <div
-              className={`w-full flex text-lg items-center justify-center h-full border rounded-none text-center ${
-                darkMode ? "border-white" : "border-black"
+              className={`w-full p-4 px-8 flex text-lg items-center justify-center h-full border rounded-none text-center ${
+                darkMode ? 'border-white' : 'border-black'
               }`}
             >
-              Please upload a WhatsApp chat using "Select File".
+              {/* Please upload a WhatsApp chat using "Select File". */}
+              {t('App.placeholder')}
             </div>
           ) : (
             <>
-              <AggregatePerTime />
-              <Timeline />
-              <BarChartComp />
-              <Emoji />
-              <ChordDiagram />
-              <WordCount />
-              <Stats />
-              <Sentiment />
-              {/*<SentimentWord />  */}
+              <AggregatePerTime /> {/* DONE */}
+              <Timeline /> {/* DONE */}
+              <BarChartComp /> {/* DONE */}
+              <Emoji /> {/* DONE */}
+              <ChordDiagram /> {/* DONE */}
+              <WordCount /> {/* DONE */}
+              <Stats /> {/* DONE */}
+              <Sentiment /> {/* DONE */}
+              <SentimentWord /> {/* DONE */}
               <HeatmapMonthWeekday />
               {/*
                */}

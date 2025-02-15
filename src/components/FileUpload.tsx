@@ -1,13 +1,20 @@
-import React, { useState, useEffect, useRef } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { ChevronDown, ChevronUp, Info, Moon, Sun } from "lucide-react";
-import InfoModal from "./InfoModal";
-import { useChat } from "../context/ChatContext";
-import {
-  useFileUploadLogic,
-  DEFAULT_WEEKDAYS,
-} from "../hooks/useFileUploadLogic";
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
+
+/**
+ * @deprecated This file is deprecated and will be removed in the next version.
+ */
+
+import React, { useState, useEffect, useRef } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { ChevronDown, ChevronUp, Info, Moon, Sun } from 'lucide-react';
+import InfoModal from './InfoModal';
+import { useChat } from '../context/ChatContext';
+import { useFileUploadLogic, DEFAULT_WEEKDAYS } from '../hooks/useFileUploadLogic';
+
+import { useTranslation } from 'react-i18next';
+import '../i18n';
 
 /**
  * Props for the FileUpload (Desktop) component.
@@ -57,13 +64,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     setIsInfoOpen,
   } = useFileUploadLogic(onFileUpload);
 
-  const borderColor = darkMode ? "border-white" : "border-black";
-  const textColor = darkMode ? "text-white" : "text-black";
-  const bgColor = darkMode ? "bg-gray-700" : "bg-white";
+  const borderColor = darkMode ? 'border-white' : 'border-black';
+  const textColor = darkMode ? 'text-white' : 'text-black';
+  const bgColor = darkMode ? 'bg-gray-700' : 'bg-white';
 
   const toggleCollapse = () => {
     setIsPanelOpen((prev) => !prev);
-    setTimeout(() => window.dispatchEvent(new Event("resize")), 50);
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
   };
 
   // Neuer lokaler State für das Öffnen/Schließen des Sender-Dropdowns:
@@ -73,28 +80,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   // Schließt das Dropdown, wenn außerhalb geklickt wird
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const { t } = useTranslation();
 
   return (
     <div className="file-upload-wrapper">
       {/* Information Modal */}
-      <InfoModal
-        isOpen={isInfoOpen}
-        onClose={() => setIsInfoOpen(false)}
-        darkMode={darkMode}
-      />
+      <InfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} darkMode={darkMode} />
 
       {/* Header: Info, Title, Dark Mode Toggle, Collapse Toggle */}
       <div className="flex items-center h-8">
@@ -102,15 +104,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           onClick={() => setIsInfoOpen(true)}
           className={`px-2 py-1 border rounded-none flex items-center ${
             darkMode
-              ? "border-white hover:border-white active:bg-gray-600"
-              : "border-black hover:border-black active:bg-gray-300"
+              ? 'border-white hover:border-white active:bg-gray-600'
+              : 'border-black hover:border-black active:bg-gray-300'
           } ${bgColor} ${textColor}`}
         >
           <Info size={20} />
         </button>
-        <div className="flex-grow text-center text-2xl font-semibold">
-          Whatsapp Dashboard
-        </div>
+        <div className="flex-grow text-center text-2xl font-semibold">Whatsapp Dashboard</div>
         <div>
           <button
             onClick={toggleDarkMode}
@@ -127,8 +127,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
           onClick={toggleCollapse}
           className={`px-2 py-1 border rounded-none flex items-center ${
             darkMode
-              ? "border-white hover:border-white active:bg-gray-600"
-              : "border-black hover:border-black active:bg-gray-300"
+              ? 'border-white hover:border-white active:bg-gray-600'
+              : 'border-black hover:border-black active:bg-gray-300'
           } ${bgColor} ${textColor}`}
         >
           {isPanelOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -139,9 +139,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
       {isPanelOpen && (
         <div
           className={`mt-4 border ${
-            darkMode ? "border-white" : "border-black"
+            darkMode ? 'border-white' : 'border-black'
           } p-4 file-upload grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 ${
-            darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
+            darkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'
           }`}
         >
           {/* File Upload Section */}
@@ -152,11 +152,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                   htmlFor="file-upload"
                   className={`cursor-pointer text-sm px-4 py-2 border ${
                     darkMode
-                      ? "border-white bg-gray-700 text-white"
-                      : "border-black bg-white text-black"
+                      ? 'border-white bg-gray-700 text-white'
+                      : 'border-black bg-white text-black'
                   } hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 inline-block`}
                 >
-                  Select File
+                  {t('FileUpload.selectFile')}
                 </label>
                 <input
                   id="file-upload"
@@ -167,9 +167,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                 />
                 {fileName && (
                   <p className="mt-2 text-sm ml-4">
-                    <span className={darkMode ? "text-white" : "text-black"}>
-                      {fileName}
-                    </span>
+                    <span className={darkMode ? 'text-white' : 'text-black'}>{fileName}</span>
                   </p>
                 )}
               </div>
@@ -183,8 +181,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                 onClick={handleDeleteFile}
                 className={`px-4 py-2 text-sm rounded-none border ${
                   darkMode
-                    ? "border-white hover:border-white active:bg-gray-600"
-                    : "border-black hover:border-black active:bg-gray-300"
+                    ? 'border-white hover:border-white active:bg-gray-600'
+                    : 'border-black hover:border-black active:bg-gray-300'
                 } w-full ${bgColor} ${textColor}`}
               >
                 Delete File
@@ -203,8 +201,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                     onClick={() => setDropdownOpen((prev) => !prev)}
                     className={`w-full px-4 py-2 border rounded-none flex justify-between items-center focus:outline-none ${
                       darkMode
-                        ? "bg-gray-800 border-white text-white"
-                        : "bg-white border-black text-black"
+                        ? 'bg-gray-800 border-white text-white'
+                        : 'bg-white border-black text-black'
                     }`}
                   >
                     <span>Select Senders</span>
@@ -215,21 +213,19 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                       ref={dropdownRef}
                       className={`absolute z-10 mt-1 w-full rounded-none  ${
                         darkMode
-                          ? "bg-gray-800 border border-white"
-                          : "bg-white border border-black"
+                          ? 'bg-gray-800 border border-white'
+                          : 'bg-white border border-black'
                       }`}
                     >
                       <div
                         className={`max-h-60 overflow-auto ${
-                          darkMode ? "text-white" : "text-black"
+                          darkMode ? 'text-white' : 'text-black'
                         }`}
                       >
                         {senders.map((sender) => {
                           // Prozent berechnen:
                           const total = originalMessages.length;
-                          const count = originalMessages.filter(
-                            (m) => m.sender === sender
-                          ).length;
+                          const count = originalMessages.filter((m) => m.sender === sender).length;
                           const percentage = (count / total) * 100;
 
                           // Status 3, wenn unter minMessagePercentage:
@@ -238,9 +234,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                           // Status 2 (manuell deaktiviert) liegt vor, wenn
                           // manualSenderSelection[sender] === false.
                           // Status 1 (aktiv) = nicht disabled und kein manuelles false:
-                          const isChecked =
-                            !isDisabled &&
-                            manualSenderSelection[sender] !== false;
+                          const isChecked = !isDisabled && manualSenderSelection[sender] !== false;
 
                           return (
                             <label
@@ -251,12 +245,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                       isDisabled
                         ? // Falls disabled, grau darstellen:
                           darkMode
-                          ? "text-gray-400"
-                          : "text-gray-400"
+                          ? 'text-gray-400'
+                          : 'text-gray-400'
                         : // Falls aktivierbar, Hover-Effekt
                         darkMode
-                        ? "hover:bg-gray-700"
-                        : "hover:bg-gray-100"
+                        ? 'hover:bg-gray-700'
+                        : 'hover:bg-gray-100'
                     }
                   `}
                             >
@@ -301,14 +295,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                     <label className="text-sm mb-1">Start Date:</label>
                     <DatePicker
                       selected={startDate}
-                      onChange={(date: Date | null) =>
-                        setStartDate(date || undefined)
-                      }
+                      onChange={(date: Date | null) => setStartDate(date || undefined)}
                       selectsStart
                       startDate={startDate}
                       endDate={endDate}
                       className={`p-2 border ${
-                        darkMode ? "border-white" : "border-black"
+                        darkMode ? 'border-white' : 'border-black'
                       } w-full ${bgColor} ${textColor}`}
                     />
                   </div>
@@ -316,33 +308,27 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                     <label className="text-sm mb-1">End Date:</label>
                     <DatePicker
                       selected={endDate}
-                      onChange={(date: Date | null) =>
-                        setEndDate(date || undefined)
-                      }
+                      onChange={(date: Date | null) => setEndDate(date || undefined)}
                       selectsEnd
                       startDate={startDate}
                       endDate={endDate}
                       minDate={startDate}
                       className={`p-2 border ${
-                        darkMode ? "border-white" : "border-black"
+                        darkMode ? 'border-white' : 'border-black'
                       } w-full ${bgColor} ${textColor}`}
                     />
                   </div>
                 </div>
                 <div className="flex flex-col w-fit">
-                  <label className="text-sm mb-1">
-                    Minimum Message Share (%):
-                  </label>
+                  <label className="text-sm mb-1">Minimum Message Share (%):</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={tempMinMessagePercentage}
-                    onChange={(e) =>
-                      setTempMinMessagePercentage(Number(e.target.value))
-                    }
+                    onChange={(e) => setTempMinMessagePercentage(Number(e.target.value))}
                     className={`p-2 border ${
-                      darkMode ? "border-white" : "border-black"
+                      darkMode ? 'border-white' : 'border-black'
                     } w-full ${bgColor} ${textColor}`}
                   />
                 </div>
@@ -355,10 +341,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                 <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-4">
                   <div className="flex flex-wrap gap-0">
                     {DEFAULT_WEEKDAYS.map((day) => (
-                      <label
-                        key={day}
-                        className="flex items-center space-x-2 cursor-pointer"
-                      >
+                      <label key={day} className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="checkbox"
                           value={day}
@@ -368,14 +351,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                         />
                         <span
                           className={`flex items-center justify-center w-4 h-4 border ${
-                            darkMode ? "border-white" : "border-black"
+                            darkMode ? 'border-white' : 'border-black'
                           } rounded-none relative`}
                         >
                           {selectedWeekdays.includes(day) && (
                             <svg
-                              className={`w-3 h-3 ${
-                                darkMode ? "text-white" : "text-black"
-                              }`}
+                              className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-black'}`}
                               viewBox="0 0 16 16"
                               fill="none"
                               xmlns="http://www.w3.org/2000/svg"
@@ -390,11 +371,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                             </svg>
                           )}
                         </span>
-                        <span
-                          className={`text-sm ${
-                            darkMode ? "text-white" : "text-black"
-                          }`}
-                        >
+                        <span className={`text-sm ${darkMode ? 'text-white' : 'text-black'}`}>
                           {day}
                         </span>
                       </label>
@@ -405,8 +382,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                       onClick={() => setSelectedWeekdays([...DEFAULT_WEEKDAYS])}
                       className={`px-3 py-1 text-sm rounded-none border ${
                         darkMode
-                          ? "border-white hover:border-white active:bg-gray-600"
-                          : "border-black hover:border-black active:bg-gray-300"
+                          ? 'border-white hover:border-white active:bg-gray-600'
+                          : 'border-black hover:border-black active:bg-gray-300'
                       } w-auto ${bgColor} ${textColor}`}
                     >
                       Select All
@@ -415,8 +392,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                       onClick={() => setSelectedWeekdays([])}
                       className={`px-3 py-1 text-sm border ${
                         darkMode
-                          ? "border-white hover:border-white active:bg-gray-600"
-                          : "border-black hover:border-black active:bg-gray-600"
+                          ? 'border-white hover:border-white active:bg-gray-600'
+                          : 'border-black hover:border-black active:bg-gray-600'
                       } rounded-none w-auto ${bgColor} ${textColor}`}
                     >
                       Deselect All
@@ -432,8 +409,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                   onClick={handleResetFilters}
                   className={`px-4 py-2 text-sm border ${
                     darkMode
-                      ? "border-white hover:border-white active:bg-gray-600"
-                      : "border-black hover:border-black active:bg-gray-300"
+                      ? 'border-white hover:border-white active:bg-gray-600'
+                      : 'border-black hover:border-black active:bg-gray-300'
                   } rounded-none w-full ${bgColor} ${textColor}`}
                 >
                   Reset
@@ -444,10 +421,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
                   }}
                   className={`px-4 py-2 text-sm border ${
                     darkMode
-                      ? "border-white hover:border-white active:bg-gray-200"
-                      : "border-black hover:border-black active:bg-gray-700"
+                      ? 'border-white hover:border-white active:bg-gray-200'
+                      : 'border-black hover:border-black active:bg-gray-700'
                   } rounded-none w-full ${
-                    darkMode ? "bg-white text-black" : "bg-black text-white"
+                    darkMode ? 'bg-white text-black' : 'bg-black text-white'
                   }`}
                 >
                   Apply
