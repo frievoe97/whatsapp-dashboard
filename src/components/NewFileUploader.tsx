@@ -1,6 +1,4 @@
 import React, { ChangeEvent, useRef, useEffect, useState } from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 import { ChevronDown, ChevronUp, Info, Moon, Sun, Trash2 } from 'lucide-react';
 import InfoModal from './InfoModal';
 import { useChat } from '../context/ChatContext';
@@ -15,6 +13,10 @@ import {
 } from '../utils/chatUtils';
 import { useTranslation } from 'react-i18next';
 import '../../i18n';
+
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
 
 interface CustomCheckboxProps {
   checked: boolean;
@@ -325,41 +327,118 @@ const FileUpload: React.FC = () => {
               />
             </div>
 
-            {/* 3. Zelle: Start Date */}
-            <div className="rounded-none flex flex-col">
-              <label className="text-md font-semibold rounded-none">Start Date:</label>
-              <DatePicker
-                selected={tempFilters.startDate}
-                onChange={(date: Date | null) =>
-                  handleDateChange(date, 'startDate', setTempFilters)
-                }
-                selectsStart
-                startDate={tempFilters.startDate}
-                endDate={tempFilters.endDate}
-                className={`mt-2 p-2 border rounded-none w-full ${
-                  darkMode ? 'border-white bg-gray-700' : 'border-black'
-                }`}
-                minDate={metadata?.firstMessageDate}
-                maxDate={tempFilters.endDate ? tempFilters.endDate : metadata?.lastMessageDate}
-              />
-            </div>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              {/* Start Date */}
+              <div className="rounded-none flex flex-col">
+                <label className="text-md font-semibold rounded-none mb-2">Start Date:</label>
+                <DatePicker
+                  // label="Start Date"
+                  value={tempFilters.startDate ? dayjs(tempFilters.startDate) : null}
+                  onChange={(newValue) =>
+                    handleDateChange(
+                      newValue ? newValue.toDate() : null,
+                      'startDate',
+                      setTempFilters,
+                    )
+                  }
+                  minDate={
+                    metadata?.firstMessageDate ? dayjs(metadata.firstMessageDate) : undefined
+                  }
+                  maxDate={
+                    tempFilters.endDate
+                      ? dayjs(tempFilters.endDate)
+                      : metadata?.lastMessageDate
+                      ? dayjs(metadata.lastMessageDate)
+                      : undefined
+                  }
+                  slotProps={{
+                    textField: {
+                      variant: 'outlined',
+                      fullWidth: true,
+                      sx: {
+                        borderRadius: 0,
+                        '& .MuiOutlinedInput-root': {
+                          backgroundColor: darkMode ? '#374151' : '#fff',
+                          height: '100%',
+                          // Überschreibe die Standard-NotchedOutline:
+                          '& fieldset': {
+                            borderColor: darkMode ? 'white' : 'black', // Nur der schwarze (bzw. weiße im Dark Mode) Rahmen bleibt
+                            borderWidth: '1px',
+                            borderRadius: 0,
+                          },
+                          '&:hover fieldset': {
+                            borderColor: darkMode ? 'white' : 'black',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: darkMode ? 'white' : 'black',
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: darkMode ? 'white' : 'black',
+                        },
+                        '& .MuiInputBase-input': {
+                          padding: '0.6rem', // Dein gewünschtes Padding
+                          fontSize: '1rem', // Tailwind base entspricht meist 1rem
+                          color: darkMode ? 'white' : 'black',
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
 
-            {/* 4. Zelle: End Date */}
-            <div className="rounded-none flex flex-col">
-              <label className="text-md font-semibold rounded-none">End Date:</label>
-              <DatePicker
-                selected={tempFilters.endDate}
-                onChange={(date: Date | null) => handleDateChange(date, 'endDate', setTempFilters)}
-                selectsEnd
-                startDate={tempFilters.startDate}
-                endDate={tempFilters.endDate}
-                className={`mt-2 p-2 border rounded-none w-full ${
-                  darkMode ? 'border-white bg-gray-700' : 'border-black'
-                }`}
-                minDate={tempFilters.startDate ? tempFilters.startDate : metadata?.firstMessageDate}
-                maxDate={metadata?.lastMessageDate}
-              />
-            </div>
+              {/* End Date */}
+              <div className="rounded-none flex flex-col">
+                <label className="text-md font-semibold rounded-none mb-2">End Date:</label>
+                <DatePicker
+                  value={tempFilters.endDate ? dayjs(tempFilters.endDate) : null}
+                  onChange={(newValue) =>
+                    handleDateChange(newValue ? newValue.toDate() : null, 'endDate', setTempFilters)
+                  }
+                  minDate={
+                    tempFilters.startDate
+                      ? dayjs(tempFilters.startDate)
+                      : metadata?.firstMessageDate
+                      ? dayjs(metadata.firstMessageDate)
+                      : undefined
+                  }
+                  maxDate={metadata?.lastMessageDate ? dayjs(metadata.lastMessageDate) : undefined}
+                  slotProps={{
+                    textField: {
+                      variant: 'outlined',
+                      fullWidth: true,
+                      sx: {
+                        borderRadius: 0,
+                        '& .MuiOutlinedInput-root': {
+                          backgroundColor: darkMode ? '#374151' : '#fff',
+                          height: '100%',
+                          // Überschreibe die Standard-NotchedOutline:
+                          '& fieldset': {
+                            borderColor: darkMode ? 'white' : 'black', // Nur der schwarze (bzw. weiße im Dark Mode) Rahmen bleibt
+                            borderWidth: '1px',
+                            borderRadius: 0,
+                          },
+                          '&:hover fieldset': {
+                            borderColor: darkMode ? 'white' : 'black',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: darkMode ? 'white' : 'black',
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: darkMode ? 'white' : 'black',
+                        },
+                        '& .MuiInputBase-input': {
+                          padding: '0.6rem', // Dein gewünschtes Padding
+                          fontSize: '1rem', // Tailwind base entspricht meist 1rem
+                          color: darkMode ? 'white' : 'black',
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </LocalizationProvider>
 
             {/* Zeile 2 */}
             {/* 1. Zelle: Weekdays-Auswahl */}
@@ -367,7 +446,7 @@ const FileUpload: React.FC = () => {
               {/* <label className="text-md font-semibold rounded-none">Select Weekdays:</label> */}
               <button
                 onClick={() => setWeekdaysDropdownOpen((prev) => !prev)}
-                className={`w-full px-2 py-2 border rounded-none flex justify-between items-center hover:border-current ${
+                className={`w-full px-4 py-2 border rounded-none flex justify-between items-center hover:border-current ${
                   darkMode
                     ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
                     : 'bg-white text-black border-black hover:bg-gray-200'
@@ -384,7 +463,7 @@ const FileUpload: React.FC = () => {
                       : 'bg-white text-black border-black'
                   }`}
                 >
-                  <div className="max-h-60 overflow-auto" onMouseDown={(e) => e.stopPropagation()}>
+                  <div className="max-h-70 overflow-auto" onMouseDown={(e) => e.stopPropagation()}>
                     {DEFAULT_WEEKDAYS.map((day) => (
                       <div
                         key={day}

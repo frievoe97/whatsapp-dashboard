@@ -129,6 +129,14 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [darkMode]);
+
   // Apply dark mode and update the theme-color meta tag.
   useDarkModeThemeEffect(darkMode);
 

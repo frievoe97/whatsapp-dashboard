@@ -1,6 +1,6 @@
 import React, { ChangeEvent, useRef, useEffect, useState } from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+// import DatePicker from 'react-datepicker';
+// import 'react-datepicker/dist/react-datepicker.css';
 import { Info, ChevronDown, ChevronUp, Moon, Sun, Trash2 } from 'lucide-react';
 import InfoModal from './InfoModal';
 import { useChat } from '../context/ChatContext';
@@ -16,6 +16,12 @@ import {
 
 import { useTranslation } from 'react-i18next';
 import '../../i18n';
+
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+
+import './DatePicker.css';
 
 const PIXEL_PER_CHAR = 7;
 
@@ -118,7 +124,7 @@ const FileUploadMobile: React.FC = () => {
     <div
       className={`p-4 min-h-fit flex flex-col space-y-4 rounded-none ${
         darkMode
-          ? 'bg-[#1f2937] text-white border border-white'
+          ? 'bg-[#1f2937] text-white border border-white dark-mode'
           : 'bg-white text-black border border-black'
       }`}
     >
@@ -351,47 +357,124 @@ const FileUploadMobile: React.FC = () => {
 
               {/* Date Selection */}
               <div className="flex flex-row rounded-none gap-2">
-                <div className="flex flex-col flex-1">
-                  <label className="text-sm rounded-none">{t('FileUpload.startDate')}:</label>
-                  <DatePicker
-                    selected={tempFilters.startDate}
-                    onChange={(date: Date | null) =>
-                      handleDateChange(date, 'startDate', setTempFilters)
-                    }
-                    selectsStart
-                    startDate={tempFilters.startDate}
-                    endDate={tempFilters.endDate}
-                    className={`text-sm w-full p-2 border rounded-none ${
-                      darkMode
-                        ? 'border-white bg-gray-700 hover:bg-gray-800'
-                        : 'border-black bg-white hover:bg-gray-100'
-                    }`}
-                    minDate={metadata?.firstMessageDate}
-                    maxDate={tempFilters.endDate ? tempFilters.endDate : metadata?.lastMessageDate}
-                  />
-                </div>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  {/* Start Date */}
+                  <div className="rounded-none flex flex-col">
+                    <label className="text-md font-semibold rounded-none mb-2">Start Date:</label>
+                    <DatePicker
+                      // label="Start Date"
+                      value={tempFilters.startDate ? dayjs(tempFilters.startDate) : null}
+                      onChange={(newValue) =>
+                        handleDateChange(
+                          newValue ? newValue.toDate() : null,
+                          'startDate',
+                          setTempFilters,
+                        )
+                      }
+                      minDate={
+                        metadata?.firstMessageDate ? dayjs(metadata.firstMessageDate) : undefined
+                      }
+                      maxDate={
+                        tempFilters.endDate
+                          ? dayjs(tempFilters.endDate)
+                          : metadata?.lastMessageDate
+                          ? dayjs(metadata.lastMessageDate)
+                          : undefined
+                      }
+                      slotProps={{
+                        textField: {
+                          variant: 'outlined',
+                          fullWidth: true,
+                          sx: {
+                            borderRadius: 0,
+                            '& .MuiOutlinedInput-root': {
+                              backgroundColor: darkMode ? '#374151' : '#fff',
+                              height: '100%',
+                              // Überschreibe die Standard-NotchedOutline:
+                              '& fieldset': {
+                                borderColor: darkMode ? 'white' : 'black', // Nur der schwarze (bzw. weiße im Dark Mode) Rahmen bleibt
+                                borderWidth: '1px',
+                                borderRadius: 0,
+                              },
+                              '&:hover fieldset': {
+                                borderColor: darkMode ? 'white' : 'black',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: darkMode ? 'white' : 'black',
+                              },
+                            },
+                            '& .MuiInputLabel-root': {
+                              color: darkMode ? 'white' : 'black',
+                            },
+                            '& .MuiInputBase-input': {
+                              padding: '0.6rem', // Dein gewünschtes Padding
+                              fontSize: '1rem', // Tailwind base entspricht meist 1rem
+                              color: darkMode ? 'white' : 'black',
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
 
-                <div className="flex flex-col flex-1">
-                  <label className="text-sm rounded-none">{t('FileUpload.endDate')}:</label>
-                  <DatePicker
-                    selected={tempFilters.endDate}
-                    onChange={(date: Date | null) =>
-                      handleDateChange(date, 'endDate', setTempFilters)
-                    }
-                    selectsEnd
-                    startDate={tempFilters.startDate}
-                    endDate={tempFilters.endDate}
-                    className={`text-sm w-full p-2 border rounded-none ${
-                      darkMode
-                        ? 'border-white bg-gray-700 hover:bg-gray-800'
-                        : 'border-black bg-white hover:bg-gray-100'
-                    }`}
-                    minDate={
-                      tempFilters.startDate ? tempFilters.startDate : metadata?.firstMessageDate
-                    }
-                    maxDate={metadata?.lastMessageDate}
-                  />
-                </div>
+                  {/* End Date */}
+                  <div className="rounded-none flex flex-col">
+                    <label className="text-md font-semibold rounded-none mb-2">End Date:</label>
+                    <DatePicker
+                      value={tempFilters.endDate ? dayjs(tempFilters.endDate) : null}
+                      onChange={(newValue) =>
+                        handleDateChange(
+                          newValue ? newValue.toDate() : null,
+                          'endDate',
+                          setTempFilters,
+                        )
+                      }
+                      minDate={
+                        tempFilters.startDate
+                          ? dayjs(tempFilters.startDate)
+                          : metadata?.firstMessageDate
+                          ? dayjs(metadata.firstMessageDate)
+                          : undefined
+                      }
+                      maxDate={
+                        metadata?.lastMessageDate ? dayjs(metadata.lastMessageDate) : undefined
+                      }
+                      slotProps={{
+                        textField: {
+                          variant: 'outlined',
+                          fullWidth: true,
+                          sx: {
+                            borderRadius: 0,
+                            '& .MuiOutlinedInput-root': {
+                              backgroundColor: darkMode ? '#374151' : '#fff',
+                              height: '100%',
+                              // Überschreibe die Standard-NotchedOutline:
+                              '& fieldset': {
+                                borderColor: darkMode ? 'white' : 'black', // Nur der schwarze (bzw. weiße im Dark Mode) Rahmen bleibt
+                                borderWidth: '1px',
+                                borderRadius: 0,
+                              },
+                              '&:hover fieldset': {
+                                borderColor: darkMode ? 'white' : 'black',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: darkMode ? 'white' : 'black',
+                              },
+                            },
+                            '& .MuiInputLabel-root': {
+                              color: darkMode ? 'white' : 'black',
+                            },
+                            '& .MuiInputBase-input': {
+                              padding: '0.6rem', // Dein gewünschtes Padding
+                              fontSize: '1rem', // Tailwind base entspricht meist 1rem
+                              color: darkMode ? 'white' : 'black',
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </LocalizationProvider>
               </div>
 
               {/* Weekday Selection Dropdown */}
@@ -416,7 +499,7 @@ const FileUploadMobile: React.FC = () => {
                     }`}
                     onMouseDown={(e) => e.stopPropagation()}
                   >
-                    <div className="max-h-60 overflow-auto">
+                    <div className="max-h-70 overflow-auto">
                       {DEFAULT_WEEKDAYS.map((day) => (
                         <label
                           key={day}

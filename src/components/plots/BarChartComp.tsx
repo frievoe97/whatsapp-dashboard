@@ -347,7 +347,7 @@ const SenderComparisonBarChart: FC = () => {
       <div id="bar-chart-header" className="flex items-center justify-between">
         <h2 className="text-base md:text-lg font-semibold mb-4">Sender Comparison</h2>
         <button
-          className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
+          className={`ml-4 hidden md:flex items-center justify-center p-1  border-none focus:outline-none ${
             darkMode ? 'text-white ' : 'text-black '
           }`}
           onClick={handleToggleExpand}
@@ -368,8 +368,10 @@ const SenderComparisonBarChart: FC = () => {
           id="property-dropdown"
           value={selectedProperty}
           onChange={handlePropertyChange}
-          className={`mt-1.5 w-fit border text-sm font-medium outline-none focus:ring-0 appearance-none p-2 ${
-            darkMode ? 'border-gray-300 bg-gray-800 text-white' : 'border-black bg-white text-black'
+          className={`rounded-none mt-1.5 w-fit border text-sm font-medium outline-none focus:ring-0 appearance-none p-2 ${
+            darkMode
+              ? 'border-gray-300 bg-gray-700 text-white hover:bg-gray-800'
+              : 'border-black bg-white text-black hover:bg-gray-100'
           }`}
           style={{ fontFamily: 'Arial, sans-serif' }}
         >
