@@ -58,7 +58,7 @@ The dashboard includes a variety of charts to help analyze chat data.
   - Percentage-based representation (how much each person contributed overall)
   - Summation of messages
 
-  <img src="public/images/1.png" alt="Message Trends Over Time" width="400">
+<img src="public/images/1.png" alt="Message Trends Over Time" width="400">
 
 #### 2. **Message Timeline (Timeline.tsx)**
 
