@@ -8,7 +8,7 @@ export default defineConfig({
     environment: 'jsdom', // Simuliert den Browser-DOM
     setupFiles: './vitest.setup.ts',
     coverage: {
-      reporter: ['text', 'json-summary', 'json'], // Wichtig: json-summary MUSS enthalten sein!
+      reporter: ['text', 'json-summary', 'json'],
       reportOnFailure: true, // Falls Tests fehlschlagen, trotzdem Coverage erzeugen
     },
   },
