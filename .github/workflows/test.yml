@@ -1,11 +1,15 @@
-name: Run Tests
+name: Run Tests & Coverage
 
 on:
   push:
     branches: ['**']
+  pull_request:
+    branches: [master]
 
 jobs:
+  # Job 1: Normaler Test-Lauf (inkl. Lint/Prettier) bei jedem Push
   test:
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -28,8 +32,9 @@ jobs:
       - name: Run tests
         run: npm run test
 
+  # Job 2: Coverage nur bei Pull Request auf master
   coverage:
-    if: github.event_name == 'pull_request'
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
 
     permissions:
