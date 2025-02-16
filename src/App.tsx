@@ -1,6 +1,16 @@
+// React & Related Libraries
 import React, { useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
-import FileUploadMobile from './components/FileUploadMobile';
+import { useTranslation } from 'react-i18next';
+import '../i18n';
+
+// Global Styles
+import './index.css';
+
+// Context
+import { useChat } from './context/ChatContext';
+
+// Components – Plots & File Upload
 import AggregatePerTime from './components/plots/AggregatePerTime';
 import Timeline from './components/plots/Timeline';
 import WordCount from './components/plots/WordCount';
@@ -10,31 +20,29 @@ import Emoji from './components/plots/Emoji';
 import BarChartComp from './components/plots/BarChartComp';
 import SentimentWord from './components/plots/SentimentWord';
 import ChordDiagram from './components/plots/ChordDiagram';
-import { useChat } from './context/ChatContext';
-import './index.css';
 import HeatmapMonthWeekday from './components/plots/Heatmap';
-
+import FileUploadMobile from './components/FileUploadMobile';
 import NewFileUploader from './components/FileUpload';
 
-import { useTranslation } from 'react-i18next';
-import '../i18n';
+///////////////////////////////////////////////////////////////
+// Custom Hooks
+///////////////////////////////////////////////////////////////
 
 /**
- * Custom hook to update the document's dark mode class and theme-color meta tag.
+ * Hook: useDarkModeThemeEffect
  *
- * This hook toggles the "dark" class on the document root and ensures the
- * theme-color meta tag reflects the current mode (dark/light). If the meta tag
- * is missing, it creates one.
+ * This hook toggles the dark mode class on the document element and updates
+ * the meta theme-color based on the dark mode status.
  *
- * @param darkMode - A boolean indicating whether dark mode is enabled.
+ * @param darkMode - Boolean indicating whether dark mode is active.
  */
 function useDarkModeThemeEffect(darkMode: boolean) {
-  // Toggle dark mode class on the document root element.
+  //////////// useEffect: Toggle Dark Mode Class ////////////
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  // Update the theme-color meta tag.
+  //////////// useEffect: Update Theme Color Meta Tag ////////////
   useEffect(() => {
     let metaThemeColor = document.querySelector("meta[name='theme-color']");
     if (!metaThemeColor) {
@@ -47,32 +55,28 @@ function useDarkModeThemeEffect(darkMode: boolean) {
 }
 
 /**
- * Custom hook that ensures all child elements within a container have equal heights
- * per row. This is especially useful when using flexbox layouts to maintain UI consistency.
+ * Hook: useEqualRowHeights
  *
- * @param containerRef - A React ref object that points to the container element.
- * @param dependencies - An optional dependency array that re-runs the effect when changed.
+ * This hook ensures that all child elements within a container have equal heights per row.
+ * It recalculates the heights when the provided dependencies change or when the window is resized.
+ *
+ * @param containerRef - Reference to the container element.
+ * @param dependencies - Array of dependencies to trigger the recalculation.
  */
 function useEqualRowHeights(
   containerRef: React.RefObject<HTMLDivElement>,
   dependencies: number[] = [],
 ) {
   useEffect(() => {
-    /**
-     * Iterates over the container’s children, groups them by rows based on their
-     * top offset, and then sets each element’s height in a row to the maximum height found.
-     */
     function setEqualRowHeights() {
       const container = containerRef.current;
       if (!container) return;
 
-      // Get all children elements.
+      // Reset child heights to calculate their natural size
       const items = Array.from(container.children) as HTMLDivElement[];
-
-      // Reset heights to auto to calculate natural heights.
       items.forEach((item) => (item.style.height = 'auto'));
 
-      // Group items into rows based on their top offset.
+      // Group items by row based on their top offset
       const rows: HTMLDivElement[][] = [];
       let currentRow: HTMLDivElement[] = [];
       let lastTop: number | null = null;
@@ -89,46 +93,45 @@ function useEqualRowHeights(
       });
       if (currentRow.length) rows.push(currentRow);
 
-      // For each row, calculate the maximum height and assign it to all items.
+      // Set each item in a row to the maximum height found in that row
       rows.forEach((row) => {
         const maxHeight = Math.max(...row.map((item) => item.offsetHeight));
         row.forEach((item) => (item.style.height = `${maxHeight}px`));
       });
     }
 
-    // Execute the height equalization on mount and whenever dependencies change.
+    // Initial calculation and re-calculate on dependency changes
     setEqualRowHeights();
-
-    // Re-calculate heights on window resize.
     window.addEventListener('resize', setEqualRowHeights);
     return () => window.removeEventListener('resize', setEqualRowHeights);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 }
 
+///////////////////////////////////////////////////////////////
+// Main Application Component
+///////////////////////////////////////////////////////////////
+
 /**
- * Main Application Component.
+ * Component: App
  *
- * This component serves as the entry point for the WhatsApp Dashboard application.
- * It handles SEO meta tags, theme settings (dark/light), responsive file upload components,
- * and renders various chat analysis visualizations based on the uploaded messages.
+ * This is the root component for the WhatsApp Dashboard application. It sets up SEO tags,
+ * manages dark mode, renders file upload components for desktop and mobile, and displays
+ * various chat analysis plots based on the uploaded data.
  *
- * All existing functionalities (dark mode, SEO, equal row heights, file uploads, and chat analysis)
- * have been preserved while cleaning up the code structure.
- *
- * @returns A JSX element representing the complete application UI.
+ * @returns The application UI.
  */
 const App: React.FC = () => {
   const { darkMode, filteredMessages } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const { t } = useTranslation();
 
-  /**
-   * Custom hook to scroll to the top of the page on component mount.
-   */
+  //////////// useEffect: Scroll to Top on Mount ////////////
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  //////////// useEffect: Update Body Class for Dark Mode ////////////
   useEffect(() => {
     if (darkMode) {
       document.body.classList.add('dark-mode');
@@ -137,17 +140,16 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  // Apply dark mode and update the theme-color meta tag.
+  // Apply dark mode settings and update meta tag
   useDarkModeThemeEffect(darkMode);
 
-  // Ensure all analysis components in the container have equal heights per row.
+  // Adjust heights of analysis components on layout change
   useEqualRowHeights(containerRef, [filteredMessages.length]);
 
-  const { t } = useTranslation();
-
+  //////////// Render Application UI ////////////
   return (
     <>
-      {/* SEO Meta-Tags */}
+      {/* SEO Configuration */}
       <Helmet>
         <title>{t('App.title')}</title>
         <meta
@@ -167,18 +169,15 @@ const App: React.FC = () => {
         <meta name="robots" content="index, follow" />
       </Helmet>
 
-      {/* Main Container */}
+      {/* Main Application Container */}
       <div className="p-4 flex flex-col h-[100lvh] h-[100svh] h-[-webkit-fill-available]">
-        {/* File Upload Components (Desktop & Mobile) */}
+        {/* File Upload Section for Desktop and Mobile */}
         <div className="hidden md:block">
-          {/*<FileUpload onFileUpload={(_: File) => {}} /> */}
           <NewFileUploader />
         </div>
         <div className="md:hidden">
           <FileUploadMobile />
         </div>
-
-        {/* <h1>{t("App.welcome")}</h1> */}
 
         {/* Chat Analysis Components */}
         <div
@@ -191,23 +190,20 @@ const App: React.FC = () => {
                 darkMode ? 'border-white' : 'border-black'
               }`}
             >
-              {/* Please upload a WhatsApp chat using "Select File". */}
               {t('App.placeholder')}
             </div>
           ) : (
             <>
-              <AggregatePerTime /> {/* DONE */}
-              <Timeline /> {/* DONE */}
-              <BarChartComp /> {/* DONE */}
-              <Emoji /> {/* DONE */}
-              <ChordDiagram /> {/* DONE */}
-              <WordCount /> {/* DONE */}
-              <Stats /> {/* DONE */}
-              <Sentiment /> {/* DONE */}
-              <SentimentWord /> {/* DONE */}
+              <AggregatePerTime />
+              <Timeline />
+              <BarChartComp />
+              <Emoji />
+              <ChordDiagram />
+              <WordCount />
+              <Stats />
+              <Sentiment />
+              <SentimentWord />
               <HeatmapMonthWeekday />
-              {/*
-               */}
             </>
           )}
         </div>

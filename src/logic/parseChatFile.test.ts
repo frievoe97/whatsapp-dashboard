@@ -1,20 +1,35 @@
+//////////////////////////////
 // tests/logic/parseChatFile.test.ts
+//
+// This file tests the parseChatFile function from the chat parsing logic.
+// It verifies that the function correctly handles empty input, parses a valid iOS chat file,
+// and filters out ignored messages based on fetched ignore-lines.
+//////////////////////////////
+
+////////////////////// Imports ////////////////////////
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { parseChatFile } from '../../src/logic/parseChatFile';
 
+////////////////////// Test Suite: parseChatFile ////////////////////////
 describe('parseChatFile', () => {
+  // Store the original global fetch to restore after tests.
   const originalFetch = global.fetch;
 
+  // Restore the original fetch after each test.
   afterEach(() => {
     global.fetch = originalFetch;
   });
 
-  test('wirft einen Fehler bei leerem Dateiinhalt', async () => {
-    await expect(parseChatFile('', 'empty.txt')).rejects.toThrow('Datei ist leer oder ungültig.');
+  ////////////////////// Test Case: Empty File //////////////////////
+
+  test('throws an error for empty file content', async () => {
+    await expect(parseChatFile('', 'empty.txt')).rejects.toThrow('The file is empty or invalid.');
   });
 
-  test('parst eine gültige iOS-Chat-Datei und filtert ignorierte Nachrichten', async () => {
-    // Mock: Ignore-Linie enthält "Hello"
+  ////////////////////// Test Case: Valid iOS Chat File with Ignored Message //////////////////////
+
+  test('parses a valid iOS chat file and filters out ignored messages', async () => {
+    // Mock fetch to return an ignore-line that contains "Hello"
     global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
@@ -25,16 +40,18 @@ describe('parseChatFile', () => {
     const content = `[12.05.21, 12:34:56] John Doe: Hello`;
     const result = await parseChatFile(content, 'chat.txt');
 
-    // Da die Nachricht "Hello" enthält, wird sie aufgrund der ignore-Linie herausgefiltert
+    // Since the message contains "Hello", it should be filtered out.
     expect(result.messages).toEqual([]);
     expect(result.metadata.fileName).toBe('chat.txt');
     expect(result.metadata.os).toBe('ios_1');
-    // Es sollten keine Sender vorhanden sein, da keine Nachricht übrig blieb.
+    // No senders should remain as all messages have been filtered out.
     expect(result.metadata.senders).toEqual({});
   });
 
-  test('parst eine gültige iOS-Chat-Datei und behält Nachrichten, wenn keine Übereinstimmung mit ignore-Linie besteht', async () => {
-    // Mock: Ignore-Linie, die nicht mit der Nachricht übereinstimmt
+  ////////////////////// Test Case: Valid iOS Chat File with Retained Message //////////////////////
+
+  test('parses a valid iOS chat file and retains messages when ignore-line does not match', async () => {
+    // Mock fetch to return an ignore-line that does NOT match the message content.
     global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
@@ -45,7 +62,7 @@ describe('parseChatFile', () => {
     const content = `[12.05.21, 12:34:56] John Doe: Hello`;
     const result = await parseChatFile(content, 'chat.txt');
 
-    // Die Nachricht "Hello" enthält nicht "IGNORED_TEXT" und wird beibehalten.
+    // The message "Hello" does not contain "IGNORED_TEXT" so it should be retained.
     expect(result.messages).toHaveLength(1);
     expect(result.messages[0]).toMatchObject({
       sender: 'John Doe',

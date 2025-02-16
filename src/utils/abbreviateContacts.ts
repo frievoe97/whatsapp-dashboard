@@ -1,36 +1,41 @@
+////////////////////// Utility Functions for Contact Abbreviation ////////////////////////
+
 /**
- * Entfernt bestimmte unerwünschte Sonderzeichen.
- * Beispiel: "~" und doppelte Anführungszeichen.
+ * Removes unwanted special characters from the input string.
+ * For example, it removes "~" and double quotes.
+ *
+ * @param input - The string to sanitize.
+ * @returns The sanitized string.
  */
 export function sanitizeInput(input: string): string {
   return input.replace(/[~"]/g, '');
 }
 
 /**
- * Prüft, ob der String eine Telefonnummer ist.
- * Erlaubt ein optionales "+" am Anfang und nur Ziffern im Rest.
- */
-/**
- * Prüft, ob der String eine Telefonnummer ist.
- * Bedingung: Der String muss mindestens 5 Ziffern enthalten.
+ * Checks if the input string is a valid phone number.
+ * The function allows an optional "+" at the start and only digits afterward.
+ * The input must contain at least 5 digits.
+ *
+ * @param input - The string to check.
+ * @returns True if the string qualifies as a phone number, false otherwise.
  */
 export function isPhoneNumber(input: string): boolean {
-  // Alle nicht-numerischen Zeichen (außer + am Anfang) entfernen
+  // Remove all non-digit characters (except for a leading +)
   const cleaned = input.replace(/[^0-9+]/g, '');
-
-  // Mindestens 5 Ziffern enthalten?
+  // Count digits (ignoring non-digits)
   const digitCount = cleaned.replace(/\D/g, '').length;
-
   return digitCount >= 5;
 }
 
 /**
- * Kürzt eine Telefonnummer:
- * - Behält die ersten 4 und letzten 4 Ziffern, fügt "...." in der Mitte ein.
+ * Abbreviates a phone number by keeping the first 4 and last 4 digits,
+ * inserting "...." in between.
+ *
+ * @param phone - The phone number string.
+ * @returns The abbreviated phone number.
  */
 export function abbreviatePhone(phone: string): string {
-  let cleanedPhone = phone.trim().replace(/\s+/g, '').replace(/[-()]/g, ''); // Backslashes entfernt
-
+  let cleanedPhone = phone.trim().replace(/\s+/g, '').replace(/[-()]/g, '');
   let plusSign = '';
   if (cleanedPhone.startsWith('+')) {
     plusSign = '+';
@@ -47,12 +52,16 @@ export function abbreviatePhone(phone: string): string {
 }
 
 /**
- * Kürzt einen Namen:
- * - Bei nur einem Wort: Unverändert.
- * - Bei mehreren Wörtern: Erstes Wort voll ausschreiben, weitere nur als Initial + Punkt.
+ * Abbreviates a name.
+ * - If the name contains only one word, it is returned unchanged.
+ * - If it contains multiple words, the first word is kept in full and subsequent words
+ *   are abbreviated to their initial followed by a period.
  *
- * Beispiel:
- * "Friedrich Völkers" -> "Friedrich V."
+ * Example:
+ * "Thomas Anderson" -> "Thomas A."
+ *
+ * @param fullName - The full name to abbreviate.
+ * @returns The abbreviated name.
  */
 export function abbreviateName(fullName: string): string {
   const parts = fullName.split(/\s+/).filter((p) => p.length > 0);
@@ -66,7 +75,10 @@ export function abbreviateName(fullName: string): string {
 }
 
 /**
- * Kürzt einen Kontakt (Name oder Telefonnummer) entsprechend.
+ * Abbreviates a contact (either a name or a phone number) accordingly.
+ *
+ * @param input - The contact string to abbreviate.
+ * @returns The abbreviated contact string.
  */
 export function abbreviateContact(input: string): string {
   const trimmed = input.trim();
@@ -78,20 +90,22 @@ export function abbreviateContact(input: string): string {
 }
 
 /**
- * Nimmt ein Array von Eingaben (Namen oder Nummern) entgegen und gibt
- * ein Array mit abgekürzten Strings zurück. Falls es Duplikate gibt,
- * werden diese hochgezählt (z.B. "Name", "Name (2)", "Name (3)").
+ * Abbreviates an array of contacts (names or phone numbers).
+ * If there are duplicates, they are counted (e.g., "Name", "Name (2)", "Name (3)").
+ *
+ * @param inputs - An array of contact strings.
+ * @returns An array of abbreviated contact strings.
  */
 export function abbreviateContacts(inputs: string[]): string[] {
   const results: string[] = [];
   const countMap: Record<string, number> = {};
 
   for (const rawInput of inputs) {
-    // 1) Sonderzeichen entfernen
+    // 1) Remove unwanted special characters.
     const sanitized = sanitizeInput(rawInput);
-    // 2) Kürzen (Name oder Nummer)
+    // 2) Abbreviate the contact (name or phone number).
     const baseAbbrev = abbreviateContact(sanitized);
-    // 3) Duplikate hochzählen
+    // 3) Increment duplicate count if necessary.
     if (!countMap[baseAbbrev]) {
       countMap[baseAbbrev] = 1;
       results.push(baseAbbrev);

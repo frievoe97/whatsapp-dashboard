@@ -1,6 +1,16 @@
+//////////////////////////////
+// InfoModal Component
+// A modal for displaying informational content and disclaimers with multiple pages.
+// Users can navigate through the pages using previous/next buttons.
+//////////////////////////////
+
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
+//////////////////////////////
+// Interfaces
+//////////////////////////////
 
 interface InfoModalProps {
   /** Determines if the modal is visible */
@@ -12,7 +22,7 @@ interface InfoModalProps {
 }
 
 /**
- * Interface to define the structure of each modal page.
+ * Defines the structure for each modal page.
  */
 interface ModalPage {
   /** The header title of the page */
@@ -21,13 +31,19 @@ interface ModalPage {
   content: JSX.Element;
 }
 
+//////////////////////////////
+// InfoModal Component Implementation
+//////////////////////////////
+
 const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, darkMode }) => {
   const { t } = useTranslation();
 
-  // 0-based index for pages
+  // 0-based index for the current modal page.
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
 
-  // Erstelle das Array der ModalPages mit i18n-Texte
+  //////////////////////////////
+  // Define Modal Pages with Translated Content
+  //////////////////////////////
   const pages: ModalPage[] = [
     {
       title: t('InfoModal.InfoAndDisclaimer.title'),
@@ -63,6 +79,10 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, darkMode }) => {
 
   const totalPages = pages.length;
 
+  //////////////////////////////
+  // Navigation Functions
+  //////////////////////////////
+
   const goToNextPage = () => {
     setCurrentPageIndex((prevIndex) => Math.min(prevIndex + 1, totalPages - 1));
   };
@@ -71,19 +91,24 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, darkMode }) => {
     setCurrentPageIndex((prevIndex) => Math.max(prevIndex - 1, 0));
   };
 
+  // If the modal is not open, render nothing.
   if (!isOpen) return null;
 
+  // Determine classes based on dark mode.
   const modalBgClasses = darkMode
     ? 'bg-gray-800 text-white border-white'
     : 'bg-white text-black border-black';
   const borderClasses = darkMode ? 'border-white' : 'border-black';
 
+  //////////////////////////////
+  // Render Modal
+  //////////////////////////////
   return (
     <div className="p-4 fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 text-sm">
       <div
         className={`p-6 border rounded-none shadow-lg max-w-md w-full relative ${modalBgClasses}`}
       >
-        {/* Schließ-Button */}
+        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-3 right-3 p-1 border rounded-none active:opacity-80"

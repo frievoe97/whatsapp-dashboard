@@ -1,6 +1,9 @@
+//////////////////////////////
+// FileUploadMobile Component (Mobile Version)
+// This component provides the mobile UI for uploading chat files and applying filters.
+//////////////////////////////
+
 import React, { ChangeEvent, useRef, useEffect, useState } from 'react';
-// import DatePicker from 'react-datepicker';
-// import 'react-datepicker/dist/react-datepicker.css';
 import { Info, ChevronDown, ChevronUp, Moon, Sun, Trash2 } from 'lucide-react';
 import InfoModal from './InfoModal';
 import { useChat } from '../context/ChatContext';
@@ -13,7 +16,6 @@ import {
   handleFileUpload,
   handleDeleteFile,
 } from '../utils/chatUtils';
-
 import { useTranslation } from 'react-i18next';
 import '../../i18n';
 
@@ -23,17 +25,36 @@ import dayjs from 'dayjs';
 
 import './DatePicker.css';
 
+//////////////////////////////
+// Constants
+//////////////////////////////
+
+// Determines the number of pixels per character used when truncating the filename.
 const PIXEL_PER_CHAR = 7;
 
+//////////////////////////////
+// FileUploadMobile Component
+//////////////////////////////
+
 const FileUploadMobile: React.FC = () => {
+  //////////////////////////////
+  // Refs
+  //////////////////////////////
   const fileInputRef = useRef<HTMLInputElement>(null);
   const senderDropdownRef = useRef<HTMLDivElement>(null);
   const weekdaysDropdownRef = useRef<HTMLDivElement>(null);
   const filenameRef = useRef<HTMLSpanElement | null>(null);
+
+  //////////////////////////////
+  // Local State
+  //////////////////////////////
   const [weekdaysDropdownOpen, setWeekdaysDropdownOpen] = useState(false);
   const [sendersDropdownOpen, setSendersDropdownOpen] = useState(false);
   const [filenameWidth, setFilenameWidth] = useState(0);
 
+  //////////////////////////////
+  // Chat Context & Translation
+  //////////////////////////////
   const {
     darkMode,
     toggleDarkMode,
@@ -55,7 +76,11 @@ const FileUploadMobile: React.FC = () => {
     setUseShortNames,
     tempSetUseShortNames,
   } = useChat();
+  const { t } = useTranslation();
 
+  //////////////////////////////
+  // Effects: Close Dropdowns on Outside Click
+  //////////////////////////////
   useEffect(() => {
     const handleSendersClickOutside = (event: MouseEvent) => {
       if (senderDropdownRef.current && !senderDropdownRef.current.contains(event.target as Node)) {
@@ -79,13 +104,18 @@ const FileUploadMobile: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleWeekdaysClickOutside);
   }, []);
 
+  //////////////////////////////
+  // Effect: Control Body Overflow When Info Modal Is Open
+  //////////////////////////////
   useEffect(() => {
     document.body.style.overflow = isInfoOpen ? 'hidden' : '';
   }, [isInfoOpen]);
 
+  //////////////////////////////
+  // Effect: Observe Filename Element for Dynamic Truncation
+  //////////////////////////////
   useEffect(() => {
     const filenameElement = filenameRef.current;
-
     if (!filenameElement) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
@@ -96,10 +126,9 @@ const FileUploadMobile: React.FC = () => {
       }
     });
 
-    // Beobachte das Element
+    // Observe the filename element.
     resizeObserver.observe(filenameElement);
-
-    // Initiale Breite setzen
+    // Set initial width.
     setFilenameWidth(filenameElement.getBoundingClientRect().width);
 
     return () => {
@@ -107,19 +136,35 @@ const FileUploadMobile: React.FC = () => {
     };
   }, [metadata?.fileName, isPanelOpen]);
 
+  //////////////////////////////
+  // Helper Functions
+  //////////////////////////////
+
+  /**
+   * Toggles the expansion of the filter panel and dispatches a resize event.
+   */
   const toggleExpanded = () => {
     setIsPanelOpen((prev) => !prev);
     setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
   };
 
-  const senders = metadata ? Object.keys(metadata.senders) : [];
-
+  /**
+   * Truncates a string to a maximum length, appending "..." if needed.
+   *
+   * @param str - The string to truncate.
+   * @param n - The maximum number of characters.
+   * @returns The truncated string.
+   */
   const truncateString = (str: string, n: number): string => {
     return str.length > n - 3 ? str.substring(0, n - 3) + '...' : str;
   };
 
-  const { t } = useTranslation();
+  // Get the list of sender names from metadata.
+  const senders = metadata ? Object.keys(metadata.senders) : [];
 
+  //////////////////////////////
+  // Render
+  //////////////////////////////
   return (
     <div
       className={`p-4 min-h-fit flex flex-col space-y-4 rounded-none ${
@@ -274,8 +319,8 @@ const FileUploadMobile: React.FC = () => {
                               disabled
                                 ? 'opacity-50 cursor-not-allowed'
                                 : darkMode
-                                  ? 'hover:bg-gray-800'
-                                  : 'hover:bg-gray-200'
+                                ? 'hover:bg-gray-800'
+                                : 'hover:bg-gray-200'
                             }`}
                           >
                             <input
@@ -382,8 +427,8 @@ const FileUploadMobile: React.FC = () => {
                         tempFilters.endDate
                           ? dayjs(tempFilters.endDate)
                           : metadata?.lastMessageDate
-                            ? dayjs(metadata.lastMessageDate)
-                            : undefined
+                          ? dayjs(metadata.lastMessageDate)
+                          : undefined
                       }
                       slotProps={{
                         textField: {
@@ -439,8 +484,8 @@ const FileUploadMobile: React.FC = () => {
                         tempFilters.startDate
                           ? dayjs(tempFilters.startDate)
                           : metadata?.firstMessageDate
-                            ? dayjs(metadata.firstMessageDate)
-                            : undefined
+                          ? dayjs(metadata.firstMessageDate)
+                          : undefined
                       }
                       maxDate={
                         metadata?.lastMessageDate ? dayjs(metadata.lastMessageDate) : undefined

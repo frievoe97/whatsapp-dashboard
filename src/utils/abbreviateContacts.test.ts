@@ -1,4 +1,3 @@
-// tests/utils/abbreviateContacts.test.ts
 import { describe, expect, test } from 'vitest';
 import {
   sanitizeInput,
@@ -9,45 +8,70 @@ import {
   abbreviateContacts,
 } from './abbreviateContacts';
 
+//////////////////////////////
+// Utility Functions - Abbreviate Contacts Tests
+//////////////////////////////
+
 describe('Utility Functions - Abbreviate Contacts', () => {
-  test('sanitizeInput entfernt unerwünschte Zeichen', () => {
+  //////////////////////////////
+  // Test: sanitizeInput
+  //////////////////////////////
+  test('sanitizeInput removes unwanted characters', () => {
     expect(sanitizeInput('Hello~World"Test')).toBe('HelloWorldTest');
   });
 
-  test('isPhoneNumber erkennt gültige Telefonnummern', () => {
+  //////////////////////////////
+  // Test: isPhoneNumber
+  //////////////////////////////
+  test('isPhoneNumber correctly identifies valid phone numbers', () => {
     expect(isPhoneNumber('12345')).toBe(true);
     expect(isPhoneNumber('+12345')).toBe(true);
     expect(isPhoneNumber('12 34')).toBe(false);
     expect(isPhoneNumber('abcde')).toBe(false);
   });
 
-  test('abbreviatePhone gibt kurze Nummern unverändert zurück', () => {
-    // 8 Ziffern (4+4) sollen nicht abgekürzt werden
+  //////////////////////////////
+  // Test: abbreviatePhone (short numbers remain unchanged)
+  //////////////////////////////
+  test('abbreviatePhone returns short phone numbers unchanged', () => {
+    // 8 digits (4+4) should not be abbreviated.
     expect(abbreviatePhone('12345678')).toBe('12345678');
   });
 
-  test('abbreviatePhone kürzt lange Nummern korrekt', () => {
+  //////////////////////////////
+  // Test: abbreviatePhone (long numbers are abbreviated)
+  //////////////////////////////
+  test('abbreviatePhone correctly abbreviates long phone numbers', () => {
     expect(abbreviatePhone('12345678901')).toBe('1234....8901');
     expect(abbreviatePhone('+12345678901')).toBe('+1234....8901');
   });
 
-  test('abbreviateName funktioniert korrekt', () => {
+  //////////////////////////////
+  // Test: abbreviateName
+  //////////////////////////////
+  test('abbreviateName works correctly', () => {
     expect(abbreviateName('John')).toBe('John');
     expect(abbreviateName('John Doe')).toBe('John D.');
     expect(abbreviateName('John Michael Doe')).toBe('John M. D.');
   });
 
-  test('abbreviateContact entscheidet zwischen Nummer und Namen', () => {
-    // Telefonnummer
+  //////////////////////////////
+  // Test: abbreviateContact (distinguish phone number vs name)
+  //////////////////////////////
+  test('abbreviateContact distinguishes between phone number and name', () => {
+    // Phone number test.
     expect(abbreviateContact('12345678901')).toBe('1234....8901');
-    // Name
+    // Name test.
     expect(abbreviateContact('John Doe')).toBe('John D.');
   });
 
-  test('abbreviateContacts behandelt Duplikate und saniert die Eingabe', () => {
+  //////////////////////////////
+  // Test: abbreviateContacts (handles duplicates and sanitizes input)
+  //////////////////////////////
+  test('abbreviateContacts handles duplicates and sanitizes input', () => {
     const inputs = ['John Doe', 'John Doe', 'Jane Doe', 'John "Doe"', 'John Doe'];
     const result = abbreviateContacts(inputs);
-    // "John Doe" wird zu "John D." – Duplikate werden hochgezählt
+    // "John Doe" becomes "John D." – duplicates are counted and appended (e.g., "John D. (2)")
     expect(result).toEqual(['John D.', 'John D. (2)', 'Jane D.', 'John D. (3)', 'John D. (4)']);
   });
 });

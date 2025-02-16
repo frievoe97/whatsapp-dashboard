@@ -1,4 +1,12 @@
+//////////////////////////////
 // AggregatePerTimePlot.test.tsx
+//
+// This file contains tests for various chart components used in the WhatsApp Dashboard.
+// Each test verifies that a specific component renders the expected SVG or DIV element
+// after loading, using a dummy ChatContext for testing purposes.
+//////////////////////////////
+
+////////////////////// Imports ////////////////////////
 import { render } from '@testing-library/react';
 import { waitFor } from '@testing-library/dom';
 import { describe, it, expect, vi } from 'vitest';
@@ -17,7 +25,8 @@ import Stats from './components/plots/Stats';
 import Timeline from './components/plots/Timeline';
 import WordCount from './components/plots/WordCount';
 
-// Dummy-Kontextwert, der alle benötigten Felder bereitstellt
+////////////////////// Dummy Context ////////////////////////
+// This dummy context provides all necessary fields for testing.
 const dummyContextValue = {
   darkMode: false,
   toggleDarkMode: vi.fn(),
@@ -47,9 +56,9 @@ const dummyContextValue = {
   tempSetUseShortNames: vi.fn(),
 };
 
-// AggregatePerTimePlot.tsx
+////////////////////// Test: AggregatePerTimePlot ////////////////////////
 describe('AggregatePerTimePlot', () => {
-  it('sollte nach dem Laden (und kurzem Timeout) das SVG-Element rendern', async () => {
+  it('should render the SVG element after loading (and a short timeout)', async () => {
     const { container } = render(
       <ChatContext.Provider value={dummyContextValue}>
         <AggregatePerTimePlot />
@@ -66,7 +75,7 @@ describe('AggregatePerTimePlot', () => {
   });
 });
 
-// BarChartComp.tsx
+////////////////////// Test: SenderComparisonBarChart ////////////////////////
 describe('SenderComparisonBarChart', () => {
   it('should render the SVG element after loading (and a short timeout)', async () => {
     const { container } = render(
@@ -85,7 +94,7 @@ describe('SenderComparisonBarChart', () => {
   });
 });
 
-// ChordDiagram.tsx
+////////////////////// Test: ChordDiagram ////////////////////////
 describe('ChordDiagram', () => {
   it('should render the SVG element after loading (and a short timeout)', async () => {
     const { container } = render(
@@ -104,7 +113,7 @@ describe('ChordDiagram', () => {
   });
 });
 
-// EmojiPlot.tsx
+////////////////////// Test: EmojiPlot ////////////////////////
 describe('EmojiPlot', () => {
   it('should render the DIV element after loading (and a short timeout)', async () => {
     const { container } = render(
@@ -115,15 +124,15 @@ describe('EmojiPlot', () => {
 
     await waitFor(
       () => {
-        const svgElement = container.querySelector('div#emoji-plot');
-        expect(svgElement).toBeTruthy();
+        const divElement = container.querySelector('div#emoji-plot');
+        expect(divElement).toBeTruthy();
       },
       { timeout: 5000 },
     );
   });
 });
 
-// Heatmap.tsx
+////////////////////// Test: Heatmap ////////////////////////
 describe('Heatmap', () => {
   it('should render the SVG element after loading (and a short timeout)', async () => {
     const { container } = render(
@@ -142,7 +151,7 @@ describe('Heatmap', () => {
   });
 });
 
-// SentimentAnalysis.tsx
+////////////////////// Test: SentimentAnalysis ////////////////////////
 describe('SentimentAnalysis', () => {
   it('should render the SVG element after loading (and a short timeout)', async () => {
     const { container } = render(
@@ -161,7 +170,7 @@ describe('SentimentAnalysis', () => {
   });
 });
 
-// SentimentWordsPlot.tsx
+////////////////////// Test: SentimentWordsPlot ////////////////////////
 describe('SentimentWordsPlot', () => {
   it('should render the DIV element after loading (and a short timeout)', async () => {
     const { container } = render(
@@ -172,15 +181,15 @@ describe('SentimentWordsPlot', () => {
 
     await waitFor(
       () => {
-        const svgElement = container.querySelector('div#sender-sentiment-word-chart');
-        expect(svgElement).toBeTruthy();
+        const divElement = container.querySelector('div#sender-sentiment-word-chart');
+        expect(divElement).toBeTruthy();
       },
       { timeout: 5000 },
     );
   });
 });
 
-// Stats.tsx
+////////////////////// Test: Stats ////////////////////////
 describe('Stats', () => {
   it('should render the DIV element after loading (and a short timeout)', async () => {
     const { container } = render(
@@ -191,17 +200,17 @@ describe('Stats', () => {
 
     await waitFor(
       () => {
-        const svgElement = container.querySelector('div#stats-card');
-        expect(svgElement).toBeTruthy();
+        const divElement = container.querySelector('div#stats-card');
+        expect(divElement).toBeTruthy();
       },
       { timeout: 5000 },
     );
   });
 });
 
-// Timeline.tsx
+////////////////////// Test: Timeline ////////////////////////
 describe('Timeline', () => {
-  it('should render the DIV element after loading (and a short timeout)', async () => {
+  it('should render the SVG element after loading (and a short timeout)', async () => {
     const { container } = render(
       <ChatContext.Provider value={dummyContextValue}>
         <Timeline />
@@ -218,7 +227,7 @@ describe('Timeline', () => {
   });
 });
 
-// WordCount.tsx
+////////////////////// Test: WordCount ////////////////////////
 describe('WordCount', () => {
   it('should render the DIV element after loading (and a short timeout)', async () => {
     const { container } = render(
@@ -229,8 +238,8 @@ describe('WordCount', () => {
 
     await waitFor(
       () => {
-        const svgElement = container.querySelector('div#word-count-chart');
-        expect(svgElement).toBeTruthy();
+        const divElement = container.querySelector('div#word-count-chart');
+        expect(divElement).toBeTruthy();
       },
       { timeout: 5000 },
     );

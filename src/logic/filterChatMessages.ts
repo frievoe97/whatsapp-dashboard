@@ -1,11 +1,23 @@
 // src/logic/filterChatMessages.ts
+
+/////////////////////// Imports ///////////////////////
 import { ChatMessage, FilterOptions } from '../types/chatTypes';
 import { SenderStatus } from '../config/constants';
 
+/////////////////////// Function: computeSenderStatuses ///////////////////////
+
 /**
- * Berechnet für die gegebene Nachrichtenmenge den Status jedes Senders.
- * - Wenn der prozentuale Anteil eines Senders unter minPercentage liegt, wird er LOCKED.
- * - Ansonsten: Falls zuvor manuell deaktiviert wurde (und resetManual false ist), bleibt MANUAL_INACTIVE, sonst ACTIVE.
+ * Computes the status for each sender based on their message share.
+ *
+ * A sender is marked as LOCKED if their percentage of messages is below the given threshold.
+ * Otherwise, if the sender was previously manually deactivated (and resetManual is false),
+ * their status remains MANUAL_INACTIVE; otherwise, the sender is marked as ACTIVE.
+ *
+ * @param messages - Array of chat messages.
+ * @param minPercentage - The minimum percentage required for a sender to be considered active.
+ * @param previousStatuses - Optional previous statuses for senders.
+ * @param resetManual - Flag to indicate if manually disabled statuses should be reset.
+ * @returns An object mapping each sender to their computed status.
  */
 export const computeSenderStatuses = (
   messages: ChatMessage[],
@@ -38,12 +50,20 @@ export const computeSenderStatuses = (
   return statuses;
 };
 
+/////////////////////// Function: filterMessages ///////////////////////
+
 /**
- * Filtert die Nachrichten basierend auf Datum, Wochentagen und Senderstatus.
- * Es werden nur Nachrichten von Sendern übernommen, deren Status ACTIVE ist.
+ * Filters chat messages based on date, weekday, and sender status.
+ *
+ * The function first filters messages by the provided date range and selected weekdays.
+ * It then returns only those messages where the sender's status is ACTIVE.
+ *
+ * @param messages - Array of chat messages.
+ * @param filters - Filter options including date range, selected weekdays, and sender statuses.
+ * @returns The filtered array of chat messages.
  */
 export const filterMessages = (messages: ChatMessage[], filters: FilterOptions): ChatMessage[] => {
-  // Zuerst nach Datum und Wochentag filtern
+  // First filter messages by date and weekday
   const filteredByTime = messages.filter((msg) => {
     if (filters.startDate && msg.date < filters.startDate) return false;
     if (filters.endDate && msg.date > filters.endDate) return false;
@@ -51,6 +71,6 @@ export const filterMessages = (messages: ChatMessage[], filters: FilterOptions):
     return filters.selectedWeekdays.includes(weekday);
   });
 
-  // Anschließend nur Nachrichten von Sendern mit Status ACTIVE übernehmen.
+  // Then, return only messages from senders with ACTIVE status
   return filteredByTime.filter((msg) => filters.senderStatuses[msg.sender] === SenderStatus.ACTIVE);
 };

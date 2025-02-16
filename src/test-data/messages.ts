@@ -1,5 +1,13 @@
+////////////////////// Imports ////////////////////////
 import { ChatMessage, ChatMetadata } from '../types/chatTypes';
 
+////////////////////// Dummy Data ////////////////////////
+
+/**
+ * Dummy chat messages used for testing and development.
+ * All messages are from February 16, 2025, and involve three senders:
+ * Alice, Bob, and Charlie.
+ */
 const dummyMessage: ChatMessage[] = [
   {
     date: new Date('2025-02-16'),
@@ -115,9 +123,19 @@ const dummyMessage: ChatMessage[] = [
     sender: 'Alice',
     message: 'Sounds great, see you later!',
   },
-  { date: new Date('2025-02-16'), time: '10:24', sender: 'Charlie', message: 'Bye for now!' },
+  {
+    date: new Date('2025-02-16'),
+    time: '10:24',
+    sender: 'Charlie',
+    message: 'Bye for now!',
+  },
 ];
 
+/**
+ * Dummy chat metadata used for testing and development.
+ * This metadata summarizes the chat file, including language, OS, message dates,
+ * sender counts, abbreviated sender names, and file name.
+ */
 const dummyMetadata = {
   language: 'en',
   os: 'ios_1',
@@ -128,4 +146,5 @@ const dummyMetadata = {
   fileName: 'chat_log.txt',
 } as ChatMetadata;
 
+////////////////////// Exports ////////////////////////
 export { dummyMessage, dummyMetadata };

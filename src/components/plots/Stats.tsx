@@ -1,15 +1,13 @@
+////////////// Imports ////////////////
 import React, { useMemo, useState, useEffect } from 'react';
 import { useChat } from '../../context/ChatContext';
 import * as d3 from 'd3';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { ChatMessage, ChatMetadata } from '../../types/chatTypes';
-
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
 
-/**
- * Represents statistics for a single sender.
- */
+////////////// Type Definitions ////////////////
 export interface SenderStats {
   sender: string;
   messageCount: number;
@@ -24,34 +22,14 @@ export interface SenderStats {
   averageCharactersPerMessage: number;
 }
 
-/**
- * Minimum container width per sender card. Used to calculate the number of items per page.
- */
+////////////// Constants ////////////////
 const MIN_WIDTH_PER_ITEM = 400;
 
+////////////// Helper Functions ////////////////
 /**
- * Calculates the number of items (sender cards) per page based on the current
- * container width and window size.
+ * Calculates the total width of an element including its left and right margins.
  */
-const calculateItemsPerPage = (containerId: string): number => {
-  if (window.innerWidth < 768) return 1;
-  // const container = document.getElementById(containerId);
-  // console.log("Container: ", container);
-  // const plotWidth = container ? container.offsetWidth : 0;
-  // console.log("Plot Width: ", plotWidth);
-
-  const plotWidth = getTotalWidthIncludingMargin(containerId);
-
-  // return plotWidth % MIN_WIDTH_PER_ITEM;
-
-  if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) return 1;
-  if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) return 2;
-  if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) return 3;
-  if (plotWidth <= MIN_WIDTH_PER_ITEM * 5) return 4;
-  return 5;
-};
-
-function getTotalWidthIncludingMargin(elementId: string) {
+function getTotalWidthIncludingMargin(elementId: string): number {
   const element = document.getElementById(elementId);
   if (!element) return 0;
   const rect = element.getBoundingClientRect();
@@ -62,8 +40,22 @@ function getTotalWidthIncludingMargin(elementId: string) {
 }
 
 /**
- * Custom hook to dynamically determine the number of items per page based on
- * window resize events and a container's width.
+ * Calculates the number of sender cards to show per page based on the container's width and the current window size.
+ */
+const calculateItemsPerPage = (containerId: string): number => {
+  if (window.innerWidth < 768) return 1;
+  const plotWidth = getTotalWidthIncludingMargin(containerId);
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 2) return 1;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 3) return 2;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 4) return 3;
+  if (plotWidth <= MIN_WIDTH_PER_ITEM * 5) return 4;
+  return 5;
+};
+
+////////////// Custom Hooks ////////////////
+/**
+ * Custom hook to determine the number of items per page based on the container's width.
+ * It listens to window resize events and updates the items count accordingly.
  */
 const useItemsPerPage = (containerId: string): number => {
   const [itemsPerPage, setItemsPerPage] = useState<number>(() =>
@@ -73,7 +65,6 @@ const useItemsPerPage = (containerId: string): number => {
   useEffect(() => {
     const handleResize = () => {
       const newItemsPerPage = calculateItemsPerPage(containerId);
-
       setItemsPerPage((prev) => (prev !== newItemsPerPage ? newItemsPerPage : prev));
     };
 
@@ -87,19 +78,18 @@ const useItemsPerPage = (containerId: string): number => {
 };
 
 /**
- * Custom hook to aggregate message statistics for all senders.
- * Da die Nachrichten bereits vom Backend gefiltert sind, werden alle Nachrichten
- * berücksichtigt.
+ * Custom hook to aggregate message statistics per sender from an array of chat messages.
+ * All messages are processed (as they are already pre-filtered on the backend).
  */
 const useAggregatedStats = (messages: ChatMessage[]): SenderStats[] => {
   return useMemo(() => {
-    // Zähle die Nachrichten pro Sender.
+    // Count messages per sender
     const senderMessageCount: Record<string, number> = {};
     messages.forEach((msg) => {
       senderMessageCount[msg.sender] = (senderMessageCount[msg.sender] || 0) + 1;
     });
 
-    // Erstelle ein Daten-Objekt für Zwischenergebnisse.
+    // Intermediate data for each sender
     type SenderDataMap = {
       messages: string[];
       wordCounts: number[];
@@ -114,7 +104,7 @@ const useAggregatedStats = (messages: ChatMessage[]): SenderStats[] => {
     messages.forEach((msg) => {
       const sender = msg.sender;
       const date = new Date(msg.date);
-      // Text normalisieren: in Kleinbuchstaben, nur Buchstaben (inkl. deutscher Umlaute)
+      // Normalize text: lower-case and remove non-letter characters (including German umlauts)
       const words = msg.message
         .toLowerCase()
         .replace(/[^a-zA-ZäöüßÄÖÜ\s]/g, '')
@@ -172,8 +162,9 @@ const useAggregatedStats = (messages: ChatMessage[]): SenderStats[] => {
   }, [messages]);
 };
 
+////////////// Presentational Components ////////////////
 /**
- * Renders a single statistics row with a label and value.
+ * Renders a single row displaying a label and its corresponding value.
  */
 interface StatRowProps {
   label: string;
@@ -191,7 +182,7 @@ const StatRow: React.FC<StatRowProps> = ({ label, value }) => {
 };
 
 /**
- * Renders a card with all statistics for a single sender.
+ * Renders a card that shows all statistics for a single sender.
  */
 interface SenderStatsCardProps {
   stat: SenderStats;
@@ -218,13 +209,11 @@ const SenderStatsCard: React.FC<SenderStatsCardProps> = ({
         flex: '1 1 calc(50% - 16px)',
       }}
     >
-      {/* <h3 className="text-md font-medium mb-2">{stat.sender}</h3> */}
       <h3 className="text-md font-medium mb-2">
         {useShortNames && metadata?.sendersShort[stat.sender]
           ? metadata.sendersShort[stat.sender]
           : stat.sender}
       </h3>
-
       <div className="space-y-1">
         <StatRow label="Number of Messages:" value={stat.messageCount} />
         <StatRow label="Avg. Words per Message:" value={stat.averageWordsPerMessage} />
@@ -248,7 +237,7 @@ const SenderStatsCard: React.FC<SenderStatsCardProps> = ({
 };
 
 /**
- * Pagination controls.
+ * Renders pagination controls with previous and next buttons.
  */
 interface PaginationProps {
   currentPage: number;
@@ -288,27 +277,25 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPrev
   );
 };
 
+////////////// Main Component: Stats ////////////////
 /**
- * Stats Component
- *
- * Displays aggregated message statistics per sender in a responsive grid with pagination.
+ * The Stats component displays aggregated message statistics per sender in a responsive grid with pagination.
+ * It uses custom hooks to calculate items per page and aggregate data, and supports dark mode and localization.
  */
 const Stats: React.FC = () => {
-  // Nun werden ausschließlich filteredMessages genutzt – isUploading und minMessagePercentage entfallen
   const { filteredMessages, darkMode, metadata, useShortNames } = useChat();
-
   const containerId = 'plot-message-stats';
 
-  // 1) Bestimme Items pro Seite via custom Hook.
+  // Determine how many sender cards should be displayed per page.
   const itemsPerPage = useItemsPerPage(containerId);
 
-  // 2) Pagination-State.
+  // Pagination state for current page.
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // 3) Aggregiere Statistiken basierend auf filteredMessages.
+  // Aggregate statistics for each sender.
   const aggregatedStats = useAggregatedStats(filteredMessages);
 
-  // 4) Erzeuge eine Farbtabelle für jeden Sender.
+  // Create a color map for senders based on dark mode.
   const colorScale = useMemo(() => {
     const senders = aggregatedStats.map((stat) => stat.sender);
     const lightColors = d3.schemePaired;
@@ -321,26 +308,26 @@ const Stats: React.FC = () => {
     return scale;
   }, [aggregatedStats, darkMode]);
 
-  // 5) Gesamtzahl der Seiten.
+  // Calculate total number of pages.
   const totalPages = useMemo(
     () => Math.ceil(aggregatedStats.length / itemsPerPage),
     [aggregatedStats, itemsPerPage],
   );
 
-  // Stelle sicher, dass currentPage im gültigen Bereich liegt.
+  // Ensure the current page is within valid range.
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages || 1);
     }
   }, [currentPage, totalPages]);
 
-  // 6) Daten für die aktuelle Seite.
+  // Determine the statistics to display on the current page.
   const currentStats = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return aggregatedStats.slice(startIndex, startIndex + itemsPerPage);
   }, [aggregatedStats, currentPage, itemsPerPage]);
 
-  // 7) Pagination-Handler.
+  // Handlers for pagination navigation.
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };

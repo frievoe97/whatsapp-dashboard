@@ -1,48 +1,79 @@
+////////////// Imports ////////////////
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import Select from 'react-select';
 import * as d3 from 'd3';
 import { useChat } from '../../context/ChatContext';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import { ChatMessage } from '../../types/chatTypes';
-
 import { RefreshCw } from 'lucide-react';
-
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
 
-/**
- * HeatmapProps is an empty interface here but can be extended
- * if you need to pass down props to the Heatmap component.
- */
-// interface HeatmapProps {}
+////////////// Constants & Types ////////////////
+/** Valid categories for filtering the heatmap data. */
+const CATEGORIES: Record<string, string[]> = {
+  Year: [], // Filled dynamically from message years
+  Month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  Weekday: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  Hour: Array.from({ length: 24 }, (_, i) => i.toString()),
+  Day: Array.from({ length: 31 }, (_, i) => (i + 1).toString()),
+};
 
 /**
- * This component displays a D3-based heatmap that visualizes
- * the frequency of messages along two categorical axes (e.g., Hour vs. Weekday).
- * It allows the user to switch the categories via react-select dropdowns.
+ * Heatmap displays the frequency of messages along two categorical axes.
+ * The component allows switching the x and y categories via react-select.
+ */
+
+////////////// Helper Functions ////////////////
+/**
+ * Converts a Date object to a corresponding string value based on a given category.
+ * @param date The date to convert.
+ * @param category The category (e.g., "Year", "Month", "Weekday", "Hour", "Day").
+ * @param validValues Array of valid values for the category.
+ * @param time The time string (used for Hour category).
+ * @returns The corresponding string value or undefined.
+ */
+function getDateValue(
+  date: Date,
+  category: string,
+  validValues: string[],
+  time: string,
+): string | undefined {
+  switch (category) {
+    case 'Year':
+      return String(date.getFullYear());
+    case 'Month':
+      return validValues[date.getMonth()];
+    case 'Weekday':
+      return validValues[(date.getDay() + 6) % 7];
+    case 'Hour':
+      return validValues[Number(time.split(':')[0])];
+    case 'Day':
+      return validValues[date.getDate() - 1];
+    default:
+      return undefined;
+  }
+}
+
+////////////// Main Component: Heatmap ////////////////
+/**
+ * Displays a D3-based heatmap visualizing message frequency along two categorical axes.
+ * The user can switch categories via dropdowns and swap the axes using the refresh icon.
  */
 const Heatmap: FC = () => {
-  // -------------
-  // Context & Hooks
-  // -------------
-  // Verwende nun ausschließlich "filteredMessages" und "darkMode".
+  // Context and hooks
   const { filteredMessages, darkMode } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
-
-  // Custom Hook für Container-Dimensionen.
   const dimensions = useResizeObserver(containerRef);
 
-  // -------------
-  // State
-  // -------------
+  // State for category selection and rotation
   const [xCategory, setXCategory] = useState<string>('Hour');
   const [yCategory, setYCategory] = useState<string>('Weekday');
   const [, setIsDesktop] = useState<boolean>(window.innerWidth >= 768);
-  // Direkt bei den anderen useState-Deklarationen
-
   const [rotation, setRotation] = useState(0);
 
+  // Handler to swap the x and y categories and update rotation for animation.
   const handleClick = () => {
     swapXAndYCategories();
     setRotation((prev) => prev + 180);
@@ -54,34 +85,23 @@ const Heatmap: FC = () => {
     setYCategory(temp);
   }
 
-  // -------------
-  // Derived Data
-  // -------------
-  // Berechne die Jahre aus den filteredMessages.
+  // Derived data: extract years from filteredMessages and update the Year category.
   const years = Array.from(
     new Set(filteredMessages.map((msg: ChatMessage) => new Date(msg.date).getFullYear())),
   )
     .sort((a, b) => a - b)
     .map(String);
 
-  /**
-   * Definiert die verfügbaren Kategorien und deren Reihenfolge.
-   */
-  const CATEGORIES: Record<string, string[]> = useMemo(
+  // Update the CATEGORIES object for "Year" dynamically.
+  const dynamicCategories = useMemo(
     () => ({
+      ...CATEGORIES,
       Year: years.length > 0 ? years : ['2024'],
-      Month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-      Weekday: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      Hour: Array.from({ length: 24 }, (_, i) => i.toString()),
-      Day: Array.from({ length: 31 }, (_, i) => (i + 1).toString()),
     }),
     [years],
   );
 
-  /**
-   * Aggregiert die Nachrichten aus filteredMessages zu einem Array
-   * von Objekten { x, y, count } für die D3-Visualisierung.
-   */
+  // Aggregate message data into objects { x, y, count } for the heatmap.
   const aggregatedData = useMemo(() => {
     const dataMap: Record<string, Record<string, number>> = {};
 
@@ -93,10 +113,11 @@ const Heatmap: FC = () => {
       });
     });
 
-    // Zähle die Nachrichten in filteredMessages.
+    // Count messages for each combination.
     filteredMessages.forEach((msg: ChatMessage) => {
       const date = new Date(msg.date);
-      const time = msg.time;
+      // If msg.time is available, use it; otherwise default to "00:00"
+      const time = (msg as ChatMessage).time || '00:00';
       const xValue = getDateValue(date, xCategory, CATEGORIES[xCategory], time);
       const yValue = getDateValue(date, yCategory, CATEGORIES[yCategory], time);
       if (xValue && yValue) {
@@ -104,7 +125,7 @@ const Heatmap: FC = () => {
       }
     });
 
-    // Flache den Datenbaum zu einem Array ab.
+    // Flatten the data into an array.
     return CATEGORIES[xCategory].flatMap((xVal) =>
       CATEGORIES[yCategory].map((yVal) => ({
         x: xVal,
@@ -112,38 +133,13 @@ const Heatmap: FC = () => {
         count: dataMap[xVal][yVal],
       })),
     );
-  }, [filteredMessages, xCategory, yCategory, CATEGORIES]);
-
-  /**
-   * Hilfsfunktion, die ein Date-Objekt anhand einer Kategorie (z.B. "Month", "Hour")
-   * in einen entsprechenden String konvertiert.
-   */
-  function getDateValue(
-    date: Date,
-    category: string,
-    validValues: string[],
-    time: string,
-  ): string | undefined {
-    switch (category) {
-      case 'Year':
-        return String(date.getFullYear());
-      case 'Month':
-        return validValues[date.getMonth()];
-      case 'Weekday':
-        return validValues[(date.getDay() + 6) % 7];
-      case 'Hour':
-        return validValues[Number(time.split(':')[0])];
-      case 'Day':
-        return validValues[date.getDate() - 1];
-      default:
-        return undefined;
-    }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredMessages, xCategory, yCategory, dynamicCategories]);
 
   // -------------
   // Effects
   // -------------
-
+  // Create a tooltip element in the container if it doesn't exist.
   useEffect(() => {
     if (!containerRef.current) return;
     const tooltipSelection = d3.select(containerRef.current).select<HTMLDivElement>('.tooltip');
@@ -158,11 +154,11 @@ const Heatmap: FC = () => {
         .style('border-radius', '4px')
         .style('pointer-events', 'none')
         .style('display', 'none')
-        // Optional: Damit es auf Smartphones nicht zu groß wird:
         .style('max-width', '200px');
     }
   }, []);
 
+  // Update tooltip styling based on dark mode.
   useEffect(() => {
     if (!containerRef.current) return;
     d3.select(containerRef.current)
@@ -171,14 +167,15 @@ const Heatmap: FC = () => {
       .style('color', darkMode ? '#fff' : '#000');
   }, [darkMode]);
 
+  // Set desktop state on dimensions change.
   useEffect(() => {
     if (!dimensions) return;
     setIsDesktop(window.innerWidth >= 768);
   }, [dimensions]);
 
+  // Draw the heatmap using D3 whenever relevant data or dimensions change.
   useEffect(() => {
-    if (!dimensions || aggregatedData.length === 0) return;
-
+    if (!dimensions) return;
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
 
@@ -191,7 +188,6 @@ const Heatmap: FC = () => {
 
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
-
     svg.selectAll('*').remove();
 
     const g = svg
@@ -273,7 +269,7 @@ const Heatmap: FC = () => {
               .filter((_, i) => i % Math.ceil(yScale.domain().length / tickCountY) === 0),
           ),
       );
-  }, [aggregatedData, dimensions, darkMode, xCategory, yCategory, CATEGORIES]);
+  }, [aggregatedData, dimensions, darkMode, xCategory, yCategory, dynamicCategories]);
 
   // -------------
   // React-Select Styles
@@ -317,21 +313,22 @@ const Heatmap: FC = () => {
       minWidth: 'fit-content',
       border: darkMode ? '1px solid white' : '1px solid black',
       borderRadius: '0',
+      fontSize: '0.9rem',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     option: (provided: any, state: any) => ({
       ...provided,
-      backgroundColor: state.isSelected
+      backgroundColor: state.isHover
         ? darkMode
           ? '#777'
           : '#ddd'
         : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-          ? darkMode
-            ? '#555'
-            : 'grey'
-          : darkMode
-            ? '#333'
-            : 'white',
+        ? darkMode
+          ? '#555'
+          : '#eee'
+        : darkMode
+        ? '#333'
+        : 'white',
       color: darkMode ? 'white' : 'black',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -344,7 +341,7 @@ const Heatmap: FC = () => {
   const { t } = useTranslation();
 
   // -------------
-  // RENDERING
+  // Rendering
   // -------------
   return (
     <div
@@ -360,7 +357,7 @@ const Heatmap: FC = () => {
           <Select
             value={{ value: xCategory, label: xCategory }}
             onChange={(selected) => setXCategory(selected?.value || 'Weekday')}
-            options={Object.keys(CATEGORIES)
+            options={Object.keys(dynamicCategories)
               .filter((cat) => cat !== yCategory)
               .map((cat) => ({ value: cat, label: cat }))}
             isSearchable={false}
@@ -371,7 +368,7 @@ const Heatmap: FC = () => {
             value={{ value: yCategory, label: yCategory }}
             onChange={(selected) => setYCategory(selected?.value || 'Weekday')}
             isSearchable={false}
-            options={Object.keys(CATEGORIES)
+            options={Object.keys(dynamicCategories)
               .filter((cat) => cat !== xCategory)
               .map((cat) => ({ value: cat, label: cat }))}
             styles={customSelectStyles}
@@ -384,7 +381,7 @@ const Heatmap: FC = () => {
         />
       </div>
 
-      {/* Heatmap Body */}
+      {/* Heatmap Visualization */}
       <div className="flex-grow flex justify-center items-center">
         {filteredMessages.length === 0 ? (
           <span className="text-lg">{t('General.noDataAvailable')}</span>

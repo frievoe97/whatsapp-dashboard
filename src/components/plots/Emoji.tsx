@@ -1,3 +1,4 @@
+////////////// Imports ////////////////
 import { useState, useEffect, useMemo, FC, ReactElement, useCallback } from 'react';
 import { useChat } from '../../context/ChatContext';
 import * as d3 from 'd3';
@@ -6,31 +7,25 @@ import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
 
-/**
- * Represents a single emoji and its count.
- */
+////////////// Constants & Types ////////////////
+/** Represents a single emoji and its count. */
 interface EmojiCount {
   emoji: string;
   count: number;
 }
 
-/**
- * Represents the aggregated top emojis for a single sender.
- */
+/** Aggregated emoji data for a sender, including the top emojis. */
 interface AggregatedEmojiData {
   sender: string;
   topEmojis: EmojiCount[];
 }
 
-/**
- * Minimum width (in px) required for each item (sender card) in the display.
- */
+/** Minimum width (in px) per sender card for responsive pagination. */
 const MIN_WIDTH_PER_ITEM = 600;
 
+////////////// Helper Functions ////////////////
 /**
- * Calculates how many items (sender cards) we can display per page based on
- * the container width and the viewport size.
- *
+ * Calculates the number of sender cards to display per page based on the container width.
  * @param containerId - The ID of the container element.
  * @returns The calculated number of items per page.
  */
@@ -45,24 +40,23 @@ function calculateItemsPerPage(containerId: string): number {
   return 5;
 }
 
+////////////// Custom Hooks ////////////////
 /**
- * A custom hook that calculates the aggregated top 10 emojis per sender.
- * Es werden alle Nachrichten (filteredMessages) berücksichtigt.
- *
- * @param messages - Das Array von Nachrichten (vom Backend bereits gefiltert).
- * @returns Ein Array von AggregatedEmojiData für jeden Sender.
+ * Aggregates the top 10 emojis per sender from the provided messages.
+ * @param messages - Array of messages (already filtered by the backend).
+ * @returns An array of aggregated emoji data per sender.
  */
 function useAggregatedEmojiData(
   messages: { sender: string; message: string; date: Date }[],
 ): AggregatedEmojiData[] {
   return useMemo(() => {
-    // Zähle die Anzahl der Nachrichten pro Sender.
+    // Count the number of messages per sender (if needed)
     const senderMessageCount: Record<string, number> = {};
     messages.forEach((msg) => {
       senderMessageCount[msg.sender] = (senderMessageCount[msg.sender] || 0) + 1;
     });
 
-    // Erstelle eine Map, um die Emoji-Zählungen pro Sender zu speichern.
+    // Create a map to count emojis per sender.
     const dataMap: Record<string, Record<string, number>> = {};
     const regex = emojiRegex();
 
@@ -71,14 +65,13 @@ function useAggregatedEmojiData(
       if (!dataMap[sender]) {
         dataMap[sender] = {};
       }
-      // Extrahiere alle Emojis aus der Nachricht.
       const foundEmojis = msg.message.match(regex) || [];
       foundEmojis.forEach((emoji) => {
         dataMap[sender][emoji] = (dataMap[sender][emoji] || 0) + 1;
       });
     });
 
-    // Baue ein Array, in dem pro Sender die Top 10 Emojis stehen.
+    // Build an array containing the top 10 emojis for each sender.
     return Object.keys(dataMap).map((sender) => {
       const sortedEmojiCounts = Object.entries(dataMap[sender])
         .map(([emoji, count]) => ({ emoji, count }))
@@ -92,7 +85,6 @@ function useAggregatedEmojiData(
 /**
  * A custom hook that calculates the number of items (sender cards) to display per page,
  * updating automatically on window resize.
- *
  * @param containerId - The ID of the container element.
  * @returns The current number of items to display per page.
  */
@@ -118,8 +110,10 @@ function useResponsiveItemsPerPage(containerId: string): number {
   return itemsPerPage;
 }
 
+////////////// Components ////////////////
+
 /**
- * Represents the props for a single row displaying an emoji count.
+ * EmojiRow displays a single row with the emoji rank, character, a progress bar, and the count.
  */
 interface EmojiRowProps {
   rank: number;
@@ -128,17 +122,8 @@ interface EmojiRowProps {
   maxCount: number;
   color: string;
 }
-
-/**
- * A row component that shows:
- * - The rank of the emoji (1st, 2nd, 3rd, ...)
- * - The emoji character itself
- * - A progress bar scaled by `count`
- * - The numerical count of occurrences
- */
 const EmojiRow: FC<EmojiRowProps> = ({ rank, emoji, count, maxCount, color }): ReactElement => {
   const { darkMode } = useChat();
-
   const barWidth = (count / maxCount) * 100;
 
   return (
@@ -167,21 +152,16 @@ const EmojiRow: FC<EmojiRowProps> = ({ rank, emoji, count, maxCount, color }): R
 };
 
 /**
- * Props for rendering the sender card that contains top emojis for a single sender.
+ * SenderEmojiCard displays a single sender’s name and their top emojis in ranked order.
  */
 interface SenderEmojiCardProps {
   senderData: AggregatedEmojiData;
   colorScale: Map<string, string>;
 }
-
-/**
- * SenderEmojiCard component displays a single sender’s name and
- * a list of their top emojis in ranked order.
- */
 const SenderEmojiCard: FC<SenderEmojiCardProps> = ({ senderData, colorScale }) => {
   const { darkMode, metadata, useShortNames } = useChat();
 
-  // Berechne den maximalen Wert unter den Top-Emojis, um die Balken zu skalieren.
+  // Calculate maximum emoji count for scaling the progress bar.
   const maxCount = useMemo(
     () => Math.max(...senderData.topEmojis.map((emojiCount) => emojiCount.count), 1),
     [senderData.topEmojis],
@@ -192,16 +172,13 @@ const SenderEmojiCard: FC<SenderEmojiCardProps> = ({ senderData, colorScale }) =
   return (
     <div
       className={`border p-4 rounded-none ${darkMode ? 'border-gray-300' : 'border-black'}`}
-      style={{
-        borderLeft: `4px solid ${borderLeftColor}`,
-      }}
+      style={{ borderLeft: `4px solid ${borderLeftColor}` }}
     >
       <h3 className="text-md font-medium mb-2">
         {useShortNames && metadata?.sendersShort[senderData.sender]
           ? metadata.sendersShort[senderData.sender]
           : senderData.sender}
       </h3>
-
       <div className="space-y-1">
         {senderData.topEmojis.map((emojiData, index) => (
           <EmojiRow
@@ -219,50 +196,35 @@ const SenderEmojiCard: FC<SenderEmojiCardProps> = ({ senderData, colorScale }) =
 };
 
 /**
- * EmojiPlot component:
- * - Displays the top 10 emojis per sender.
- * - Supports pagination (previous/next) based on responsive items-per-page logic.
- * - Shows a loading spinner when no data is available.
- * - Adapts to dark mode.
+ * EmojiPlot displays the top 10 emojis per sender, with responsive pagination.
+ * It adapts to dark mode and shows a loading message when no data is available.
  */
 const EmojiPlot: FC = () => {
-  // Verwende nun filteredMessages; isUploading und minMessagePercentage entfallen.
   const { filteredMessages, darkMode } = useChat();
-
-  // Container-ID zur Berechnung der Breite.
   const containerId = 'plot-emoji-count';
-
-  // Berechne, wie viele Items pro Seite angezeigt werden sollen.
   const itemsPerPage = useResponsiveItemsPerPage(containerId);
-
-  // Aktuelle Seite in der Pagination.
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Aggregiere Emoji-Daten basierend auf den Nachrichten.
   const aggregatedEmojiData = useAggregatedEmojiData(filteredMessages);
 
-  // Berechne die Gesamtzahl der Seiten.
+  // Calculate total pages for pagination.
   const totalPages = useMemo(() => {
     return Math.ceil(aggregatedEmojiData.length / itemsPerPage);
   }, [aggregatedEmojiData, itemsPerPage]);
 
-  // Stelle sicher, dass currentPage gültig ist.
+  // Ensure the current page is valid.
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages || 1);
     }
   }, [currentPage, totalPages]);
 
-  // Extrahiere die Daten für die aktuelle Seite.
+  // Extract the data for the current page.
   const currentData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return aggregatedEmojiData.slice(startIndex, endIndex);
+    return aggregatedEmojiData.slice(startIndex, startIndex + itemsPerPage);
   }, [aggregatedEmojiData, currentPage, itemsPerPage]);
 
-  /**
-   * Erzeuge eine Farbtabelle, um jedem Sender eine eigene Farbe zuzuordnen.
-   */
+  // Create a color scale to assign a unique color to each sender.
   const colorScale = useMemo(() => {
     const senders = aggregatedEmojiData.map((d) => d.sender);
     const lightColors = d3.schemePaired;
@@ -275,7 +237,7 @@ const EmojiPlot: FC = () => {
     return scale;
   }, [aggregatedEmojiData, darkMode]);
 
-  // Pagination-Handler.
+  // Pagination handlers.
   const handlePrevPage = useCallback(() => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   }, []);
@@ -295,7 +257,6 @@ const EmojiPlot: FC = () => {
       style={{ minHeight: '350px', maxHeight: '550px', overflow: 'hidden' }}
     >
       <h2 className="text-base md:text-lg font-semibold mb-4">{t('Emoji.title')}</h2>
-
       <div className="flex-grow flex justify-center items-center flex-col">
         {filteredMessages.length === 0 ? (
           <span className="text-lg">{t('General.noDataAvailable')}</span>
@@ -306,15 +267,12 @@ const EmojiPlot: FC = () => {
               {currentData.map((senderData) => (
                 <div
                   key={senderData.sender}
-                  style={{
-                    flex: `1 1 calc(${100 / itemsPerPage}% - 16px)`,
-                  }}
+                  style={{ flex: `1 1 calc(${100 / itemsPerPage}% - 16px)` }}
                 >
                   <SenderEmojiCard senderData={senderData} colorScale={colorScale} />
                 </div>
               ))}
             </div>
-
             {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center mt-4 space-x-2">

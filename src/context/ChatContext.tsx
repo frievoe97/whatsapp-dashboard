@@ -1,5 +1,6 @@
 // src/context/ChatContext.tsx
 
+///////////////////////// Imports ///////////////////////////
 import React, {
   createContext,
   useContext,
@@ -15,6 +16,13 @@ import { ChatMessage, ChatMetadata, FilterOptions } from '../types/chatTypes';
 import { computeSenderStatuses } from '../logic/filterChatMessages';
 import { DEFAULT_WEEKDAYS } from '../config/constants';
 
+///////////////////////// Context Type Definition ///////////////////////////
+
+/**
+ * ChatContextType defines the structure for the Chat context.
+ * It includes state values, setter functions, and helper methods
+ * to manage chat data, filtering, and UI controls.
+ */
 interface ChatContextType {
   darkMode: boolean;
   toggleDarkMode: () => void;
@@ -44,16 +52,29 @@ interface ChatContextType {
   tempSetUseShortNames: Dispatch<SetStateAction<boolean>>;
 }
 
+///////////////////////// Context Creation ///////////////////////////
 export const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
+///////////////////////// ChatProvider Component ///////////////////////////
+
+/**
+ * ChatProvider wraps the application and provides chat-related state and functions
+ * through context. It manages dark mode, messages, filtering options, and UI controls.
+ *
+ * @param children - The child components that require access to the Chat context.
+ * @returns The Chat context provider wrapping the children.
+ */
 export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  //////////// State: Dark Mode ////////////
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const toggleDarkMode = useCallback(() => setDarkMode((prev) => !prev), []);
 
+  //////////// State: Chat Messages and Metadata ////////////
   const [originalMessages, setOriginalMessages] = useState<ChatMessage[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<ChatMessage[]>([]);
   const [metadata, setMetadata] = useState<ChatMetadata | null>(null);
 
+  //////////// State: Filter Options ////////////
   const initialFilters: FilterOptions = {
     startDate: undefined,
     endDate: undefined,
@@ -61,21 +82,22 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     minPercentagePerSender: 3,
     senderStatuses: {},
   };
-
   const [appliedFilters, setAppliedFilters] = useState<FilterOptions>(initialFilters);
   const [tempFilters, setTempFilters] = useState<FilterOptions>(initialFilters);
   const [lastAppliedMinPercentage, setLastAppliedMinPercentage] = useState<number>(3);
 
+  //////////// State: UI Controls //////////////////
   const [senderDropdownOpen, setSenderDropdownOpen] = useState<boolean>(false);
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
 
+  //////////// State: Short Names Option //////////////////
   const [useShortNames, setUseShortNames] = useState<boolean>(false);
   const toggleUseShortNames = useCallback(() => setUseShortNames((prev) => !prev), []);
-
   const [tempUseShortNames, tempSetUseShortNames] = useState<boolean>(false);
   const tempToggleUseShortNames = useCallback(() => tempSetUseShortNames((prev) => !prev), []);
 
+  //////////// Effect: Initialize Filters when Metadata or Messages Change ////////////
   useEffect(() => {
     if (metadata && originalMessages.length > 0) {
       const newFilters: FilterOptions = {
@@ -100,15 +122,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metadata, originalMessages]);
 
+  //////////// Callback: Apply Filters //////////////////
   const applyFilters = useCallback(
     (filters?: FilterOptions) => {
       const usedFilters = filters?.startDate ? filters : tempFilters;
-
-      // Erstelle einen Worker für das Filtern
+      // Create a worker to process filtering asynchronously.
       const worker = new Worker(new URL('../workers/filterWorker.ts', import.meta.url), {
         type: 'module',
       });
-
       worker.postMessage({
         originalMessages,
         tempFilters: usedFilters,
@@ -125,6 +146,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     [originalMessages, tempFilters, lastAppliedMinPercentage],
   );
 
+  //////////// Callback: Reset Filters //////////////////
   const resetFilters = useCallback(() => {
     if (metadata) {
       const newFilters: FilterOptions = {
@@ -145,6 +167,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [metadata, originalMessages, tempFilters.minPercentagePerSender]);
 
+  //////////// Memoized Context Value //////////////////
   const value = useMemo(
     () => ({
       darkMode,
@@ -196,9 +219,18 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     ],
   );
 
+  //////////// Render Chat Context Provider //////////////////
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };
 
+///////////////////////// Custom Hook: useChat ///////////////////////////
+
+/**
+ * Custom hook to access the ChatContext.
+ *
+ * @returns The Chat context value.
+ * @throws An error if used outside of a ChatProvider.
+ */
 // eslint-disable-next-line react-refresh/only-export-components
 export const useChat = (): ChatContextType => {
   const context = useContext(ChatContext);

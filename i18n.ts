@@ -1,6 +1,11 @@
+/////////////////////// Imports ///////////////////////
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+/////////////////////// i18n Resources ///////////////////////
+/**
+ * i18n resources for different languages.
+ */
 const resources = {
   en: {
     translation: {
@@ -182,14 +187,24 @@ const resources = {
   },
 };
 
+/////////////////////// i18n Initialization ///////////////////////
+/**
+ * Initialize the i18n instance with the react-i18next plugin.
+ *
+ * - Uses the resources defined above.
+ * - Sets the initial language based on the browser's language (fallback to 'en').
+ * - Specifies a fallback language ('en') if the chosen language is not available.
+ * - Uses 'translation' as the default namespace.
+ * - Disables escaping in interpolation since React already handles it.
+ */
 i18n
-  .use(initReactI18next)
+  .use(initReactI18next) // Passes i18n down to react-i18next.
   .init({
     resources,
-    lng: navigator.language.split('-')[0] || 'en',
-    fallbackLng: 'en',
-    defaultNS: 'translation',
-    interpolation: { escapeValue: false },
+    lng: navigator.language.split('-')[0] || 'en', // Use browser language or default to English.
+    fallbackLng: 'en', // Fallback language in case the detected language is not available.
+    defaultNS: 'translation', // Default namespace for translations.
+    interpolation: { escapeValue: false }, // React already escapes values.
   })
   .then(() => {
     console.log('i18n initialized successfully');
@@ -197,4 +212,5 @@ i18n
   })
   .catch((err) => console.error('i18n initialization failed:', err));
 
+/////////////////////// Export ///////////////////////
 export default i18n;

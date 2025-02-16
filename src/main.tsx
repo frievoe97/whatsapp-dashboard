@@ -1,39 +1,49 @@
+// React & ReactDOM & Helmet Provider
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 
+// App & Context
 import App from './App';
 import { ChatProvider } from './context/ChatContext';
 import './index.css';
 
+///////////////////// Global Providers Component //////////////////////
+
 /**
- * Wraps the application with necessary global providers.
- * This keeps the `index.tsx` clean and modular.
+ * Providers Component
+ *
+ * Wraps the application with global providers: HelmetProvider for SEO and
+ * ChatProvider for state management. This ensures that all children have access
+ * to these contexts.
+ *
+ * @param children - The child components to wrap.
+ * @returns The children wrapped with HelmetProvider and ChatProvider.
  */
 // eslint-disable-next-line react-refresh/only-export-components
-const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <HelmetProvider>
-      <ChatProvider>{children}</ChatProvider>
-    </HelmetProvider>
-  );
-};
+const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <HelmetProvider>
+    <ChatProvider>{children}</ChatProvider>
+  </HelmetProvider>
+);
 
-// Ensure the root element exists before rendering
+///////////////////// Root Element Setup //////////////////////
+
+// Get the root element from the HTML. Throw an error if it's not found.
 const rootElement = document.getElementById('root');
 if (!rootElement) {
-  throw new Error(
-    "Root element not found. Make sure there is an element with id='root' in index.html",
-  );
+  throw new Error("Root element not found. Ensure an element with id='root' exists in index.html");
 }
-
 const root = ReactDOM.createRoot(rootElement);
 
+///////////////////// Application Entry Point //////////////////////
+
 /**
- * Main entry point of the application.
- * - Uses React 18's concurrent rendering with `createRoot`.
- * - Wraps the App component with necessary context providers.
- * - Enables strict mode for additional runtime checks.
+ * Main Application Render
+ *
+ * Uses React 18's createRoot API to enable concurrent rendering.
+ * The App component is wrapped with Providers and React.StrictMode
+ * for extra runtime checks and better development practices.
  */
 root.render(
   <React.StrictMode>

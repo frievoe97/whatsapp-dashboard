@@ -1,3 +1,4 @@
+////////////// Imports ////////////////
 import { FC, ReactElement, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import Select from 'react-select';
@@ -6,27 +7,22 @@ import Sentiment from 'sentiment';
 import { removeStopwords, deu } from 'stopword';
 import { useChat } from '../../context/ChatContext';
 import { ChatMetadata } from '../../types/chatTypes';
-
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
 
-//
-// -----------------------------------------------------------------------------
-// CONSTANTS & TYPES
-// -----------------------------------------------------------------------------
-
+////////////// Types & Constants ////////////////
 /**
- * List of valid language codes supported for sentiment analysis.
+ * List of valid language codes for sentiment analysis.
  */
 const VALID_LANGUAGES = ['de', 'en', 'fr', 'es'] as const;
 
 /**
- * Minimum width per item (in px) to decide how many items we can display per page.
+ * Minimum width (in px) per item to determine the number of items per page.
  */
 const MIN_WIDTH_PER_ITEM = 600;
 
 /**
- * Represents a single word and its aggregated sentiment data.
+ * Represents a word with its count and aggregated sentiment value.
  */
 interface WordSentimentCount {
   word: string;
@@ -35,7 +31,7 @@ interface WordSentimentCount {
 }
 
 /**
- * Represents the aggregated top words (by sentiment) for a particular sender.
+ * Aggregated sentiment data for a sender.
  */
 interface AggregatedSentimentWordData {
   sender: string;
@@ -43,7 +39,7 @@ interface AggregatedSentimentWordData {
 }
 
 /**
- * Props for the subcomponent that displays each sender’s top words in bar chart style.
+ * Props for the sender sentiment word chart component.
  */
 interface SenderSentimentWordChartProps {
   sender: string;
@@ -55,7 +51,7 @@ interface SenderSentimentWordChartProps {
 }
 
 /**
- * Props for the pagination subcomponent.
+ * Props for the pagination controls component.
  */
 interface PaginationProps {
   currentPage: number;
@@ -65,15 +61,9 @@ interface PaginationProps {
   onNext: () => void;
 }
 
-//
-// -----------------------------------------------------------------------------
-// HELPER COMPONENTS
-// -----------------------------------------------------------------------------
-
+////////////// Helper Components ////////////////
 /**
- * SenderSentimentWordChart
- *
- * Renders a simple bar-chart-like view for a single sender's top words.
+ * Renders a bar-chart style view of a sender's top words with sentiment values.
  */
 const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
   sender,
@@ -83,7 +73,7 @@ const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
   useShortNames,
   metadata,
 }) => {
-  // Compute the maximum absolute total sentiment (to scale bar widths).
+  // Calculate the maximum absolute sentiment value for scaling.
   const maxSentiment = useMemo(
     () => Math.max(...topWords.map((w) => Math.abs(w.totalSentiment)), 1),
     [topWords],
@@ -98,28 +88,20 @@ const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
         borderLeft: `4px solid ${color}`,
       }}
     >
-      {/* <h3 className="text-md font-medium mb-2">{sender}</h3> */}
       <h3 className="text-md font-medium mb-2">
         {useShortNames && metadata?.sendersShort[sender] ? metadata.sendersShort[sender] : sender}
       </h3>
-
       <div className="space-y-1">
         {topWords.map((wordData, index) => {
           const barWidthPercent = (Math.abs(wordData.totalSentiment) / maxSentiment) * 100;
-
           return (
             <div key={wordData.word} className="flex items-center h-[28px]">
-              {/* Rank (1-based index) */}
               <div className={`w-6 text-sm ${darkMode ? 'text-white' : 'text-black'}`}>
                 {index + 1}.
               </div>
-
-              {/* Word text */}
               <div className={`w-24 text-sm ${darkMode ? 'text-white' : 'text-black'}`}>
                 {wordData.word}
               </div>
-
-              {/* Bar container */}
               <div className="flex-1 bg-gray-300 h-4 mx-2">
                 <div
                   className="h-4"
@@ -129,8 +111,6 @@ const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
                   }}
                 />
               </div>
-
-              {/* Total sentiment value (formatted) */}
               <div className={`w-12 text-sm ${darkMode ? 'text-white' : 'text-black'}`}>
                 {wordData.totalSentiment.toFixed(1)}
               </div>
@@ -143,9 +123,7 @@ const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
 };
 
 /**
- * Pagination
- *
- * Renders simple pagination controls: "Previous" / "Next" buttons and current page info.
+ * Renders pagination controls with Previous/Next buttons and current page info.
  */
 const Pagination: FC<PaginationProps> = ({ currentPage, totalPages, darkMode, onPrev, onNext }) => {
   return (
@@ -177,40 +155,26 @@ const Pagination: FC<PaginationProps> = ({ currentPage, totalPages, darkMode, on
   );
 };
 
-//
-// -----------------------------------------------------------------------------
-// MAIN COMPONENT: SentimentWordsPlot
-// -----------------------------------------------------------------------------
-
+////////////// Main Component: SentimentWordsPlot ////////////////
 /**
- * SentimentWordsPlot
- *
- * Analysiert Chat-Nachrichten aus dem Context (useChat) und zeigt für jeden Sender
- * die Top 10 Wörter mit dem höchsten (best) bzw. niedrigsten (worst) Gesamtsentiment.
- * Enthält:
- *   - Sprache-basierte Sentiment-Analyse (AFINN-Lexikon).
- *   - Ein Toggle (über react‑select) zur Auswahl zwischen "Best" und "Worst" Wörtern.
- *   - Responsive Pagination, die sich an der verfügbaren Breite orientiert.
+ * Analyzes chat messages and displays each sender's top 10 words based on aggregated sentiment.
+ * Features include:
+ * - Language-based sentiment analysis using an AFINN lexicon.
+ * - A toggle (via react‑select) to switch between "Best" and "Worst" words.
+ * - Responsive pagination based on available container width.
  */
 const SentimentWordsPlot: FC = (): ReactElement => {
-  // Verwende nun ausschließlich filteredMessages; isUploading und minMessagePercentage entfallen.
-  // const { filteredMessages, darkMode, metadata } = useChat();
   const { filteredMessages, darkMode, metadata, useShortNames } = useChat();
-
-  // Reference zum Container (für responsive Breitenmessung).
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Pagination-States.
+  // Pagination state.
   const [itemsPerPage, setItemsPerPage] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // Toggle: true = "Best" (positive), false = "Worst" (negative).
+  // Toggle state: true for "Best" (positive), false for "Worst" (negative).
   const [showBest, setShowBest] = useState<boolean>(true);
 
-  //
-  // ---------------------------------------------------------------------------
-  // RESIZE HANDLING (RESPONSIVE ITEMS PER PAGE)
-  // ---------------------------------------------------------------------------
+  // Responsive: Calculate items per page based on container width.
   useEffect(() => {
     const updateItemsPerPage = (): void => {
       let newItemsPerPage = 1;
@@ -239,18 +203,13 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     return () => window.removeEventListener('resize', updateItemsPerPage);
   }, []);
 
-  //
-  // ---------------------------------------------------------------------------
-  // SENTIMENT ANALYZER & LEXIKON LOADING
-  // ---------------------------------------------------------------------------
+  // Sentiment analyzer initialization and lexicon loading.
   const sentimentAnalyzer = useMemo(() => new Sentiment(), []);
   const [afinn, setAfinn] = useState<Record<string, number>>({});
   const [isLanguageRegistered, setIsLanguageRegistered] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!metadata) return;
-
-    if (!metadata.language) return;
+    if (!metadata || !metadata.language) return;
     const langToLoad = VALID_LANGUAGES.includes(metadata.language as 'de' | 'en' | 'fr' | 'es')
       ? metadata.language
       : 'en';
@@ -266,12 +225,10 @@ const SentimentWordsPlot: FC = (): ReactElement => {
 
   useEffect(() => {
     if (!metadata) return;
-
     if (metadata.language) {
       setIsLanguageRegistered(true);
       return;
     }
-
     if (!metadata.language || Object.keys(afinn).length === 0) return;
     const langToUse = VALID_LANGUAGES.includes(metadata.language as 'de' | 'en' | 'fr' | 'es')
       ? metadata.language
@@ -286,17 +243,12 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     }
   }, [metadata, afinn, sentimentAnalyzer]);
 
-  //
-  // ---------------------------------------------------------------------------
-  // AGGREGATE SENTIMENT CALCULATION
-  // ---------------------------------------------------------------------------
+  // Calculate aggregated sentiment data per sender.
   const aggregatedSentimentData: AggregatedSentimentWordData[] = useMemo(() => {
     if (!metadata?.language || !isLanguageRegistered) {
       return [];
     }
 
-    // In diesem Fall werden alle Nachrichten in filteredMessages berücksichtigt.
-    // Es entfällt eine Filterung nach Mindestnachrichten.
     const dataMap: {
       [sender: string]: {
         [word: string]: { count: number; sentiment: number };
@@ -341,10 +293,7 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     });
   }, [filteredMessages, metadata, isLanguageRegistered, afinn, showBest]);
 
-  //
-  // ---------------------------------------------------------------------------
-  // PAGINATION LOGIC
-  // ---------------------------------------------------------------------------
+  // Pagination calculations.
   const totalPages = useMemo(() => {
     if (aggregatedSentimentData.length === 0) return 1;
     return Math.ceil(aggregatedSentimentData.length / itemsPerPage);
@@ -363,10 +312,7 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
-  //
-  // ---------------------------------------------------------------------------
-  // COLOR SCALE (d3)
-  // ---------------------------------------------------------------------------
+  // Create a color scale for sender charts.
   const colorScale: Map<string, string> = useMemo(() => {
     const senders = aggregatedSentimentData.map((d) => d.sender);
     const lightPalette = d3.schemePaired;
@@ -379,13 +325,13 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     return scale;
   }, [aggregatedSentimentData, darkMode]);
 
-  // React-Select Optionen
+  // Options for the react-select toggle.
   const options = [
     { value: 'Best', label: 'Best' },
     { value: 'Worst', label: 'Worst' },
   ];
 
-  // React-Select Styles (angepasst an Dark/Light Mode)
+  // Custom styling for the react-select component.
   const customSelectStyles = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     control: (provided: any) => ({
@@ -425,6 +371,7 @@ const SentimentWordsPlot: FC = (): ReactElement => {
       minWidth: 'fit-content',
       border: darkMode ? '1px solid white' : '1px solid black',
       borderRadius: '0',
+      fontSize: '0.9rem',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     option: (provided: any, state: any) => ({
@@ -436,7 +383,7 @@ const SentimentWordsPlot: FC = (): ReactElement => {
         : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
         ? darkMode
           ? '#555'
-          : 'grey'
+          : '#eee'
         : darkMode
         ? '#333'
         : 'white',
@@ -450,16 +397,11 @@ const SentimentWordsPlot: FC = (): ReactElement => {
   };
 
   const { t } = useTranslation();
-
   const titleParts = t('SentimentWord.title', {
     wordCategory: showBest ? 'Best' : 'Worst',
     returnObjects: true,
   }) as string[];
 
-  //
-  // ---------------------------------------------------------------------------
-  // RENDERING
-  // ---------------------------------------------------------------------------
   return (
     <div
       id="plot-sentiment-words"
@@ -469,7 +411,6 @@ const SentimentWordsPlot: FC = (): ReactElement => {
       }`}
       style={{ minHeight: '350px', maxHeight: '550px', overflow: 'hidden' }}
     >
-      {/* Header with Toggle */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-base md:text-lg font-semibold flex items-center space-x-0">
           <span>{titleParts[0]}</span>
@@ -483,7 +424,6 @@ const SentimentWordsPlot: FC = (): ReactElement => {
           <span>{titleParts[2]}</span>
         </h2>
       </div>
-      {/* Main Content */}
       <div className="flex-grow flex justify-center items-center flex-col w-full">
         {aggregatedSentimentData.length === 0 ? (
           <span className="text-lg">{t('General.noDataAvailable')}</span>
