@@ -97,7 +97,7 @@ Thank you for your interest in contributing to **WhatsApp Dashboard**! This proj
 
 ## License
 
-This project is licensed under the [MIT License](./LICENSE), with an additional requirement to credit the author in any publicly distributed versions of the software.
+This project is licensed under the [MIT License](./LICENSE.txt), with an additional requirement to credit the author in any publicly distributed versions of the software.
 
 ## Contact
 
