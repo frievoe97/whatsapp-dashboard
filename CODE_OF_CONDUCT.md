@@ -1,5 +1,3 @@
-# CODE_OF_CONDUCT.md
-
 ## Introduction
 
 Our goal is to foster an open and welcoming environment for everyone interested in **WhatsApp Dashboard**. Although we have not adopted a formal code of conduct framework at this time, we expect contributors to interact with respect and professionalism.

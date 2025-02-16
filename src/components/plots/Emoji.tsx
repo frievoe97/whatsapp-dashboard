@@ -3,6 +3,8 @@ import { useChat } from '../../context/ChatContext';
 import * as d3 from 'd3';
 import emojiRegex from 'emoji-regex';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
 
 /**
  * Represents a single emoji and its count.
@@ -282,6 +284,8 @@ const EmojiPlot: FC = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   }, [totalPages]);
 
+  const { t } = useTranslation();
+
   return (
     <div
       id={containerId}
@@ -290,11 +294,11 @@ const EmojiPlot: FC = () => {
       }`}
       style={{ minHeight: '350px', maxHeight: '550px', overflow: 'hidden' }}
     >
-      <h2 className="text-base md:text-lg font-semibold mb-4">Top 10 Emojis for Person</h2>
+      <h2 className="text-base md:text-lg font-semibold mb-4">{t('Emoji.title')}</h2>
 
       <div className="flex-grow flex justify-center items-center flex-col">
         {filteredMessages.length === 0 ? (
-          <span className="text-lg">No Data Available</span>
+          <span className="text-lg">{t('General.noDataAvailable')}</span>
         ) : (
           <>
             {/* Sender Cards */}

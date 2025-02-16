@@ -1,8 +1,12 @@
-import { FC, useEffect, useMemo, useRef, useState, ChangeEvent } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Maximize2, Minimize2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useChat } from '../../context/ChatContext';
 import useResizeObserver from '../../hooks/useResizeObserver';
+
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
+import Select from 'react-select';
 
 /* -------------------------------------------------------------------------- */
 /*                               Constants & Types                            */
@@ -320,9 +324,9 @@ const SenderComparisonBarChart: FC = () => {
     setExpanded((prev) => !prev);
   }
 
-  function handlePropertyChange(event: ChangeEvent<HTMLSelectElement>) {
-    setSelectedProperty(event.target.value);
-  }
+  // function handlePropertyChange(event: ChangeEvent<HTMLSelectElement>) {
+  //   setSelectedProperty(event.target.value);
+  // }
 
   function handlePreviousPage() {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -333,6 +337,73 @@ const SenderComparisonBarChart: FC = () => {
   }
 
   /* -------------------------- Component Rendering -------------------------- */
+
+  // const { t } = useTranslation();
+
+  const customSelectStyles = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    control: (provided: any) => ({
+      ...provided,
+      backgroundColor: 'transparent',
+      border: 'none',
+      boxShadow: 'none',
+      display: 'flex',
+      justifyContent: 'space-between',
+      marginLeft: '4px',
+      textDecoration: 'underline',
+      textUnderlineOffset: '3px',
+      marginRight: '4px',
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    valueContainer: (provided: any) => ({
+      ...provided,
+      padding: '0px',
+      flex: '1 1 auto',
+    }),
+    indicatorSeparator: () => ({ display: 'none' }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dropdownIndicator: (provided: any) => ({
+      ...provided,
+      padding: '6px',
+      marginLeft: '-5px',
+      color: darkMode ? 'white' : 'black',
+      display: 'none',
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: darkMode ? '#333' : 'white',
+      color: darkMode ? 'white' : 'black',
+      boxShadow: 'none',
+      width: 'auto',
+      minWidth: 'fit-content',
+      border: darkMode ? '1px solid white' : '1px solid black',
+      borderRadius: '0',
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isHover
+        ? darkMode
+          ? '#777'
+          : '#ddd'
+        : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
+          ? darkMode
+            ? '#555'
+            : '#eee'
+          : darkMode
+            ? '#333'
+            : 'white',
+      color: darkMode ? 'white' : 'black',
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: darkMode ? 'white' : 'black',
+    }),
+  };
+
+  const { t } = useTranslation();
 
   return (
     <div
@@ -345,7 +416,16 @@ const SenderComparisonBarChart: FC = () => {
     >
       {/* Header with title and expand/minimize button */}
       <div id="bar-chart-header" className="flex items-center justify-between">
-        <h2 className="text-base md:text-lg font-semibold mb-4">Sender Comparison</h2>
+        <h2 className="text-base md:text-lg font-semibold flex items-center space-x-0">
+          <Select
+            value={properties.find((option) => option.key === selectedProperty)}
+            onChange={(selected) => setSelectedProperty(selected?.key || properties[0].key)}
+            options={properties}
+            isSearchable={false}
+            styles={customSelectStyles}
+          />
+        </h2>
+
         <button
           className={`ml-4 hidden md:flex items-center justify-center p-1  border-none focus:outline-none ${
             darkMode ? 'text-white ' : 'text-black '
@@ -362,36 +442,10 @@ const SenderComparisonBarChart: FC = () => {
         </button>
       </div>
 
-      {/* Property selection dropdown */}
-      <div id="property-select" className="mb-4">
-        <select
-          id="property-dropdown"
-          value={selectedProperty}
-          onChange={handlePropertyChange}
-          className={`rounded-none mt-1.5 w-fit border text-sm font-medium outline-none focus:ring-0 appearance-none p-2 ${
-            darkMode
-              ? 'border-gray-300 bg-gray-700 text-white hover:bg-gray-800'
-              : 'border-black bg-white text-black hover:bg-gray-100'
-          }`}
-          style={{ fontFamily: 'Arial, sans-serif' }}
-        >
-          {properties.map((prop) => (
-            <option
-              key={prop.key}
-              value={prop.key}
-              className={darkMode ? 'bg-black text-white' : 'bg-white text-black'}
-              style={{ fontFamily: 'Arial, sans-serif' }}
-            >
-              {prop.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
       {/* Chart or "No Data Available" if no messages */}
       {filteredMessages.length === 0 ? (
         <div className="flex justify-center items-center flex-grow">
-          <span className="text-lg">No Data Available</span>
+          <span className="text-lg">{t('General.noDataAvailable')}</span>
         </div>
       ) : (
         <svg id="bar-chart-plot" ref={svgRef} className="w-full"></svg>

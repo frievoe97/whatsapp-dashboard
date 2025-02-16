@@ -7,6 +7,9 @@ import { removeStopwords, deu } from 'stopword';
 import { useChat } from '../../context/ChatContext';
 import { ChatMetadata } from '../../types/chatTypes';
 
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
+
 //
 // -----------------------------------------------------------------------------
 // CONSTANTS & TYPES
@@ -426,17 +429,17 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     option: (provided: any, state: any) => ({
       ...provided,
-      backgroundColor: state.isSelected
+      backgroundColor: state.isHover
         ? darkMode
           ? '#777'
           : '#ddd'
         : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-          ? darkMode
-            ? '#555'
-            : 'grey'
-          : darkMode
-            ? '#333'
-            : 'white',
+        ? darkMode
+          ? '#555'
+          : 'grey'
+        : darkMode
+        ? '#333'
+        : 'white',
       color: darkMode ? 'white' : 'black',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -445,6 +448,13 @@ const SentimentWordsPlot: FC = (): ReactElement => {
       color: darkMode ? 'white' : 'black',
     }),
   };
+
+  const { t } = useTranslation();
+
+  const titleParts = t('SentimentWord.title', {
+    wordCategory: showBest ? 'Best' : 'Worst',
+    returnObjects: true,
+  }) as string[];
 
   //
   // ---------------------------------------------------------------------------
@@ -462,7 +472,7 @@ const SentimentWordsPlot: FC = (): ReactElement => {
       {/* Header with Toggle */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-base md:text-lg font-semibold flex items-center space-x-0">
-          <span>Top 10</span>
+          <span>{titleParts[0]}</span>
           <Select
             value={options.find((option) => option.value === (showBest ? 'Best' : 'Worst'))}
             onChange={(selected) => setShowBest(selected?.value === 'Best')}
@@ -470,13 +480,13 @@ const SentimentWordsPlot: FC = (): ReactElement => {
             isSearchable={false}
             styles={customSelectStyles}
           />
-          <span>Words per Person</span>
+          <span>{titleParts[2]}</span>
         </h2>
       </div>
       {/* Main Content */}
       <div className="flex-grow flex justify-center items-center flex-col w-full">
         {aggregatedSentimentData.length === 0 ? (
-          <span className="text-lg">No Data Available</span>
+          <span className="text-lg">{t('General.noDataAvailable')}</span>
         ) : (
           <>
             <div className="flex flex-col md:flex-row gap-4 w-full">

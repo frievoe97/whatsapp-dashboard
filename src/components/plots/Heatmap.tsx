@@ -7,6 +7,9 @@ import { ChatMessage } from '../../types/chatTypes';
 
 import { RefreshCw } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
+
 /**
  * HeatmapProps is an empty interface here but can be extended
  * if you need to pass down props to the Heatmap component.
@@ -338,6 +341,8 @@ const Heatmap: FC = () => {
     }),
   };
 
+  const { t } = useTranslation();
+
   // -------------
   // RENDERING
   // -------------
@@ -351,7 +356,7 @@ const Heatmap: FC = () => {
       {/* Title and Category Selectors */}
       <div className="flex flex-row justify-between items-center w-full pl-4 md:pl-0 mb-4 ">
         <h2 className="text-base md:text-lg font-semibold flex items-center space-x-0">
-          <span>Messages By</span>
+          <span>{t('Heatmap.title')}</span>
           <Select
             value={{ value: xCategory, label: xCategory }}
             onChange={(selected) => setXCategory(selected?.value || 'Weekday')}
@@ -382,7 +387,7 @@ const Heatmap: FC = () => {
       {/* Heatmap Body */}
       <div className="flex-grow flex justify-center items-center">
         {filteredMessages.length === 0 ? (
-          <span className="text-lg">No Data Available</span>
+          <span className="text-lg">{t('General.noDataAvailable')}</span>
         ) : (
           <svg id="heatmap-plot" ref={svgRef} className="w-full h-full" />
         )}

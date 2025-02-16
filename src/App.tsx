@@ -149,7 +149,7 @@ const App: React.FC = () => {
     <>
       {/* SEO Meta-Tags */}
       <Helmet>
-        <title>WhatsApp Dashboard – Visualize your Chats</title>
+        <title>{t('App.title')}</title>
         <meta
           name="description"
           content="Analyze your WhatsApp chats with detailed charts and statistics."

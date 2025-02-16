@@ -6,6 +6,9 @@ import { useChat } from '../../context/ChatContext';
 import { ChatMessage, ChatMetadata } from '../../types/chatTypes';
 import useResizeObserver from '../../hooks/useResizeObserver';
 
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
+
 interface TimeDataPoint {
   date: Date;
   count: number;
@@ -622,6 +625,8 @@ const Timeline: React.FC = () => {
     metadata,
   );
 
+  const { t } = useTranslation();
+
   return (
     <div
       ref={containerRef}
@@ -827,7 +832,7 @@ const Timeline: React.FC = () => {
       </div>
       <div className="flex-grow flex justify-center items-center">
         {filteredMessages.length === 0 ? (
-          <span className="text-lg">No Data Available</span>
+          <span className="text-lg">{t('General.noDataAvailable')}</span>
         ) : (
           <svg id="timeline_plot" ref={svgRef} className="h-full w-full flex-grow" />
         )}

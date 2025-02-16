@@ -6,6 +6,9 @@ import useResizeObserver from '../../hooks/useResizeObserver';
 import Switch from 'react-switch';
 import { Hash, Percent, Maximize2, Minimize2, Split, Merge } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
+
 /** DataPoint und AggregatedData Interfaces bleiben unverändert */
 interface DataPoint {
   category: string;
@@ -593,6 +596,8 @@ const AggregatePerTimePlot: React.FC = () => {
     return rect.height + marginTop + marginBottom;
   }
 
+  const { t } = useTranslation();
+
   return (
     <div
       ref={containerRef}
@@ -789,7 +794,7 @@ const AggregatePerTimePlot: React.FC = () => {
       )}
       <div className="flex-grow flex justify-center items-center">
         {filteredMessages.length === 0 ? (
-          <span className="text-lg">No Data Available</span>
+          <span className="text-lg">{t('General.noDataAvailable')}</span>
         ) : (
           <svg id="aggregate_plot" ref={svgRef} className="h-full w-full flex-grow"></svg>
         )}
