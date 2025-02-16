@@ -28,7 +28,7 @@ describe('parseChatFile', () => {
     // Da die Nachricht "Hello" enthält, wird sie aufgrund der ignore-Linie herausgefiltert
     expect(result.messages).toEqual([]);
     expect(result.metadata.fileName).toBe('chat.txt');
-    expect(result.metadata.os).toBe('ios');
+    expect(result.metadata.os).toBe('ios_1');
     // Es sollten keine Sender vorhanden sein, da keine Nachricht übrig blieb.
     expect(result.metadata.senders).toEqual({});
   });

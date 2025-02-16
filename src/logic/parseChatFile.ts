@@ -1,17 +1,25 @@
 // src/logic/parseChatFile.ts
 import { ChatMessage, ChatMetadata } from '../types/chatTypes';
 import { franc } from 'franc-min';
-import { IOS_REGEX, ANDROID_REGEX } from '../config/constants';
+import { extractMessageData, OPERATING_SYSTEMS } from '../config/constants';
 import { abbreviateContacts } from '../utils/abbreviateContacts';
 
-const detectOS = (lines: string[]): 'ios' | 'android' => {
-  let iosCount = 0;
-  let androidCount = 0;
-  for (const line of lines.slice(0, 100)) {
-    if (IOS_REGEX.test(line)) iosCount++;
-    if (ANDROID_REGEX.test(line)) androidCount++;
+const detectOS = (lines: string[]): string => {
+  const counts = new Map<string, number>();
+
+  for (const os of OPERATING_SYSTEMS) {
+    counts.set(os.name, 0);
   }
-  return iosCount >= androidCount ? 'ios' : 'android';
+
+  for (const line of lines.slice(0, 1000)) {
+    for (const os of OPERATING_SYSTEMS) {
+      if (os.regex.test(line)) {
+        counts.set(os.name, (counts.get(os.name) || 0) + 1);
+      }
+    }
+  }
+
+  return [...counts.entries()].reduce((a, b) => (a[1] >= b[1] ? a : b))[0];
 };
 
 const detectLanguage = (messages: ChatMessage[]): 'de' | 'en' | 'fr' | 'es' => {
@@ -35,8 +43,8 @@ const detectLanguage = (messages: ChatMessage[]): 'de' | 'en' | 'fr' | 'es' => {
  * @param os Operating system of the chat
  * @returns Array of ignore lines
  */
-const loadIgnoreLines = async (lang: string, os: string): Promise<string[]> => {
-  const fileName = `ignore_lines_${lang}_${os}.txt`;
+const loadIgnoreLines = async (lang: string): Promise<string[]> => {
+  const fileName = `ignore_lines_${lang}.txt`;
   const fileNamePath = `/files/${fileName}`;
 
   const fileNamePathResponse = await fetch(fileNamePath);
@@ -47,8 +55,6 @@ const loadIgnoreLines = async (lang: string, os: string): Promise<string[]> => {
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
-
-  // console.log("Load these ignore lines: ", lines, " from ", fileNamePath);
 
   return lines;
 };
@@ -64,36 +70,44 @@ export const parseChatFile = async (
   if (lines.length === 0) {
     throw new Error('Datei ist leer oder ungültig.');
   }
-  const os = detectOS(lines);
 
   const messages: ChatMessage[] = [];
+
+  const osName = detectOS(lines);
+  const osConfig = OPERATING_SYSTEMS.find((os) => os.name === osName);
+
+  if (!osConfig) {
+    throw new Error(`Unbekanntes Betriebssystem: ${osName}`);
+  }
+
   for (const line of lines) {
-    let match;
-    if (os === 'ios') {
-      match = line.match(IOS_REGEX);
-    } else {
-      match = line.match(ANDROID_REGEX);
-    }
+    const match = line.match(osConfig.regex);
+
     if (match) {
-      const dateParts = match[1].split('.');
-      let formattedDateStr: string;
-      if (os === 'ios') {
-        formattedDateStr = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-      } else {
-        formattedDateStr = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-      }
+      const result = extractMessageData(match, osName);
+
+      if (!result) continue;
+
+      console.log(result);
+
+      const { date, time, sender, message } = result;
+
+      // const formattedDateStr = osConfig.parseDate(match[1]);
+      const formattedDateStr = osConfig.parseDate(date);
+
+      // const time2 = osConfig.parseTime(match[2],  match[3],match[4]);
 
       messages.push({
         date: new Date(formattedDateStr),
-        time: match[2],
-        sender: match[3],
-        message: match[4],
+        time: time,
+        sender: sender,
+        message: message,
       });
     }
   }
 
   const language = detectLanguage(messages);
-  const ignoreLines = await loadIgnoreLines(language, os);
+  const ignoreLines = await loadIgnoreLines(language);
   const filteredMessages = messages.filter(
     (msg) => !ignoreLines.some((ignore) => msg.message.includes(ignore)),
   );
@@ -112,12 +126,9 @@ export const parseChatFile = async (
     sendersShort[sender] = abbreviatedList[index];
   });
 
-  // console.log("Detected language: ", language);
-  // console.log("Senders: ", senders);
-
   const metadata: ChatMetadata = {
     language: language,
-    os: os,
+    os: osName,
     firstMessageDate: firstMessageDate,
     lastMessageDate: lastMessageDate,
     senders: senders,

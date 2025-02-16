@@ -1,5 +1,8 @@
 // src/types/chatTypes.ts
 import { SenderStatus } from '../config/constants';
+import { OPERATING_SYSTEMS } from '../config/constants';
+
+export type OperatingSystemName = (typeof OPERATING_SYSTEMS)[number]['name'];
 
 export interface ChatMessage {
   date: Date;
@@ -10,7 +13,7 @@ export interface ChatMessage {
 
 export interface ChatMetadata {
   language: 'de' | 'en' | 'fr' | 'es';
-  os: 'ios' | 'android';
+  os: OperatingSystemName;
   firstMessageDate: Date;
   lastMessageDate: Date;
   senders: Record<string, number>;
@@ -29,4 +32,11 @@ export interface FilterOptions {
   selectedWeekdays: string[];
   minPercentagePerSender: number;
   senderStatuses: Record<string, SenderStatus>;
+}
+
+export interface OperatingSystem {
+  name: string;
+  regex: RegExp;
+  parseDate: (dateString: string) => string;
+  parseTime: (timeString: string, period?: string) => string;
 }

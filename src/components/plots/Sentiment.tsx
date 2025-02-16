@@ -517,6 +517,7 @@ const SentimentAnalysis: React.FC = () => {
         dailyPositive[dateKey].totalScore += posScore;
         dailyNegative[dateKey].totalScore += negScore;
       } catch (error) {
+        // TODO
         console.error(`Error analyzing message with language ${langToUse}:`, error);
       }
     });
