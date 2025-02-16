@@ -791,7 +791,7 @@ const AggregatePerTimePlot: React.FC = () => {
         {filteredMessages.length === 0 ? (
           <span className="text-lg">No Data Available</span>
         ) : (
-          <svg id="aggregate_plot2" ref={svgRef} className="h-full w-full flex-grow"></svg>
+          <svg id="aggregate_plot" ref={svgRef} className="h-full w-full flex-grow"></svg>
         )}
       </div>
     </div>
