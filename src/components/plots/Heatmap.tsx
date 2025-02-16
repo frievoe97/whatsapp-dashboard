@@ -323,12 +323,12 @@ const Heatmap: FC = () => {
           ? '#777'
           : '#ddd'
         : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-        ? darkMode
-          ? '#555'
-          : 'grey'
-        : darkMode
-        ? '#333'
-        : 'white',
+          ? darkMode
+            ? '#555'
+            : 'grey'
+          : darkMode
+            ? '#333'
+            : 'white',
       color: darkMode ? 'white' : 'black',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

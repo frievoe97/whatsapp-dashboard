@@ -276,8 +276,8 @@ const FileUploadMobile: React.FC = () => {
                               disabled
                                 ? 'opacity-50 cursor-not-allowed'
                                 : darkMode
-                                ? 'hover:bg-gray-800'
-                                : 'hover:bg-gray-200'
+                                  ? 'hover:bg-gray-800'
+                                  : 'hover:bg-gray-200'
                             }`}
                           >
                             <input
@@ -378,8 +378,8 @@ const FileUploadMobile: React.FC = () => {
                         tempFilters.endDate
                           ? dayjs(tempFilters.endDate)
                           : metadata?.lastMessageDate
-                          ? dayjs(metadata.lastMessageDate)
-                          : undefined
+                            ? dayjs(metadata.lastMessageDate)
+                            : undefined
                       }
                       slotProps={{
                         textField: {
@@ -433,8 +433,8 @@ const FileUploadMobile: React.FC = () => {
                         tempFilters.startDate
                           ? dayjs(tempFilters.startDate)
                           : metadata?.firstMessageDate
-                          ? dayjs(metadata.firstMessageDate)
-                          : undefined
+                            ? dayjs(metadata.firstMessageDate)
+                            : undefined
                       }
                       maxDate={
                         metadata?.lastMessageDate ? dayjs(metadata.lastMessageDate) : undefined
