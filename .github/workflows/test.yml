@@ -1,22 +1,19 @@
-name: Run Tests
+name: Run Tests & Coverage
 
 on:
   push:
-    branches:
-      - master
+    branches: ['**']
   pull_request:
-    branches:
-      - master
+    branches: [master]
 
 jobs:
+  # Job 1: Normaler Test-Lauf (inkl. Lint/Prettier) bei jedem Push
   test:
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -26,11 +23,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Check formatting with Prettier
+        run: npx prettier --check .
+
       - name: Run tests
         run: npm run test
 
+  # Job 2: Coverage nur bei Pull Request auf master
   coverage:
-    if: github.event_name == 'pull_request'
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
 
     permissions:
@@ -40,6 +44,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
