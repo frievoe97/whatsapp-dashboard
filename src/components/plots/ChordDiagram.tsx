@@ -3,6 +3,8 @@ import * as d3 from 'd3';
 import { useChat } from '../../context/ChatContext';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import Select from 'react-select';
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
 
 /**
  * Minimum number of unique senders required to show the chord diagram.
@@ -59,6 +61,8 @@ const ChordDiagram: React.FC = () => {
   const [shouldRender, setShouldRender] = useState(false);
 
   const [topCount, setTopCount] = useState<number>(10);
+
+  const { t } = useTranslation();
 
   /**
    * Berechne die Chord-Daten aus den Nachrichten.
@@ -135,8 +139,8 @@ const ChordDiagram: React.FC = () => {
         sortedSenders.length > MAX_SENDERS
           ? MAX_SENDERS
           : sortedSenders.length < 10
-            ? sortedSenders.length
-            : 10;
+          ? sortedSenders.length
+          : 10;
       setTopCount(defaultTop);
     }
   }, [sortedSenders]);
@@ -368,17 +372,17 @@ const ChordDiagram: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     option: (provided: any, state: any) => ({
       ...provided,
-      backgroundColor: state.isSelected
+      backgroundColor: state.isHover
         ? darkMode
           ? '#777'
           : '#ddd'
         : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-          ? darkMode
-            ? '#555'
-            : 'grey'
-          : darkMode
-            ? '#333'
-            : 'white',
+        ? darkMode
+          ? '#555'
+          : 'grey'
+        : darkMode
+        ? '#333'
+        : 'white',
       color: darkMode ? 'white' : 'black',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -400,7 +404,7 @@ const ChordDiagram: React.FC = () => {
         id="chord-diagram-header"
         className="text-base md:text-lg font-semibold mb-0 md:mb-4 flex items-center px-4 md:px-0"
       >
-        <span>Who Replies to Whom (Top </span>
+        <span>{t('ChordDiagram.title')}</span>
         <Select
           value={{ value: topCount, label: topCount.toString() }}
           onChange={(selected) => setTopCount(Number(selected?.value))}
@@ -417,10 +421,9 @@ const ChordDiagram: React.FC = () => {
         <span>)</span>
       </h2>
 
-      {/* <h2 className="text-lg font-semibold mb-4">10 )</h2> */}
       <div className="flex-grow flex justify-center items-center">
         {filteredMessages.length === 0 ? (
-          <span className="text-lg">No Data Available</span>
+          <span className="text-lg">{t('General.noDataAvailable')}</span>
         ) : (
           <svg id="chord-diagram-plot" ref={svgRef} className="w-full h-full" />
         )}

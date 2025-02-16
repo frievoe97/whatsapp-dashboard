@@ -6,6 +6,9 @@ import Sentiment from 'sentiment';
 import { Maximize2, Merge, Minimize2, Split } from 'lucide-react';
 import Switch from 'react-switch';
 
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
+
 /* -------------------------------------------------------------------------
  * CONSTANTS & TYPES
  * ------------------------------------------------------------------------- */
@@ -567,6 +570,8 @@ const SentimentAnalysis: React.FC = () => {
     }
   }, [dimensions, combinedData, positiveData, negativeData, darkMode, splitMode]);
 
+  const { t } = useTranslation();
+
   return (
     <div
       ref={containerRef}
@@ -588,7 +593,7 @@ const SentimentAnalysis: React.FC = () => {
             darkMode ? 'text-white' : 'text-black'
           }`}
         >
-          Sentiment Analysis over Time
+          {t('Sentiment.title')}
         </h2>
         <div className="flex flex row">
           <Split
@@ -664,7 +669,7 @@ const SentimentAnalysis: React.FC = () => {
       </div>
       <div className="flex-grow flex justify-center items-center max-h-full">
         {combinedData.length === 0 ? (
-          <span className="text-lg">No Data Available</span>
+          <span className="text-lg">{t('General.noDataAvailable')}</span>
         ) : (
           <svg id="sentiment-plot" ref={svgRef} className="w-full h-full"></svg>
         )}

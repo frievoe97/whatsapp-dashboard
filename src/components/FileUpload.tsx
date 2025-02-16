@@ -88,7 +88,6 @@ const FileUpload: React.FC = () => {
     setTempFilters,
     resetFilters,
     applyFilters,
-    senderDropdownOpen,
     setSenderDropdownOpen,
     isPanelOpen,
     setIsPanelOpen,
@@ -102,18 +101,19 @@ const FileUpload: React.FC = () => {
   } = useChat();
 
   const [weekdaysDropdownOpen, setWeekdaysDropdownOpen] = useState(false);
+  const [sendersDropdownOpen, setSendersDropdownOpen] = useState(false);
 
   const { t } = useTranslation();
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleSendersClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setSenderDropdownOpen(false);
+        setSendersDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [setSenderDropdownOpen]);
+    document.addEventListener('mousedown', handleSendersClickOutside);
+    return () => document.removeEventListener('mousedown', handleSendersClickOutside);
+  }, []);
 
   useEffect(() => {
     const handleWeekdaysClickOutside = (event: MouseEvent) => {
@@ -151,7 +151,7 @@ const FileUpload: React.FC = () => {
         >
           <Info size={20} />
         </button>
-        <div className="flex-grow text-center text-2xl font-semibold">Whatsapp Dashboard</div>
+        <div className="flex-grow text-center text-2xl font-semibold">WhatsApp Dashboard</div>
         <button
           onClick={toggleDarkMode}
           className={`px-2 py-1 mr-4 border rounded-none flex items-center hover:border-current ${
@@ -248,20 +248,22 @@ const FileUpload: React.FC = () => {
             {/* Zeile 1 */}
             {/* 1. Zelle: Sender Filter */}
             <div className="rounded-none flex flex-col">
-              <label className="text-md font-semibold rounded-none">Select Senders:</label>
+              <label className="text-md font-semibold rounded-none">
+                {t('FileUpload.selectSenders')}
+              </label>
               <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={() => setSenderDropdownOpen((prev) => !prev)}
-                  className={`w-full mt-2 px-4 py-2 border rounded-none flex justify-between items-center hover:border-current ${
+                  onClick={() => setSendersDropdownOpen((prev) => !prev)}
+                  className={`w-full mt-2 px-2 py-2 border rounded-none flex justify-between items-center hover:border-current ${
                     darkMode
                       ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
                       : 'bg-white text-black border-black hover:bg-gray-200'
                   }`}
                 >
-                  <span>Select Senders</span>
+                  <span>{t('FileUpload.selectSenders')}</span>
                   <ChevronDown size={16} />
                 </button>
-                {senderDropdownOpen && (
+                {sendersDropdownOpen && (
                   <div
                     className={`absolute z-10 mt-1 w-full border rounded-none ${
                       darkMode
@@ -312,7 +314,9 @@ const FileUpload: React.FC = () => {
 
             {/* 2. Zelle: Minimum Message Share */}
             <div className="rounded-none flex flex-col">
-              <label className="text-md font-semibold rounded-none">Min. Share:</label>
+              <label className="text-md font-semibold rounded-none">
+                {t('FileUpload.minimumMessageShare')}
+              </label>
               <input
                 type="number"
                 min="0"
@@ -330,7 +334,9 @@ const FileUpload: React.FC = () => {
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               {/* Start Date */}
               <div className="rounded-none flex flex-col">
-                <label className="text-md font-semibold rounded-none mb-2">Start Date:</label>
+                <label className="text-md font-semibold rounded-none mb-2">
+                  {t('FileUpload.startDate')}
+                </label>
                 <DatePicker
                   // label="Start Date"
                   value={tempFilters.startDate ? dayjs(tempFilters.startDate) : null}
@@ -348,8 +354,8 @@ const FileUpload: React.FC = () => {
                     tempFilters.endDate
                       ? dayjs(tempFilters.endDate)
                       : metadata?.lastMessageDate
-                        ? dayjs(metadata.lastMessageDate)
-                        : undefined
+                      ? dayjs(metadata.lastMessageDate)
+                      : undefined
                   }
                   slotProps={{
                     textField: {
@@ -389,7 +395,9 @@ const FileUpload: React.FC = () => {
 
               {/* End Date */}
               <div className="rounded-none flex flex-col">
-                <label className="text-md font-semibold rounded-none mb-2">End Date:</label>
+                <label className="text-md font-semibold rounded-none mb-2">
+                  {t('FileUpload.endDate')}
+                </label>
                 <DatePicker
                   value={tempFilters.endDate ? dayjs(tempFilters.endDate) : null}
                   onChange={(newValue) =>
@@ -399,8 +407,8 @@ const FileUpload: React.FC = () => {
                     tempFilters.startDate
                       ? dayjs(tempFilters.startDate)
                       : metadata?.firstMessageDate
-                        ? dayjs(metadata.firstMessageDate)
-                        : undefined
+                      ? dayjs(metadata.firstMessageDate)
+                      : undefined
                   }
                   maxDate={metadata?.lastMessageDate ? dayjs(metadata.lastMessageDate) : undefined}
                   slotProps={{
@@ -446,13 +454,13 @@ const FileUpload: React.FC = () => {
               {/* <label className="text-md font-semibold rounded-none">Select Weekdays:</label> */}
               <button
                 onClick={() => setWeekdaysDropdownOpen((prev) => !prev)}
-                className={`w-full px-4 py-2 border rounded-none flex justify-between items-center hover:border-current ${
+                className={`w-full px-2 py-2 border rounded-none flex justify-between items-center hover:border-current ${
                   darkMode
                     ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
                     : 'bg-white text-black border-black hover:bg-gray-200'
                 }`}
               >
-                <span>Select Weekdays</span>
+                <span>{t('FileUpload.selectWeekdays')}</span>
                 <ChevronDown size={16} />
               </button>
               {weekdaysDropdownOpen && (
@@ -490,13 +498,17 @@ const FileUpload: React.FC = () => {
             <div className="rounded-none ">
               <button
                 onClick={() => tempToggleUseShortNames()}
-                className={`w-full px-2 py-2 border rounded-none hover:border-current ${
+                className={`w-full px-0 py-2 border rounded-none hover:border-current ${
                   darkMode
                     ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
                     : 'bg-white text-black border-black hover:bg-gray-200'
                 }`}
               >
-                {tempUseShortNames ? <div>Use Full Names</div> : <div>Use abbreviations</div>}
+                {tempUseShortNames ? (
+                  <div>{t('FileUpload.useFullNames')}</div>
+                ) : (
+                  <div>{t('FileUpload.useAbbreviations')}</div>
+                )}
               </button>
             </div>
 
@@ -510,7 +522,7 @@ const FileUpload: React.FC = () => {
                     : 'bg-white text-black border-black hover:bg-gray-200'
                 }`}
               >
-                Reset
+                {t('FileUpload.reset')}
               </button>
             </div>
             <div className="rounded-none">
@@ -527,7 +539,7 @@ const FileUpload: React.FC = () => {
                     : 'bg-white text-black border-black hover:bg-gray-200'
                 }`}
               >
-                Apply
+                {t('FileUpload.apply')}
               </button>
             </div>
           </div>

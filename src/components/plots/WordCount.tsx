@@ -5,6 +5,9 @@ import { removeStopwords, deu, eng, fra, spa } from 'stopword';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { ChatMetadata } from '../../types/chatTypes';
 
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
+
 // -----------------------------------------------------------------------------
 // TypeScript Interfaces
 // -----------------------------------------------------------------------------
@@ -313,6 +316,8 @@ const WordCount: FC = (): ReactElement => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
+  const { t } = useTranslation();
+
   return (
     <div
       id="plot-word-count"
@@ -322,11 +327,11 @@ const WordCount: FC = (): ReactElement => {
       }`}
       style={{ minHeight: '350px', maxHeight: '550px', overflow: 'hidden' }}
     >
-      <h2 className="text-base md:text-lg font-semibold mb-4">Top 10 Words per Person</h2>
+      <h2 className="text-base md:text-lg font-semibold mb-4">{t('WordCount.title')}</h2>
 
       <div className="flex-grow flex justify-center items-center flex-col w-full">
         {filteredMessages.length === 0 ? (
-          <span className="text-lg">No Data Available</span>
+          <span className="text-lg">{t('General.noDataAvailable')}</span>
         ) : (
           <>
             {/* Sender Charts */}

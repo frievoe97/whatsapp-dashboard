@@ -4,6 +4,9 @@ import * as d3 from 'd3';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { ChatMessage, ChatMetadata } from '../../types/chatTypes';
 
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
+
 /**
  * Represents statistics for a single sender.
  */
@@ -346,6 +349,8 @@ const Stats: React.FC = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
+  const { t } = useTranslation();
+
   return (
     <div
       id={containerId}
@@ -354,10 +359,10 @@ const Stats: React.FC = () => {
       }`}
       style={{ minHeight: '350px', maxHeight: '550px', overflow: 'hidden' }}
     >
-      <h2 className="text-base md:text-lg font-semibold mb-4">Message Statistics per Person</h2>
+      <h2 className="text-base md:text-lg font-semibold mb-4">{t('Stats.title')}</h2>
       <div className="flex-grow flex justify-center items-center flex-col">
         {filteredMessages.length === 0 || aggregatedStats.length === 0 ? (
-          <span className="text-base md:text-lg">No Data Available</span>
+          <span className="text-base md:text-lg">{t('General.noDataAvailable')}</span>
         ) : (
           <>
             <div className="flex flex-row gap-4 w-full justify-center">

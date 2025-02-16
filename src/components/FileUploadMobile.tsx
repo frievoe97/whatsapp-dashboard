@@ -31,6 +31,7 @@ const FileUploadMobile: React.FC = () => {
   const weekdaysDropdownRef = useRef<HTMLDivElement>(null);
   const filenameRef = useRef<HTMLSpanElement | null>(null);
   const [weekdaysDropdownOpen, setWeekdaysDropdownOpen] = useState(false);
+  const [sendersDropdownOpen, setSendersDropdownOpen] = useState(false);
   const [filenameWidth, setFilenameWidth] = useState(0);
 
   const {
@@ -43,7 +44,6 @@ const FileUploadMobile: React.FC = () => {
     setTempFilters,
     resetFilters,
     applyFilters,
-    senderDropdownOpen,
     setSenderDropdownOpen,
     isPanelOpen,
     setIsPanelOpen,
@@ -57,14 +57,14 @@ const FileUploadMobile: React.FC = () => {
   } = useChat();
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleSendersClickOutside = (event: MouseEvent) => {
       if (senderDropdownRef.current && !senderDropdownRef.current.contains(event.target as Node)) {
-        setSenderDropdownOpen(false);
+        setSendersDropdownOpen(false);
       }
     };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [setSenderDropdownOpen]);
+    document.addEventListener('mousedown', handleSendersClickOutside);
+    return () => document.removeEventListener('mousedown', handleSendersClickOutside);
+  }, []);
 
   useEffect(() => {
     const handleWeekdaysClickOutside = (event: MouseEvent) => {
@@ -140,7 +140,7 @@ const FileUploadMobile: React.FC = () => {
         >
           <Info size={16} />
         </button>
-        <div className="flex-grow text-center text-lg font-semibold">Whatsapp Dashboard</div>
+        <div className="flex-grow text-center text-lg font-semibold">WhatsApp Dashboard</div>
 
         <button
           onClick={toggleDarkMode}
@@ -236,13 +236,11 @@ const FileUploadMobile: React.FC = () => {
 
           {/* Filter Section */}
           {metadata?.fileName && (
-            <div className="space-y-4 rounded-none">
+            <div className="space-y-2 rounded-none">
               {/* Sender Filter */}
               <div className="relative rounded-none" ref={senderDropdownRef}>
                 <button
-                  onClick={() => {
-                    setSenderDropdownOpen((prev) => !prev);
-                  }}
+                  onClick={() => setSendersDropdownOpen((prev) => !prev)}
                   className={`text-sm w-full px-4 py-2 border rounded-none flex justify-between items-center hover:border-current ${
                     darkMode
                       ? 'bg-gray-700 text-white border-white hover:bg-gray-700 active:bg-gray-700'
@@ -252,7 +250,7 @@ const FileUploadMobile: React.FC = () => {
                   <span>{t('FileUpload.selectSenders')}</span>
                   <ChevronDown size={16} />
                 </button>
-                {senderDropdownOpen && (
+                {sendersDropdownOpen && (
                   <div
                     className={`absolute z-10 mt-1 w-full border rounded-none ${
                       darkMode
@@ -276,8 +274,8 @@ const FileUploadMobile: React.FC = () => {
                               disabled
                                 ? 'opacity-50 cursor-not-allowed'
                                 : darkMode
-                                  ? 'hover:bg-gray-800'
-                                  : 'hover:bg-gray-200'
+                                ? 'hover:bg-gray-800'
+                                : 'hover:bg-gray-200'
                             }`}
                           >
                             <input
@@ -331,12 +329,16 @@ const FileUploadMobile: React.FC = () => {
                     : 'bg-white text-black border-black hover:bg-gray-200'
                 }`}
               >
-                {tempUseShortNames ? <div>Use Full Names</div> : <div>Use abbreviations</div>}
+                {tempUseShortNames ? (
+                  <div>{t('FileUpload.useFullNames')}</div>
+                ) : (
+                  <div>{t('FileUpload.useAbbreviations')}</div>
+                )}
               </button>
 
               {/* Minimum Message Share Input */}
               <div className="flex flex-col rounded-none">
-                <label className="text-sm rounded-none">
+                <label className="text-base rounded-none mb-2">
                   {t('FileUpload.minimumMessageShare')}
                 </label>
                 <input
@@ -359,8 +361,10 @@ const FileUploadMobile: React.FC = () => {
               <div className="flex flex-row rounded-none gap-2">
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   {/* Start Date */}
-                  <div className="rounded-none flex flex-col">
-                    <label className="text-md font-semibold rounded-none mb-2">Start Date:</label>
+                  <div className="rounded-none flex flex-1 flex-col">
+                    <label className="text-base  rounded-none mb-2">
+                      {t('FileUpload.startDate')}:
+                    </label>
                     <DatePicker
                       // label="Start Date"
                       value={tempFilters.startDate ? dayjs(tempFilters.startDate) : null}
@@ -378,8 +382,8 @@ const FileUploadMobile: React.FC = () => {
                         tempFilters.endDate
                           ? dayjs(tempFilters.endDate)
                           : metadata?.lastMessageDate
-                            ? dayjs(metadata.lastMessageDate)
-                            : undefined
+                          ? dayjs(metadata.lastMessageDate)
+                          : undefined
                       }
                       slotProps={{
                         textField: {
@@ -418,8 +422,10 @@ const FileUploadMobile: React.FC = () => {
                   </div>
 
                   {/* End Date */}
-                  <div className="rounded-none flex flex-col">
-                    <label className="text-md font-semibold rounded-none mb-2">End Date:</label>
+                  <div className="rounded-none flex flex-1 flex-col">
+                    <label className="text-base rounded-none mb-2">
+                      {t('FileUpload.endDate')}:
+                    </label>
                     <DatePicker
                       value={tempFilters.endDate ? dayjs(tempFilters.endDate) : null}
                       onChange={(newValue) =>
@@ -433,8 +439,8 @@ const FileUploadMobile: React.FC = () => {
                         tempFilters.startDate
                           ? dayjs(tempFilters.startDate)
                           : metadata?.firstMessageDate
-                            ? dayjs(metadata.firstMessageDate)
-                            : undefined
+                          ? dayjs(metadata.firstMessageDate)
+                          : undefined
                       }
                       maxDate={
                         metadata?.lastMessageDate ? dayjs(metadata.lastMessageDate) : undefined

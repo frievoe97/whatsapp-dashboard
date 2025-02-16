@@ -6,6 +6,9 @@ import { useChat } from '../../context/ChatContext';
 import { ChatMessage, ChatMetadata } from '../../types/chatTypes';
 import useResizeObserver from '../../hooks/useResizeObserver';
 
+import { useTranslation } from 'react-i18next';
+import '../../../i18n';
+
 interface TimeDataPoint {
   date: Date;
   count: number;
@@ -205,7 +208,7 @@ function useTimelineChart(
       .line<TimeDataPoint>()
       .defined((d) => d.date >= computedStartDate && d.date <= computedEndDate)
       .x((d) => xScale(d.date))
-      .y((d) => yScale(showPercentage ? (d.percentage ?? 0) : d.count))
+      .y((d) => yScale(showPercentage ? d.percentage ?? 0 : d.count))
       .curve(d3.curveMonotoneX);
 
     // Annahme: Du hast bereits definiert:
@@ -468,7 +471,7 @@ function useTimelineChart(
           const value =
             showPercentage && point?.percentage !== undefined
               ? `${point.percentage.toFixed(2)} %`
-              : (point?.count ?? 0);
+              : point?.count ?? 0;
           return { sender: fd.sender, value };
         });
 
@@ -622,6 +625,8 @@ const Timeline: React.FC = () => {
     metadata,
   );
 
+  const { t } = useTranslation();
+
   return (
     <div
       ref={containerRef}
@@ -650,8 +655,8 @@ const Timeline: React.FC = () => {
                     ? 'bg-white text-black border border-gray-300 hover:border-gray-300'
                     : 'bg-black text-white border-none'
                   : darkMode
-                    ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
-                    : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
+                  ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
+                  : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
               }`}
               onClick={() => setMode('year')}
             >
@@ -664,8 +669,8 @@ const Timeline: React.FC = () => {
                     ? 'bg-white text-black border border-gray-300 hover:border-gray-300'
                     : 'bg-black text-white border-none'
                   : darkMode
-                    ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
-                    : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
+                  ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
+                  : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
               }`}
               onClick={() => setMode('month')}
             >
@@ -827,7 +832,7 @@ const Timeline: React.FC = () => {
       </div>
       <div className="flex-grow flex justify-center items-center">
         {filteredMessages.length === 0 ? (
-          <span className="text-lg">No Data Available</span>
+          <span className="text-lg">{t('General.noDataAvailable')}</span>
         ) : (
           <svg id="timeline_plot" ref={svgRef} className="h-full w-full flex-grow" />
         )}
