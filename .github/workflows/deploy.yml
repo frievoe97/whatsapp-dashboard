@@ -23,7 +23,6 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      # Füge die Umgebungsvariablen zu den Build-Schritten hinzu
       - name: Build React App
         run: npm run build
 
