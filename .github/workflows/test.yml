@@ -27,7 +27,7 @@ jobs:
         run: npm run lint
 
       - name: Run Prettier
-        run: npm prettier --write .
+        run: npx prettier --write .
 
       - name: Check formatting with Prettier
         run: npx prettier --check .
