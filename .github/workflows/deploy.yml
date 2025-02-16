@@ -1,9 +1,8 @@
 name: Deploy React App to FTP
 
 on:
-  workflow_run:
-    workflows: ['Run tests with coverage']
-    types: [completed]
+  push:
+    branches: [master]
 
 jobs:
   deploy:
