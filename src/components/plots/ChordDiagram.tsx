@@ -135,8 +135,8 @@ const ChordDiagram: React.FC = () => {
         sortedSenders.length > MAX_SENDERS
           ? MAX_SENDERS
           : sortedSenders.length < 10
-            ? sortedSenders.length
-            : 10;
+          ? sortedSenders.length
+          : 10;
       setTopCount(defaultTop);
     }
   }, [sortedSenders]);
@@ -242,10 +242,10 @@ const ChordDiagram: React.FC = () => {
       const angleStart = d.startAngle - Math.PI / 2;
       const angleEnd = d.endAngle - Math.PI / 2;
       const largeArcFlag = angleEnd - angleStart > Math.PI ? 1 : 0;
-      const xStart = (radius + 15) * Math.cos(angleStart);
-      const yStart = (radius + 15) * Math.sin(angleStart);
-      const xEnd = (radius + 15) * Math.cos(angleEnd);
-      const yEnd = (radius + 15) * Math.sin(angleEnd);
+      const xStart = (radius + 17) * Math.cos(angleStart);
+      const yStart = (radius + 17) * Math.sin(angleStart);
+      const xEnd = (radius + 17) * Math.cos(angleEnd);
+      const yEnd = (radius + 17) * Math.sin(angleEnd);
       defs
         .append('path')
         .attr('id', `arc-path-${i}`)
@@ -373,12 +373,12 @@ const ChordDiagram: React.FC = () => {
           ? '#777'
           : '#ddd'
         : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-          ? darkMode
-            ? '#555'
-            : 'grey'
-          : darkMode
-            ? '#333'
-            : 'white',
+        ? darkMode
+          ? '#555'
+          : 'grey'
+        : darkMode
+        ? '#333'
+        : 'white',
       color: darkMode ? 'white' : 'black',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
