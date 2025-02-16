@@ -1,5 +1,3 @@
-# CONTRIBUTING.md
-
 Thank you for your interest in contributing to **WhatsApp Dashboard**! This project is an open-source React application that enables users to analyze and visualize WhatsApp chat data securely and privately. We welcome all contributions—whether you want to fix a bug, propose a new feature, or improve our documentation.
 
 ## Table of Contents
