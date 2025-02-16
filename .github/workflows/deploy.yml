@@ -1,14 +1,12 @@
 name: Deploy React App to FTP
 
 on:
-  workflow_run:
-    workflows: ['Run Tests']
-    types:
-      - completed
+  push:
+    branches:
+      - master # Nur wenn etwas auf master gepusht wird (nach einem Merge)
 
 jobs:
   build:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:

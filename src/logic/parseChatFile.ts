@@ -57,8 +57,6 @@ export const parseChatFile = async (
   content: string,
   fileName: string,
 ): Promise<{ messages: ChatMessage[]; metadata: ChatMetadata }> => {
-  console.log('Start parsing chat file: ', fileName);
-
   const lines = content
     .split('\n')
     .map((line) => line.trim())
@@ -67,7 +65,7 @@ export const parseChatFile = async (
     throw new Error('Datei ist leer oder ungültig.');
   }
   const os = detectOS(lines);
-  console.log('Detected OS: ', os);
+
   const messages: ChatMessage[] = [];
   for (const line of lines) {
     let match;
@@ -107,10 +105,7 @@ export const parseChatFile = async (
     senders[msg.sender] = (senders[msg.sender] || 0) + 1;
   });
 
-  console.log('Number of filtered messages: ', filteredMessages.length);
-
   const senderNames = Object.keys(senders);
-  console.log('Number of senders: ', senderNames.length);
   const abbreviatedList = abbreviateContacts(senderNames);
   const sendersShort: Record<string, string> = {};
   senderNames.forEach((sender, index) => {
@@ -129,8 +124,6 @@ export const parseChatFile = async (
     fileName: fileName,
     sendersShort: sendersShort,
   };
-  console.log('Filtered messages: ', filteredMessages);
-  console.log('Metadata: ', metadata);
-  console.log('Parsing done.');
+
   return { messages: filteredMessages, metadata };
 };
