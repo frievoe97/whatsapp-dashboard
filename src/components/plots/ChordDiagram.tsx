@@ -135,8 +135,8 @@ const ChordDiagram: React.FC = () => {
         sortedSenders.length > MAX_SENDERS
           ? MAX_SENDERS
           : sortedSenders.length < 10
-          ? sortedSenders.length
-          : 10;
+            ? sortedSenders.length
+            : 10;
       setTopCount(defaultTop);
     }
   }, [sortedSenders]);
@@ -373,12 +373,12 @@ const ChordDiagram: React.FC = () => {
           ? '#777'
           : '#ddd'
         : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-        ? darkMode
-          ? '#555'
-          : 'grey'
-        : darkMode
-        ? '#333'
-        : 'white',
+          ? darkMode
+            ? '#555'
+            : 'grey'
+          : darkMode
+            ? '#333'
+            : 'white',
       color: darkMode ? 'white' : 'black',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

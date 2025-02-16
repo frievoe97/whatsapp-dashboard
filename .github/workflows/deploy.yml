@@ -24,6 +24,7 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+      # npx prettier --write .
       - name: Check formatting with Prettier
         run: npx prettier --check .
 
