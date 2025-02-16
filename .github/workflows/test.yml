@@ -55,6 +55,6 @@ jobs:
       - name: Run tests with coverage
         run: npx vitest --coverage.enabled true
 
-      - name: Report Coverage
+      - name: Report Coveragee
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
