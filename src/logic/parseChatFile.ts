@@ -3,7 +3,7 @@
 /////////////////////// Imports ///////////////////////
 import { ChatMessage, ChatMetadata } from '../types/chatTypes';
 import { franc } from 'franc-min';
-import { extractMessageData, OPERATING_SYSTEMS } from '../config/constants';
+import { OPERATING_SYSTEMS } from '../config/constants';
 import { abbreviateContacts } from '../utils/abbreviateContacts';
 
 /////////////////////// Utility Functions ///////////////////////
@@ -103,23 +103,17 @@ export const parseChatFile = async (
     throw new Error(`Unknown operating system: ${osName}`);
   }
 
-  // Process each line and extract message data based on the detected OS format.
+  // Verwende die neue parseLine-Methode zum Extrahieren der Nachrichtendaten.
   for (const line of lines) {
-    const match = line.match(osConfig.regex);
-    if (match) {
-      const result = extractMessageData(match, osName);
-      if (!result) continue;
+    const result = osConfig.parseLine(line);
+    if (!result) continue;
 
-      const { date, time, sender, message } = result;
-      const formattedDateStr = osConfig.parseDate(date);
-
-      messages.push({
-        date: new Date(formattedDateStr),
-        time,
-        sender,
-        message,
-      });
-    }
+    messages.push({
+      date: result.date,
+      time: result.time,
+      sender: result.sender,
+      message: result.message,
+    });
   }
 
   // Filter messages based on language-specific ignore lines.

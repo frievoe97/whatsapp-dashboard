@@ -1,28 +1,32 @@
+////////////// Imports ////////////////
 import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { useChat } from '../../context/ChatContext';
 import * as d3 from 'd3';
-import { ChatMessage } from '../../types/chatTypes';
+import { useChat } from '../../context/ChatContext';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import Switch from 'react-switch';
 import { Hash, Percent, Maximize2, Minimize2, Split, Merge } from 'lucide-react';
-
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
+import { ChatMessage } from '../../types/chatTypes';
 
-/** DataPoint und AggregatedData Interfaces bleiben unverändert */
+////////////// Types & Constants ////////////////
+/** Data point representing a category value, count and optional percentage. */
 interface DataPoint {
   category: string;
   count: number;
   percentage?: number;
 }
 
+/** Aggregated statistics for a sender over time. */
 interface AggregatedData {
   sender: string;
   values: DataPoint[];
 }
 
+/** Supported modes for aggregation. */
 type Mode = 'weekday' | 'hour' | 'month';
 
+/** Returns an array of category labels for a given mode. */
 const getCategories = (mode: Mode): string[] => {
   switch (mode) {
     case 'weekday':
@@ -49,6 +53,7 @@ const getCategories = (mode: Mode): string[] => {
   }
 };
 
+/** Extracts a category value from a chat message based on the mode. */
 const getCategoryFromMessage = (msg: ChatMessage, mode: Mode): string => {
   const date = new Date(msg.date);
   if (mode === 'weekday') {
@@ -76,6 +81,7 @@ const getCategoryFromMessage = (msg: ChatMessage, mode: Mode): string => {
   return '';
 };
 
+/** Aggregates chat messages into sender-based statistics per category. */
 const aggregateMessages = (
   messages: ChatMessage[],
   mode: Mode,
@@ -115,10 +121,14 @@ const aggregateMessages = (
   return result;
 };
 
+////////////// Component: AggregatePerTimePlot ////////////////
+/**
+ * AggregatePerTimePlot renders a D3-based line chart that displays aggregated
+ * chat statistics over time per sender. It supports switching modes (hour, weekday, month),
+ * toggling percentage view and merging sender data.
+ */
 const AggregatePerTimePlot: React.FC = () => {
-  // const { filteredMessages, darkMode } = useChat();
   const { filteredMessages, darkMode, metadata, useShortNames } = useChat();
-
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
@@ -129,12 +139,10 @@ const AggregatePerTimePlot: React.FC = () => {
   const [showMerged, setShowMerged] = useState<boolean>(false);
 
   const categories = useMemo(() => getCategories(mode), [mode]);
-
   const aggregatedData = useMemo(
     () => aggregateMessages(filteredMessages, mode, categories, showPercentage),
     [filteredMessages, mode, categories, showPercentage],
   );
-
   const senders = useMemo(() => aggregatedData.map((d) => d.sender), [aggregatedData]);
 
   useEffect(() => {
@@ -168,7 +176,7 @@ const AggregatePerTimePlot: React.FC = () => {
     return [{ sender: 'Total', values: mergedValues }];
   }, [aggregatedData, showMerged, categories]);
 
-  // Tooltip initial erstellen (einmalig)
+  // Tooltip initialization
   useEffect(() => {
     if (!containerRef.current) return;
     const tooltipSelection = d3.select(containerRef.current).select<HTMLDivElement>('.tooltip');
@@ -194,11 +202,7 @@ const AggregatePerTimePlot: React.FC = () => {
       .style('color', darkMode ? '#fff' : '#000');
   }, [darkMode]);
 
-  /**
-   * Hier wird der gesamte D3-Plot aktualisiert.
-   * Beachte: Wir nutzen Refs, um den vorherigen Zustand (u.a. der Achsen und Linien) zu speichern.
-   */
-  // Refs für vorherige Zustände, damit wir differenzieren können, ob nur showMerged/showPercentage oder Mode/Dims geändert wurden
+  // Refs for previous states to drive transitions.
   const prevDataRef = useRef<AggregatedData[]>(mergedData);
   const prevModeRef = useRef(mode);
   const prevShowPercentageRef = useRef(showPercentage);
@@ -222,35 +226,26 @@ const AggregatePerTimePlot: React.FC = () => {
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom - headerHeight - legendHeight;
 
-    // Skalen
+    // Scales
     const xScale = d3.scalePoint<string>().domain(categories).range([0, innerWidth]).padding(0);
-
     const yMax = showPercentage
-      ? (d3.max(mergedData, (d) =>
-          // @ts-expect-error I dont know why there is an error here
-          d3.max(d.values, (v) => v.percentage),
-        ) as number) || 100
+      ? // @ts-expect-error - I have no idea why there is an error... But it works.
+        (d3.max(mergedData, (d) => d3.max(d.values, (v) => v.percentage)) as number) || 100
       : d3.max(mergedData, (d) => d3.max(d.values, (v) => v.count)) || 10;
-
     const yScale = d3.scaleLinear().domain([0, yMax]).nice().range([innerHeight, 0]);
-
-    // Direkt nach der Definition von yScale:
     const yTickValues = yScale.ticks(5);
 
-    // X-Achsen-Ticks
     const tickSpacing = mode === 'hour' ? 20 : 70;
     const maxTicks = Math.max(2, Math.floor(innerWidth / tickSpacing));
     const xTickValues = categories.filter(
       (_, i) => i % Math.ceil(categories.length / maxTicks) === 0,
     );
     const xAxis = d3.axisBottom(xScale).tickValues(xTickValues);
-    // Modified yAxis tick format: entferne den Label-Wert bei 0
     const yAxis = d3
       .axisLeft(yScale)
       .tickValues(yTickValues)
       .tickFormat((d) => (d === 0 ? '' : d3.format('.2s')(d)));
 
-    // Linien-Generator (normale Linie)
     const lineGenerator = d3
       .line<DataPoint>()
       .defined((d) => d.count != null)
@@ -258,36 +253,30 @@ const AggregatePerTimePlot: React.FC = () => {
       .y((d) => yScale(showPercentage ? d.percentage || 0 : d.count))
       .curve(d3.curveMonotoneX);
 
-    // Baseline-Linie (alle y-Werte = innerHeight)
     const baselineLineGenerator = d3
       .line<DataPoint>()
       .x((d) => xScale(d.category) as number)
       .y(() => innerHeight)
       .curve(d3.curveMonotoneX);
 
-    // Für die custom Transition (vertikale Bewegung) benötigen wir einen Generator, der direkt mit y-Pixelwerten arbeitet.
     const lineGeneratorCustom = d3
       .line<{ category: string; y: number }>()
       .x((d) => xScale(d.category) as number)
       .y((d) => d.y)
       .curve(d3.curveMonotoneX);
 
-    // Bestimmen, ob Mode oder Dimensionen sich geändert haben
     const modeChanged = prevModeRef.current !== mode;
     const darkModeChanged = prevDarkMode.current !== darkMode;
     const dimensionsChanged =
       !prevDimensionsRef.current ||
       prevDimensionsRef.current.width !== width ||
       prevDimensionsRef.current.height !== height;
-    // X-Achse nur aktualisieren, wenn Mode oder Dimensionen sich ändern
     const shouldUpdateXAxis = modeChanged || dimensionsChanged || darkModeChanged;
 
-    // --- Lokale Kopien der vorherigen Zustände für Transition (wichtig, da die Refs am Ende aktualisiert werden) ---
     const _prevShowPercentage = prevShowPercentageRef.current;
     const _prevData = prevDataRef.current;
     const _prevYScale = prevYScaleRef.current;
 
-    // Chart-Gruppe abrufen oder erstellen
     let chartGroup = svg.select<SVGGElement>('.chart-group');
     if (chartGroup.empty()) {
       chartGroup = svg
@@ -296,24 +285,19 @@ const AggregatePerTimePlot: React.FC = () => {
         .attr('transform', `translate(${margin.left},${margin.top})`);
     }
 
-    // Erstelle eine feste y-Achsen-Domain-Gruppe (nur einmal), die dauerhaft die Achsenlinie anzeigt
     let yAxisDomain = chartGroup.select<SVGGElement>('.y-axis-domain');
     if (yAxisDomain.empty()) {
       yAxisDomain = chartGroup.append('g').attr('class', 'y-axis-domain');
     }
-    yAxisDomain.call(
-      d3.axisLeft(yScale).tickValues([]), // Keine Ticks, nur Domain-Linie
-    );
+    yAxisDomain.call(d3.axisLeft(yScale).tickValues([]));
     yAxisDomain
       .select('.domain')
       .attr('stroke', darkMode ? '#a0a0a0' : '#e0e0e0')
       .attr('stroke-width', 1)
       .style('opacity', 1);
 
-    // --- X-Achse und X-Grid nur neu zeichnen, wenn nötig ---
     if (shouldUpdateXAxis) {
       chartGroup.selectAll('.x-grid, .x-axis').remove();
-      // X-Grid
       const xGrid = chartGroup
         .append('g')
         .attr('class', 'x-grid')
@@ -329,7 +313,6 @@ const AggregatePerTimePlot: React.FC = () => {
         .attr('stroke', darkMode ? '#a0a0a0' : '#e0e0e0')
         .attr('stroke-width', 1);
       xGrid.style('opacity', 0).transition().duration(500).style('opacity', 1);
-      // X-Achse
       const xAxisGroup = chartGroup
         .append('g')
         .attr('class', 'x-axis')
@@ -341,7 +324,6 @@ const AggregatePerTimePlot: React.FC = () => {
         .style('text-anchor', 'middle')
         .style('font-size', '14px')
         .style('fill', darkMode ? 'white' : 'black');
-      // Hier wird die Domain-Linie der x-Achse (und die Tick-Linien) gestylt:
       xAxisGroup
         .select('.domain')
         .attr('stroke', darkMode ? '#fff' : '#000')
@@ -352,9 +334,7 @@ const AggregatePerTimePlot: React.FC = () => {
         .attr('stroke-width', 1);
       xAxisGroup.style('opacity', 0).transition().duration(500).style('opacity', 1);
     }
-    // --- Y-Grid immer neu zeichnen ---
-    // --- Y-Grid synchron zur y-Achse aktualisieren ---
-    // --- y-Grid synchron zur y-Achse aktualisieren ---
+
     let yGrid = chartGroup.select<SVGGElement>('.y-grid');
     if (yGrid.empty()) {
       yGrid = chartGroup.append('g').attr('class', 'y-grid');
@@ -365,31 +345,13 @@ const AggregatePerTimePlot: React.FC = () => {
       .call(
         d3
           .axisLeft(yScale)
-          .tickValues(yTickValues) // <-- Synchronisieren!
+          .tickValues(yTickValues)
           .tickSize(-innerWidth)
           .tickFormat(() => ''),
       );
     yGrid.selectAll('line').attr('stroke', darkMode ? '#a0a0a0' : '#e0e0e0');
 
-    // Füge eine separate Gruppe für die feste y-Achsen-Domain hinzu
-    // let yAxisDomain = chartGroup.select<SVGGElement>(".y-axis-domain");
-    // if (yAxisDomain.empty()) {
-    //   yAxisDomain = chartGroup.append("g").attr("class", "y-axis-domain");
-    // }
-    // // Aktualisiere die Domain-Gruppe (nur die Achsenlinie, ohne Ticks) – keine Transition!
-    // yAxisDomain.call(
-    //   d3.axisLeft(yScale).tickValues([]) // keine Ticks, nur Domain-Linie
-    // );
-    // yAxisDomain
-    //   .select(".domain")
-    //   .attr("stroke", darkMode ? "#a0a0a0" : "#e0e0e0")
-    //   .attr("stroke-width", 1)
-    //   .style("opacity", 1);
-
-    // **Neue Zeilen: Rahmen oben und rechts (mit derselben Farbe wie das Grid)**
-    chartGroup.selectAll('.plot-border').remove(); // Alte Border entfernen
-
-    // Obere Rahmenlinie
+    chartGroup.selectAll('.plot-border').remove();
     chartGroup
       .append('line')
       .attr('class', 'plot-border top-border')
@@ -399,8 +361,6 @@ const AggregatePerTimePlot: React.FC = () => {
       .attr('y2', 0)
       .attr('stroke', darkMode ? '#a0a0a0' : '#e0e0e0')
       .attr('stroke-width', 1);
-
-    // Rechte Rahmenlinie
     chartGroup
       .append('line')
       .attr('class', 'plot-border right-border')
@@ -411,14 +371,10 @@ const AggregatePerTimePlot: React.FC = () => {
       .attr('stroke', darkMode ? '#a0a0a0' : '#e0e0e0')
       .attr('stroke-width', 1);
 
-    // --- Y-Achse per Transition aktualisieren ---
-    // --- Y-Achse per Transition aktualisieren (nur Ticks und Texte, Domain bleibt fest) ---
-    // --- Y-Achse per Transition aktualisieren (nur Ticks und Texte, Domain bleibt in der separaten Gruppe) ---
     let yAxisGroup = chartGroup.select<SVGGElement>('.y-axis');
     if (yAxisGroup.empty()) {
       yAxisGroup = chartGroup.append('g').attr('class', 'y-axis');
     }
-    // Aktualisiere die Ticks und Texte mit Transition – die Domain wird NICHT entfernt, da sie in yAxisDomain liegt
     yAxisGroup
       .transition()
       .duration(1000)
@@ -431,7 +387,6 @@ const AggregatePerTimePlot: React.FC = () => {
       .style('font-size', '14px')
       .style('fill', darkMode ? 'white' : 'black');
 
-    // --- Linien zeichnen mit Übergängen (vertikale Tweening-Transition) ---
     const lines = chartGroup
       .selectAll<SVGPathElement, AggregatedData>('.line')
       .data(mergedData, (d) => d.sender);
@@ -444,7 +399,6 @@ const AggregatePerTimePlot: React.FC = () => {
           .attr('fill', 'none')
           .attr('stroke', (d) => getLineColor(d.sender))
           .attr('stroke-width', 2)
-          // Starte von der Basislinie
           .attr('d', (d) => baselineLineGenerator(d.values))
           .transition()
           .duration(1000)
@@ -456,7 +410,6 @@ const AggregatePerTimePlot: React.FC = () => {
           .attr('stroke', (d) => getLineColor(d.sender))
           .attr('stroke-width', 2)
           .attrTween('d', function (d) {
-            // Für jede Linie interpolieren wir die y-Pixelwerte von den alten zu den neuen Werten.
             const prevSeries = _prevData.find((s) => s.sender === d.sender);
             const prevValues = prevSeries
               ? prevSeries.values
@@ -465,7 +418,7 @@ const AggregatePerTimePlot: React.FC = () => {
             const newMetric = showPercentage ? 'percentage' : 'count';
             const interpolators = d.values.map((newPoint) => {
               const prevPoint = prevValues.find((p) => p.category === newPoint.category);
-              const prevVal = prevPoint ? ((prevPoint as DataPoint)[prevMetric] ?? 0) : 0;
+              const prevVal = prevPoint ? (prevPoint as DataPoint)[prevMetric] ?? 0 : 0;
               const newVal = (newPoint as DataPoint)[newMetric] ?? 0;
               const startPixel = _prevYScale ? _prevYScale(prevVal) : innerHeight;
               const endPixel = yScale(newVal);
@@ -486,12 +439,10 @@ const AggregatePerTimePlot: React.FC = () => {
           .attr('d', (d) => baselineLineGenerator(d.values))
           .remove(),
     );
-    // --- Linien über das Grid legen ---
+
     chartGroup.selectAll('.line').raise();
 
-    // --- Tooltip und Interaktionen ---
     const tooltip = d3.select(containerRef.current).select<HTMLDivElement>('.tooltip');
-    // Alte Overlay-Rechtecke entfernen
     chartGroup.selectAll('.overlay').remove();
     const overlay = chartGroup
       .append('rect')
@@ -501,7 +452,6 @@ const AggregatePerTimePlot: React.FC = () => {
       .style('fill', 'none')
       .style('pointer-events', 'all');
 
-    // Hover-Line: nur einmal anlegen, falls noch nicht vorhanden
     const hoverLine = chartGroup.selectAll('.hover-line');
     if (hoverLine.empty()) {
       chartGroup
@@ -528,9 +478,9 @@ const AggregatePerTimePlot: React.FC = () => {
         const tooltipData = mergedData.map((d) => {
           const point = d.values.find((v) => v.category === nearestCategory);
           const value =
-            // @ts-expect-error I dont know why there is an error here
+            // @ts-expect-error - I have no idea why there is an error... But it works.
             showPercentage && point?.percentage !== undefined
-              ? // @ts-expect-error I dont know why there is an error here
+              ? // @ts-expect-error - I have no idea why there is an error... But it works.
                 point.percentage.toFixed(2) + ' %'
               : point?.count;
           return { sender: d.sender, value };
@@ -541,10 +491,7 @@ const AggregatePerTimePlot: React.FC = () => {
               tooltipData
                 .map((d) => {
                   const displaySender =
-                    d.sender !== 'Total' &&
-                    useShortNames &&
-                    metadata &&
-                    metadata.sendersShort[d.sender]
+                    d.sender !== 'Total' && useShortNames && metadata?.sendersShort[d.sender]
                       ? metadata.sendersShort[d.sender]
                       : d.sender;
                   return `<span style="color:${
@@ -553,7 +500,6 @@ const AggregatePerTimePlot: React.FC = () => {
                 })
                 .join('<br>'),
           )
-
           .style('left', `${mx + margin.left + 10}px`)
           .style('top', `${my + margin.top + 10}px`);
       })
@@ -562,10 +508,8 @@ const AggregatePerTimePlot: React.FC = () => {
         tooltip.style('display', 'none');
       });
 
-    // ** x-Achse vor dem Overlay in den Vordergrund holen (mit pointer-events none), damit sie sichtbar bleibt **
     chartGroup.select('.x-axis').raise().attr('pointer-events', 'none');
 
-    // --- Update der vorherigen Zustände ---
     prevDataRef.current = mergedData;
     prevYScaleRef.current = yScale;
     prevModeRef.current = mode;
@@ -573,7 +517,6 @@ const AggregatePerTimePlot: React.FC = () => {
     prevShowPercentageRef.current = showPercentage;
     prevShowMergedRef.current = showMerged;
     prevDarkMode.current = darkMode;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     dimensions,
     mergedData,
@@ -586,7 +529,7 @@ const AggregatePerTimePlot: React.FC = () => {
     useShortNames,
   ]);
 
-  function getTotalHeightIncludingMargin(elementId: string) {
+  function getTotalHeightIncludingMargin(elementId: string): number {
     const element = document.getElementById(elementId);
     if (!element) return 0;
     const rect = element.getBoundingClientRect();
@@ -606,12 +549,7 @@ const AggregatePerTimePlot: React.FC = () => {
       } w-full md:min-w-[730px] ${
         expanded ? 'md:basis-[3000px]' : 'md:basis-[800px]'
       } flex-grow py-2 pt-4 px-0 md:p-4 flex flex-col`}
-      style={{
-        position: 'relative',
-        minHeight: '400px',
-        maxHeight: '550px',
-        overflow: 'hidden',
-      }}
+      style={{ position: 'relative', minHeight: '400px', maxHeight: '550px', overflow: 'hidden' }}
     >
       {/* Control Panel */}
       <div
@@ -626,8 +564,8 @@ const AggregatePerTimePlot: React.FC = () => {
                 ? 'bg-white text-black border border-gray-300 hover:border-gray-300 '
                 : 'bg-black text-white border-none '
               : darkMode
-                ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
-                : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200';
+              ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
+              : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200';
             return (
               <button
                 key={item}
@@ -693,8 +631,8 @@ const AggregatePerTimePlot: React.FC = () => {
           <div className="mx-1 md:mx-2 hidden md:inline-block h-[20px]">
             <Switch
               onChange={() => {
+                if (showMerged) setShowMerged(false);
                 setShowPercentage(!showPercentage);
-                if (!showPercentage) setShowMerged(false);
               }}
               checked={showPercentage}
               offColor={darkMode ? '#444' : '#ccc'}
@@ -712,8 +650,8 @@ const AggregatePerTimePlot: React.FC = () => {
           </div>
           <button
             onClick={() => {
+              if (showMerged) setShowMerged(false);
               setShowPercentage(!showPercentage);
-              if (!showPercentage) setShowMerged(false);
             }}
             className={`ml-1 md:hidden p-2 rounded-none border ${
               darkMode ? 'border-white bg-gray-700' : 'border-black bg-white'
@@ -749,7 +687,7 @@ const AggregatePerTimePlot: React.FC = () => {
           </button>
         </div>
       </div>
-      {/* Legende: Bei showMerged wird ein einzelnes Total-Element angezeigt */}
+      {/* Legend */}
       {showMerged ? (
         <div
           id="aggregate-per-time-plot-legend"
@@ -775,7 +713,7 @@ const AggregatePerTimePlot: React.FC = () => {
         >
           {senders.map((sender) => {
             const displayName =
-              useShortNames && metadata && metadata.sendersShort[sender]
+              useShortNames && metadata?.sendersShort[sender]
                 ? metadata.sendersShort[sender]
                 : sender;
             return (

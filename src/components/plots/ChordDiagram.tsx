@@ -1,3 +1,4 @@
+////////////// Imports ////////////////
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import * as d3 from 'd3';
 import { useChat } from '../../context/ChatContext';
@@ -6,21 +7,17 @@ import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
 
-/**
- * Minimum number of unique senders required to show the chord diagram.
- */
+////////////// Constants & Types ////////////////
+/** Minimum number of unique senders required to show the chord diagram. */
 const MIN_SENDERS = 3;
-
-/**
- * Maximum number of unique senders allowed to show the chord diagram.
- */
+/** Maximum number of unique senders allowed to show the chord diagram. */
 const MAX_SENDERS = 12;
 
 /**
- * Represents a single link in the chord data:
- * - `source` is the sender of the previous message
- * - `target` is the sender of the current message
- * - `value` is the frequency of transitions from `source` to `target`
+ * Represents a single link for the chord diagram.
+ * - `source`: the sender of the previous message.
+ * - `target`: the sender of the current message.
+ * - `value`: frequency of transitions from source to target.
  */
 interface ChordDatum {
   source: string;
@@ -28,59 +25,49 @@ interface ChordDatum {
   value: number;
 }
 
+////////////// Main Component: ChordDiagram ////////////////
 /**
- * Props shape for the ChordDiagram component.
- * Currently, this component uses only context from `useChat` and doesn't take external props.
- */
-// interface ChordDiagramProps {}
-
-/**
- * ChordDiagram component visualizes interactions between chat participants using a chord diagram.
- * It dynamically updates based on chat messages and filters participants based on their usage.
- * The diagram handles theme changes and window resizes, and supports interactions:
- * - Klick auf einen Bogen hebt die relevanten Verbindungen hervor.
- * - Doppelklick setzt die Darstellung zurück.
- * - Wird ein Spinner angezeigt, falls keine Daten vorhanden sind.
- * - Das Diagramm wird nur gerendert, wenn die Anzahl der Teilnehmer zwischen MIN_SENDERS und MAX_SENDERS liegt.
+ * ChordDiagram visualizes interactions between chat participants using a chord diagram.
+ * It updates dynamically based on chat messages, theme, and window size.
+ * It supports interactions such as:
+ * - Clicking on a segment to highlight connections.
+ * - Double-clicking to reset the diagram.
+ * - Displaying a spinner if no data is available.
+ * The diagram is rendered only when the number of participants is between MIN_SENDERS and MAX_SENDERS.
  */
 const ChordDiagram: React.FC = () => {
-  // Verwende nun ausschließlich filteredMessages und darkMode aus dem Context.
   const { filteredMessages, darkMode, metadata, useShortNames } = useChat();
-
-  // Refs für Container (zum Messen der Dimensionen) und für das <svg>-Element.
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
-
-  // Beobachte Änderungen an der Containergröße.
   const dimensions = useResizeObserver(containerRef);
 
-  // Flag für einen einmaligen erzwungenen Re-Render (falls benötigt).
+  // Flag to force a re-render if needed.
   const [isRendered, setIsRendered] = useState(false);
-
-  // State, ob das Diagramm gerendert werden soll (abhängig von der Anzahl eindeutiger Sender).
+  // Flag indicating if the chord diagram should render based on the number of unique senders.
   const [shouldRender, setShouldRender] = useState(false);
-
+  // Number of top senders to include in the diagram.
   const [topCount, setTopCount] = useState<number>(10);
 
   const { t } = useTranslation();
 
   /**
-   * Berechne die Chord-Daten aus den Nachrichten.
-   * Es werden nur aufeinanderfolgende Nachrichten berücksichtigt.
-   * Es werden:
-   * - `chordData`: Ein Array von { source, target, value } erzeugt.
-   * - `uniqueSenders`: Die Anzahl der eindeutigen Teilnehmer (nur aus gefilterten Nachrichten).
+   * Aggregates chord data from the filtered messages.
+   * It counts transitions between consecutive messages (from previous sender to current sender).
+   * Returns:
+   * - `chordData`: an array of { source, target, value } objects.
+   * - `uniqueSenders`: total count of unique participants.
+   * - `sortedSenders`: senders sorted in descending order by message count.
    */
   const { chordData, uniqueSenders, sortedSenders } = useMemo(() => {
     const counts: Record<string, Record<string, number>> = {};
     const senderCounts = new Map<string, number>();
 
-    // Zähle Nachrichten pro Sender
+    // Count messages per sender.
     filteredMessages.forEach((msg) => {
       senderCounts.set(msg.sender, (senderCounts.get(msg.sender) || 0) + 1);
     });
 
-    // Sortiere die Sender absteigend nach Anzahl der Nachrichten
+    // Sort senders in descending order of message count.
     const sortedSenders = Array.from(senderCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .map(([sender]) => sender);
@@ -90,7 +77,7 @@ const ChordDiagram: React.FC = () => {
       return { chordData: [], uniqueSenders: 0, sortedSenders: [] };
     }
 
-    // Zähle Übergänge zwischen aufeinanderfolgenden Nachrichten für gültige Sender
+    // Count transitions between consecutive messages for valid senders.
     filteredMessages.forEach((msg, index) => {
       if (index === 0) return;
       const previousMessage = filteredMessages[index - 1];
@@ -108,7 +95,7 @@ const ChordDiagram: React.FC = () => {
       counts[previousSender][sender] += 1;
     });
 
-    // Erzeuge ein Array von Chord-Daten
+    // Flatten the count matrix into an array of chord data.
     const flatChordData: ChordDatum[] = Object.entries(counts).flatMap(([source, targets]) =>
       Object.entries(targets).map(([target, value]) => ({
         source,
@@ -124,41 +111,33 @@ const ChordDiagram: React.FC = () => {
     };
   }, [filteredMessages]);
 
+  // Limit the senders based on the top count.
   const topSenders = sortedSenders.slice(0, topCount);
+  // Filter chord data to include only transitions between the top senders.
   const filteredChordData = chordData.filter(
     (d) => topSenders.includes(d.source) && topSenders.includes(d.target),
   );
 
-  // console.log("Top Senders: ", topSenders);
-
+  // Set the default top count based on the number of senders.
   useEffect(() => {
     if (sortedSenders.length > 0) {
-      // Falls mehr als 12 Sender vorhanden sind, verwende 12 als Default,
-      // ansonsten: Wenn weniger als 10 Sender vorhanden sind, nimm alle, sonst 10.
       const defaultTop =
         sortedSenders.length > MAX_SENDERS
           ? MAX_SENDERS
           : sortedSenders.length < 10
-            ? sortedSenders.length
-            : 10;
+          ? sortedSenders.length
+          : 10;
       setTopCount(defaultTop);
     }
   }, [sortedSenders]);
 
-  /**
-   * Entscheidet, ob das Diagramm gerendert werden soll, basierend auf der Anzahl der eindeutigen Sender.
-   */
+  // Decide whether to render the chord diagram based on the number of unique senders.
   useEffect(() => {
-    if (uniqueSenders >= MIN_SENDERS) {
-      setShouldRender(true);
-    } else {
-      setShouldRender(false);
-    }
+    setShouldRender(uniqueSenders >= MIN_SENDERS);
   }, [uniqueSenders]);
 
   /**
-   * Haupteffekt, der das Chord-Diagramm zeichnet bzw. aktualisiert, wenn sich die Chord-Daten,
-   * Dimensionen oder das Theme ändern.
+   * Main effect to draw or update the chord diagram when chord data, dimensions, theme, or topCount change.
    */
   useEffect(() => {
     if (!dimensions || filteredChordData.length === 0 || !svgRef.current) return;
@@ -166,7 +145,7 @@ const ChordDiagram: React.FC = () => {
     const svg = d3.select(svgRef.current);
     const width = dimensions.width;
 
-    // Ermittele die Höhe des Headers (falls vorhanden)
+    // Get header height if available.
     const header = document.getElementById('chord-diagram-header');
     const headerHeight = header
       ? header.getBoundingClientRect().height +
@@ -178,22 +157,22 @@ const ChordDiagram: React.FC = () => {
     const radius = Math.min(width, height) / 2 - 40;
     if (radius <= 0) return;
 
-    // Lösche vorherige Zeichnungen.
+    // Clear previous drawings.
     svg.selectAll('*').remove();
 
-    // Erstelle eine Gruppe in der Mitte des SVG.
+    // Create a centered group for the diagram.
     const g = svg.append('g').attr('transform', `translate(${width / 2}, ${height / 2})`);
 
-    // Ermittle alle Teilnehmer (aus den Quell- und Zielwerten).
+    // Get the list of participants from the chord data.
     const participants = Array.from(
       new Set(filteredChordData.flatMap((d) => [d.source, d.target])),
     );
 
-    // Wähle die Farbschemata abhängig vom Theme.
+    // Choose a color scheme based on the theme.
     const colors = darkMode ? d3.schemeSet2 : d3.schemePaired;
     const colorScale = d3.scaleOrdinal<string>().domain(participants).range(colors);
 
-    // Erstelle eine Matrix für d3.chord.
+    // Create a matrix for the chord layout.
     const matrix = Array.from({ length: participants.length }, () =>
       new Array(participants.length).fill(0),
     );
@@ -201,7 +180,6 @@ const ChordDiagram: React.FC = () => {
     filteredChordData.forEach(({ source, target, value }) => {
       const sourceIndex = participants.indexOf(source);
       const targetIndex = participants.indexOf(target);
-      // Nur fortfahren, wenn beide Indizes gültig sind:
       if (sourceIndex >= 0 && targetIndex >= 0) {
         matrix[sourceIndex][targetIndex] = value;
         matrix[targetIndex][sourceIndex] = value;
@@ -221,7 +199,8 @@ const ChordDiagram: React.FC = () => {
 
     group
       .append('path')
-      .attr('d', arc as never)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .attr('d', arc as any)
       .attr('fill', (d) => colorScale(participants[d.index]))
       .attr('stroke', '#000')
       .style('cursor', 'pointer')
@@ -235,7 +214,8 @@ const ChordDiagram: React.FC = () => {
       .data(chords)
       .enter()
       .append('path')
-      .attr('d', ribbon as never)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .attr('d', ribbon as any)
       .attr('fill', (d) => colorScale(participants[d.source.index]))
       .attr('stroke', '#000')
       .style('opacity', 1);
@@ -368,6 +348,7 @@ const ChordDiagram: React.FC = () => {
       minWidth: 'fit-content',
       border: darkMode ? '1px solid white' : '1px solid black',
       borderRadius: '0',
+      fontSize: '0.9rem',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     option: (provided: any, state: any) => ({
@@ -377,12 +358,12 @@ const ChordDiagram: React.FC = () => {
           ? '#777'
           : '#ddd'
         : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-          ? darkMode
-            ? '#555'
-            : 'grey'
-          : darkMode
-            ? '#333'
-            : 'white',
+        ? darkMode
+          ? '#555'
+          : '#eee'
+        : darkMode
+        ? '#333'
+        : 'white',
       color: darkMode ? 'white' : 'black',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

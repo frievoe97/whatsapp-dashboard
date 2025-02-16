@@ -1,3 +1,4 @@
+////////////// Imports ////////////////
 import React, { useEffect, useRef, useMemo, useState, RefObject } from 'react';
 import * as d3 from 'd3';
 import { Hash, Percent, Maximize2, Minimize2, Split, Merge } from 'lucide-react';
@@ -5,10 +6,10 @@ import Switch from 'react-switch';
 import { useChat } from '../../context/ChatContext';
 import { ChatMessage, ChatMetadata } from '../../types/chatTypes';
 import useResizeObserver from '../../hooks/useResizeObserver';
-
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
 
+////////////// Type Definitions ////////////////
 interface TimeDataPoint {
   date: Date;
   count: number;
@@ -22,6 +23,12 @@ interface TimeAggregatedData {
 
 type Mode = 'year' | 'month';
 
+////////////// Helper Functions ////////////////
+
+/**
+ * Generate time category labels based on the selected mode and messages.
+ * For 'year' mode returns years, for 'month' mode returns "YYYY-MM" strings.
+ */
 function getTimeCategories(mode: Mode, messages: ChatMessage[]): string[] {
   if (messages.length === 0) return [];
   const dates = messages.map((msg) => new Date(msg.date));
@@ -29,29 +36,28 @@ function getTimeCategories(mode: Mode, messages: ChatMessage[]): string[] {
   const maxDate = d3.max(dates)!;
 
   if (mode === 'year') {
-    // Definiere den Start des ersten Jahres und den Beginn des Jahres nach dem letzten Datum
     const startYear = new Date(minDate.getFullYear(), 0, 1);
     const endYear = new Date(maxDate.getFullYear() + 1, 0, 1);
-    // Generiere eine durchgehende Liste aller Jahre zwischen startYear (inkl.) und endYear (exkl.)
     return d3.timeYear.range(startYear, endYear).map((date) => date.getFullYear().toString());
   } else {
-    // Für den "month"-Modus: Definiere den ersten Tag des Startmonats und einen Monat nach dem letzten Monat
     const startMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
     const endMonth = d3.timeMonth.offset(new Date(maxDate.getFullYear(), maxDate.getMonth(), 1), 1);
-    // Erzeuge eine Liste aller Monate im Format "YYYY-MM"
     return d3.timeMonth.range(startMonth, endMonth).map((date) => d3.timeFormat('%Y-%m')(date));
   }
 }
 
+/**
+ * Return a time category for a given message based on the mode.
+ */
 function getCategoryFromMessage(msg: ChatMessage, mode: Mode): string {
   const date = new Date(msg.date);
-  if (mode === 'year') {
-    return date.getFullYear().toString();
-  } else {
-    return d3.timeFormat('%Y-%m')(date);
-  }
+  return mode === 'year' ? date.getFullYear().toString() : d3.timeFormat('%Y-%m')(date);
 }
 
+/**
+ * Aggregate chat messages per sender and time category.
+ * Optionally computes percentage share if showPercentage is enabled.
+ */
 function aggregateTimeMessages(
   messages: ChatMessage[],
   mode: Mode,
@@ -82,7 +88,6 @@ function aggregateTimeMessages(
       }
       return { date, count: dataMap[sender][cat] || 0 };
     });
-    // console.log({ sender, values });
     return { sender, values };
   });
   if (showPercentage) {
@@ -97,11 +102,13 @@ function aggregateTimeMessages(
       };
     });
   } else {
-    // console.log(result);
     return result;
   }
 }
 
+/**
+ * Calculate the total height of an element including its vertical margins.
+ */
 function getTotalHeightIncludingMargin(elementId: string): number {
   const element = document.getElementById(elementId);
   if (!element) return 0;
@@ -112,6 +119,11 @@ function getTotalHeightIncludingMargin(elementId: string): number {
   return rect.height + marginTop + marginBottom;
 }
 
+////////////// Custom Hook: useTimelineChart ////////////////
+/**
+ * Hook to create and update the D3 timeline chart based on aggregated data.
+ * Handles filtering, scales, axes, lines, grid, tooltips, and transitions.
+ */
 function useTimelineChart(
   svgRef: RefObject<SVGSVGElement>,
   containerRef: RefObject<HTMLDivElement>,
@@ -129,12 +141,13 @@ function useTimelineChart(
   useShortNames: boolean,
   metadata: ChatMetadata | null,
 ): void {
-  // Ref zum Speichern des vorherigen Modes, um einen Modewechsel zu erkennen
+  // Store previous mode to detect mode changes for transitions
   const prevModeRef = useRef<Mode>(mode);
 
   useEffect(() => {
     if (!dimensions || aggregatedData.length === 0) return;
     const fallbackDate = new Date(2000, 0, 1);
+    // Filter data within the provided start/end range based on mode
     const filteredData = (showMerged ? mergedData : aggregatedData).map((d) => ({
       sender: d.sender,
       values: d.values.filter((v) => {
@@ -165,6 +178,7 @@ function useTimelineChart(
       computedStartDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
       computedEndDate = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate());
     }
+    // Check if the data covers less than three unique years
     const uniqueYears = new Set(filteredDates.map((date) => date.getFullYear()));
     const hasLessThanThreeYears = uniqueYears.size < 3;
     setUniqueYearsLessThanThree(hasLessThanThreeYears);
@@ -184,7 +198,7 @@ function useTimelineChart(
     const innerHeight = height - margin.top - margin.bottom - headerHeight - legendHeight;
     if (filteredData.every((d) => d.values.length === 0)) return;
 
-    // X-Skala
+    // Setup X and Y scales based on computed dates and data values
     const xScale = d3
       .scaleTime()
       .domain([computedStartDate, computedEndDate])
@@ -198,7 +212,6 @@ function useTimelineChart(
         10;
     const yScale = d3.scaleLinear().domain([0, yMax]).nice().range([innerHeight, 0]);
 
-    // y-Achse ohne Tick "0"
     const yTicks = yScale.ticks(5).filter((t) => t > 0);
     const yAxis = d3.axisLeft<number>(yScale).tickValues(yTicks).tickFormat(d3.format('.2s'));
 
@@ -208,23 +221,20 @@ function useTimelineChart(
       .line<TimeDataPoint>()
       .defined((d) => d.date >= computedStartDate && d.date <= computedEndDate)
       .x((d) => xScale(d.date))
-      .y((d) => yScale(showPercentage ? (d.percentage ?? 0) : d.count))
+      .y((d) => yScale(showPercentage ? d.percentage ?? 0 : d.count))
       .curve(d3.curveMonotoneX);
 
-    // Annahme: Du hast bereits definiert:
-    // const xAxis = d3.axisBottom(xScale).ticks(maxTicks);
     const xTickValues = xScale.ticks(maxTicks);
-    // Bestimme den rechten Endpunkt anhand des letzten Ticks:
     const topBorderX2 = xScale(xTickValues[xTickValues.length - 1]);
 
-    // Baseline-Line: alle y-Werte auf innerHeight („aus dem Boden wachsend“)
+    // Baseline line generator for transition effects
     const baselineLineGenerator = d3
       .line<TimeDataPoint>()
       .x((d) => xScale(d.date))
       .y(() => innerHeight)
       .curve(d3.curveMonotoneX);
 
-    // Hilfsfunktion für die Linienfarbe (und auch für das Tooltip)
+    // Determine line color based on sender and mode
     const getLineColor = (d: TimeAggregatedData) => {
       if (showMerged) return darkMode ? '#fff' : '#000';
       const colorRange = darkMode ? d3.schemeSet2 : d3.schemePaired;
@@ -233,6 +243,7 @@ function useTimelineChart(
         .domain(aggregatedData.map((d) => d.sender))(d.sender) as string;
     };
 
+    // Initialize or select the chart group container
     let chartGroup = svg.select<SVGGElement>('.chart-group');
     if (chartGroup.empty()) {
       chartGroup = svg
@@ -240,7 +251,7 @@ function useTimelineChart(
         .attr('class', 'chart-group')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-      // X-Grid
+      // Append X and Y grid groups with styling based on dark mode
       chartGroup
         .append('g')
         .attr('class', 'x-grid')
@@ -253,7 +264,6 @@ function useTimelineChart(
         )
         .selectAll('line')
         .attr('stroke', darkMode ? '#606060' : '#e0e0e0');
-      // Y-Grid
       chartGroup
         .append('g')
         .attr('class', 'y-grid')
@@ -266,11 +276,7 @@ function useTimelineChart(
         .selectAll('line')
         .attr('stroke', darkMode ? '#606060' : '#e0e0e0');
 
-      // **Neue Zeilen: Rahmen oben und rechts (mit derselben Farbe wie das Grid)**
-      // Zuerst alte Rahmen entfernen:
-      chartGroup.selectAll('.plot-border').remove();
-
-      // Obere Rahmenlinie – dynamisch mit topBorderX2
+      // Append top border line for the plot area
       chartGroup
         .append('line')
         .attr('class', 'plot-border top-border')
@@ -281,18 +287,7 @@ function useTimelineChart(
         .attr('stroke', darkMode ? '#a0a0a0' : '#e0e0e0')
         .attr('stroke-width', 1);
 
-      // Rechte Rahmenlinie
-      // chartGroup
-      //   .append("line")
-      //   .attr("class", "plot-border right-border")
-      //   .attr("x1", innerWidth)
-      //   .attr("y1", 0)
-      //   .attr("x2", innerWidth)
-      //   .attr("y2", innerHeight)
-      //   .attr("stroke", darkMode ? "#606060" : "#e0e0e0")
-      //   .attr("stroke-width", 1);
-
-      // Achsen erstellen
+      // Append X and Y axes
       chartGroup
         .append('g')
         .attr('class', 'x-axis')
@@ -304,9 +299,7 @@ function useTimelineChart(
         .style('font-size', '14px')
         .style('fill', darkMode ? 'white' : 'black');
 
-      // Für die y-Achse: Hier wird zunächst ohne zusätzliche Text-Stile gerendert
       chartGroup.append('g').attr('class', 'y-axis').call(yAxis);
-      // Direkt im Anschluss werden die Tick-Texte auf den gewünschten Stil gesetzt:
       chartGroup
         .select('.y-axis')
         .selectAll('text')
@@ -314,9 +307,7 @@ function useTimelineChart(
         .style('fill', darkMode ? 'white' : 'black');
     }
 
-    // --- BEGIN Update der Rahmenlinien (immer bei Dimensionsänderung) ---
-
-    // Aktualisiere die obere Rahmenlinie
+    // Update top border line
     chartGroup
       .select('.plot-border.top-border')
       .attr('x1', 0)
@@ -326,11 +317,7 @@ function useTimelineChart(
       .attr('stroke', darkMode ? '#a0a0a0' : '#e0e0e0')
       .attr('stroke-width', 1);
 
-    // Falls du eine untere Rahmenlinie wünschst, erstelle sie falls nötig und update sie:
-
-    // --- ENDE Update der Rahmenlinien ---
-
-    // Achsengitter (Update) – nach Transition die Domain-Pfade entfernen:
+    // Update grid lines with transitions
     chartGroup
       .select<SVGGElement>('.x-grid')
       .transition()
@@ -358,11 +345,11 @@ function useTimelineChart(
       .selectAll('line')
       .attr('stroke', darkMode ? '#a0a0a0' : '#e0e0e0');
 
-    // Entferne die Domain-Pfade aus den Gittergruppen (dadurch gibt es keinen Rahmen oben/rechts)
+    // Remove domain paths from grid groups
     chartGroup.select('.x-grid').select('.domain').remove();
     chartGroup.select('.y-grid').select('.domain').remove();
 
-    // Update der Achsen (ohne Duplikate bei der y-Achse):
+    // Update X and Y axes with transitions
     chartGroup
       .select<SVGGElement>('.x-axis')
       .transition()
@@ -372,8 +359,6 @@ function useTimelineChart(
       .selectAll('text')
       .style('fill', darkMode ? 'white' : 'black')
       .style('font-size', '14px');
-
-    // Für die y-Achse leeren wir zunächst den Inhalt, bevor wir die Achse neu zeichnen:
     const yAxisG = chartGroup.select<SVGGElement>('.y-axis');
     yAxisG.selectAll('*').remove();
     yAxisG.transition().duration(1000).call(yAxis);
@@ -382,11 +367,11 @@ function useTimelineChart(
       .style('fill', darkMode ? 'white' : 'black')
       .style('font-size', '14px');
 
-    // Erkennen, ob ein Modewechsel stattgefunden hat
+    // Detect mode changes for appropriate transition handling
     const isModeChange = prevModeRef.current !== mode;
     prevModeRef.current = mode;
 
-    // Linien aktualisieren – Animation beim Wechsel zwischen Total/Sendern sowie Modewechsel
+    // Update chart lines with transitions
     const lines = chartGroup
       .selectAll<SVGPathElement, TimeAggregatedData>('.line')
       .data(showMerged ? mergedData : aggregatedData, (d) => d.sender);
@@ -434,7 +419,7 @@ function useTimelineChart(
       },
     );
 
-    // Tooltip-Handling
+    // Setup tooltip functionality for mouse interactions
     const tooltip = d3.select(containerRef.current).select<HTMLDivElement>('.tooltip');
     chartGroup
       .selectAll<SVGRectElement, null>('rect.overlay')
@@ -471,7 +456,7 @@ function useTimelineChart(
           const value =
             showPercentage && point?.percentage !== undefined
               ? `${point.percentage.toFixed(2)} %`
-              : (point?.count ?? 0);
+              : point?.count ?? 0;
           return { sender: fd.sender, value };
         });
 
@@ -480,7 +465,6 @@ function useTimelineChart(
             `<strong>${formattedDate}</strong><br>` +
               tooltipData
                 .map((td) => {
-                  // Hier prüfen wir, ob useShortNames aktiv ist und ob ein Kurzname existiert.
                   const displayName =
                     useShortNames && metadata?.sendersShort[td.sender]
                       ? metadata.sendersShort[td.sender]
@@ -497,13 +481,10 @@ function useTimelineChart(
           .style('left', `${mx + margin.left + 10}px`)
           .style('top', `${my + margin.top + 10}px`);
       });
-    // Statt eines "mouseleave"-Handlers am Overlay wird das Tooltip ausgeblendet,
-    // sobald die Maus das SVG verlässt.
     svg.on('mouseleave', () => {
       chartGroup.select('line.hover-line').style('opacity', 0);
       tooltip.style('display', 'none');
     });
-
     if (chartGroup.select('line.hover-line').empty()) {
       chartGroup
         .append('line')
@@ -512,7 +493,6 @@ function useTimelineChart(
         .attr('stroke-width', 1)
         .style('opacity', 0);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     svgRef,
     containerRef,
@@ -530,17 +510,29 @@ function useTimelineChart(
   ]);
 }
 
+////////////// Main Component: Timeline ////////////////
+/**
+ * The Timeline component displays a D3-based timeline chart of chat messages.
+ * It provides options to switch between year/month modes, toggle percentage view,
+ * merge data, and expand the view. It uses several hooks to manage layout and data.
+ */
 const Timeline: React.FC = () => {
+  ////////////// useChat Context //////////////
   const { filteredMessages, darkMode, appliedFilters, metadata, useShortNames } = useChat();
+
+  ////////////// Refs and Resize Observer //////////////
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
+
+  ////////////// Component State //////////////
   const [expanded, setExpanded] = useState(false);
   const [uniqueYearsLessThanThree, setUniqueYearsLessThanThree] = useState(false);
   const [mode, setMode] = useState<Mode>('year');
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
   const [showMerged, setShowMerged] = useState(false);
 
+  ////////////// useEffect: Initialize Tooltip Element //////////////
   useEffect(() => {
     if (!containerRef.current) return;
     const tooltip = d3.select(containerRef.current).select('.tooltip');
@@ -557,6 +549,7 @@ const Timeline: React.FC = () => {
     }
   }, []);
 
+  ////////////// useEffect: Update Tooltip Styling on Dark Mode Change //////////////
   useEffect(() => {
     if (!containerRef.current) return;
     d3.select(containerRef.current)
@@ -565,6 +558,7 @@ const Timeline: React.FC = () => {
       .style('color', darkMode ? '#fff' : '#000');
   }, [darkMode]);
 
+  ////////////// useEffect: Adjust Mode Based on Data Availability //////////////
   useEffect(() => {
     if (filteredMessages.length === 0) {
       setMode('month');
@@ -572,15 +566,19 @@ const Timeline: React.FC = () => {
     }
   }, [filteredMessages]);
 
+  ////////////// useMemo: Compute Time Categories //////////////
   const categories = useMemo(
     () => getTimeCategories(mode, filteredMessages),
     [mode, filteredMessages],
   );
+
+  ////////////// useMemo: Aggregate Messages for Chart Display //////////////
   const aggregatedData = useMemo(
     () => aggregateTimeMessages(filteredMessages, mode, categories, showPercentage),
     [filteredMessages, mode, categories, showPercentage],
   );
 
+  ////////////// useMemo: Merge Data for Total Counts //////////////
   const mergedData = useMemo(() => {
     if (!showMerged) return aggregatedData;
     const allDates = Array.from(
@@ -597,16 +595,16 @@ const Timeline: React.FC = () => {
     return [{ sender: 'Total', values: mergedValues }];
   }, [aggregatedData, showMerged]);
 
-  // Farbskala: Bei showMerged nur Total (schwarz), sonst einzelne Sender
+  ////////////// Color Scale Setup //////////////
   const getColorScale = () => {
     if (showMerged) return () => (darkMode ? '#fff' : '#000');
     const colorRange = darkMode ? d3.schemeSet2 : d3.schemePaired;
     const domain = aggregatedData.map((d) => d.sender);
     return d3.scaleOrdinal<string, string>(colorRange).domain(domain);
   };
-
   const colorScale = getColorScale();
 
+  ////////////// Update Timeline Chart using Custom Hook //////////////
   useTimelineChart(
     svgRef,
     containerRef,
@@ -625,8 +623,10 @@ const Timeline: React.FC = () => {
     metadata,
   );
 
+  ////////////// useTranslation Hook //////////////
   const { t } = useTranslation();
 
+  ////////////// Render Component //////////////
   return (
     <div
       ref={containerRef}
@@ -642,6 +642,7 @@ const Timeline: React.FC = () => {
         overflow: 'hidden',
       }}
     >
+      {/* Header with controls */}
       <div
         id="timeline-plot-header"
         className="flex items-center justify-between mb-2 px-4 md:px-0"
@@ -655,8 +656,8 @@ const Timeline: React.FC = () => {
                     ? 'bg-white text-black border border-gray-300 hover:border-gray-300'
                     : 'bg-black text-white border-none'
                   : darkMode
-                    ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
-                    : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
+                  ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
+                  : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
               }`}
               onClick={() => setMode('year')}
             >
@@ -669,8 +670,8 @@ const Timeline: React.FC = () => {
                     ? 'bg-white text-black border border-gray-300 hover:border-gray-300'
                     : 'bg-black text-white border-none'
                   : darkMode
-                    ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
-                    : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
+                  ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
+                  : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
               }`}
               onClick={() => setMode('month')}
             >
@@ -790,6 +791,7 @@ const Timeline: React.FC = () => {
           </button>
         </div>
       </div>
+      {/* Legend displaying sender colors */}
       <div
         id="timeline-plot-legend"
         className="flex flex-nowrap overflow-x-auto items-center mb-2 space-x-2 px-4 md:px-0"
@@ -830,6 +832,7 @@ const Timeline: React.FC = () => {
           })
         )}
       </div>
+      {/* Chart container */}
       <div className="flex-grow flex justify-center items-center">
         {filteredMessages.length === 0 ? (
           <span className="text-lg">{t('General.noDataAvailable')}</span>

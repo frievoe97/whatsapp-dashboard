@@ -1,3 +1,4 @@
+////////////// Imports ////////////////
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import * as d3 from 'd3';
 import { useChat } from '../../context/ChatContext';
@@ -5,52 +6,40 @@ import useResizeObserver from '../../hooks/useResizeObserver';
 import Sentiment from 'sentiment';
 import { Maximize2, Merge, Minimize2, Split } from 'lucide-react';
 import Switch from 'react-switch';
-
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
 
-/* -------------------------------------------------------------------------
- * CONSTANTS & TYPES
- * ------------------------------------------------------------------------- */
-
-/** List of valid languages supported for sentiment analysis. */
+////////////// Constants & Types ////////////////
+/** Valid language codes supported for sentiment analysis. */
 const VALID_LANGUAGES = ['de', 'en', 'fr', 'es'] as const;
 
-/** Anzahl der Tage vor und nach dem aktuellen Tag, die beim gleitenden Durchschnitt berücksichtigt werden sollen. */
-// const SMOOTHING_WINDOW = 30; // x Tage davor UND x Tage danach
+/** Set to true to test linear interpolation for missing days. */
+const INTERPOLATE_MISSING = false;
 
-/** Farbe für die Sentiment-Linie. */
-// const SENTIMENT_COLOR = '#2BA02B';
-
-const INTERPOLATE_MISSING = false; // Auf true setzen, um lineare Interpolation zu testen
-
-/** Ein einzelner Datenpunkt für den Sentimentverlauf. */
+/** A single data point representing the sentiment score on a specific date. */
 interface SentimentDataPoint {
   date: Date;
   score: number;
 }
 
-/** Chat message type (adjust as needed). */
+/** Minimal ChatMessage interface (backend already filters messages). */
 interface ChatMessage {
   date: Date;
   message: string;
-  // Die Eigenschaft isUsed entfällt, da das Backend bereits filtert.
 }
 
-/* -------------------------------------------------------------------------
- * HELPER FUNCTIONS
- * ------------------------------------------------------------------------- */
-
+////////////// Helper Functions ////////////////
 /**
- * Generates a continuous series of dates (day by day) from a start to an end date.
+ * Generates a continuous series of dates (day by day) between start and end.
  */
 function getDateRange(start: Date, end: Date): Date[] {
   return d3.timeDay.range(start, d3.timeDay.offset(end, 1));
 }
 
 /**
- * Fills in missing days within the sorted daily sentiment data.
- * Für Tage, an denen keine Daten vorliegen, wird ein neutraler Wert (0) eingesetzt.
+ * Fills in missing days in the sorted sentiment data.
+ * For days with no data, a neutral score (0) is used.
+ * Optionally, linear interpolation can be applied.
  */
 function fillMissingDays(
   sortedData: SentimentDataPoint[],
@@ -62,7 +51,7 @@ function fillMissingDays(
   const lastDate = sortedData[sortedData.length - 1].date;
   const allDates = getDateRange(firstDate, lastDate);
 
-  // Erstelle eine Map für den schnellen Zugriff per Datum (YYYY-MM-DD)
+  // Create a quick-access Map using date string (YYYY-MM-DD)
   const dataMap = new Map<string, SentimentDataPoint>();
   sortedData.forEach((d) => {
     const key = d.date.toISOString().split('T')[0];
@@ -75,7 +64,6 @@ function fillMissingDays(
       filledData.push(dataMap.get(key)!);
     } else {
       if (interpolateMissing) {
-        // Interpolationslogik:
         let prev: SentimentDataPoint | null = null;
         let next: SentimentDataPoint | null = null;
         for (let i = sortedData.length - 1; i >= 0; i--) {
@@ -114,7 +102,7 @@ function fillMissingDays(
 
 /**
  * Applies a moving average smoothing over the sentiment data.
- * Für jeden Tag wird der Durchschnitt der x Tage davor und x Tage danach berechnet.
+ * For each day, the average score over the window days before and after is calculated.
  */
 function smoothData(data: SentimentDataPoint[], window: number): SentimentDataPoint[] {
   if (!data.length) return [];
@@ -130,8 +118,8 @@ function smoothData(data: SentimentDataPoint[], window: number): SentimentDataPo
 }
 
 /**
- * Teilt die Daten in Segmente auf, bei denen das Vorzeichen konstant bleibt.
- * Berechnet dabei den Schnittpunkt, wenn zwischen zwei Punkten ein Vorzeichenwechsel passiert.
+ * Splits the sentiment data into segments where the sign of the score remains constant.
+ * If a sign change occurs, it calculates an intersection point at score zero.
  */
 function splitDataBySign(data: SentimentDataPoint[]): SentimentDataPoint[][] {
   const segments: SentimentDataPoint[][] = [];
@@ -167,9 +155,8 @@ function splitDataBySign(data: SentimentDataPoint[]): SentimentDataPoint[][] {
 }
 
 /**
- * Zeichnet das Chart (kombinierte Darstellung) in das SVG.
- * Hier wird ein einzelner Datensatz (combinedData) verwendet, dessen Linie segmentsweise
- * farblich (grün/rot) je nach Vorzeichen variiert.
+ * Draws the combined sentiment chart into the SVG element.
+ * The line is drawn in segments with color changes (green/red) based on the sign.
  */
 function drawChart(
   svgRef: React.RefObject<SVGSVGElement>,
@@ -267,13 +254,12 @@ function drawChart(
     .attr('y2', yScale(0))
     .attr('stroke', darkMode ? 'white' : 'black')
     .attr('stroke-width', 1);
-  // In der kombinierten Darstellung werden die Daten in Segmente unterteilt, die dann je nach Vorzeichen eingefärbt werden.
+  // Split the data into segments based on sign changes and draw each segment with color.
   const segments = splitDataBySign(sentimentData);
   segments.forEach((segment) => {
     if (segment.length === 1) {
       return;
     }
-
     const segmentColor = segment[1].score >= 0 ? 'green' : 'red';
     g.append('path')
       .datum(segment)
@@ -285,10 +271,7 @@ function drawChart(
 }
 
 /**
- * Zeichnet das Chart mit getrennten Datensätzen:
- * Hier werden zwei Linien gezeichnet – eine Linie, die ausschließlich die positiven
- * Wortwerte (grün) enthält, und eine Linie, die ausschließlich die negativen
- * Wortwerte (rot) enthält.
+ * Draws two separate sentiment lines: one for positive scores (green) and one for negative scores (red).
  */
 function drawChartSplit(
   svgRef: React.RefObject<SVGSVGElement>,
@@ -386,14 +369,14 @@ function drawChartSplit(
     .attr('y2', yScale(0))
     .attr('stroke', darkMode ? 'white' : 'black')
     .attr('stroke-width', 1);
-  // Zeichne die positive Linie (nur positive Wortwerte, grün)
+  // Draw positive sentiment line (green)
   g.append('path')
     .datum(positiveData)
     .attr('fill', 'none')
     .attr('stroke', 'green')
     .attr('stroke-width', 3)
     .attr('d', lineGenerator);
-  // Zeichne die negative Linie (nur negative Wortwerte, rot)
+  // Draw negative sentiment line (red)
   g.append('path')
     .datum(negativeData)
     .attr('fill', 'none')
@@ -402,24 +385,15 @@ function drawChartSplit(
     .attr('d', lineGenerator);
 }
 
-/* -------------------------------------------------------------------------
- * SENTIMENT ANALYSIS COMPONENT
- * ------------------------------------------------------------------------- */
-
+////////////// Main Component: SentimentAnalysis ////////////////
 /**
- * Rendert den Chart des täglichen Sentiments über die Zeit.
+ * Renders a chart showing daily sentiment over time.
+ * It computes three datasets on load:
+ * - combinedData: Total sentiment per day (sum of all word scores) with one line that varies in color based on sign.
+ * - positiveData: Daily sum of only positive word scores.
+ * - negativeData: Daily sum of only negative word scores.
  *
- * Es werden beim Laden zwei verschiedene Datensätze berechnet:
- *
- * 1. **Combined Data:**
- *    Gesamtscore pro Tag (Summe aller Wortwerte) – hier wird eine einzelne Linie gezeichnet, die in ihren Segmenten je nach Vorzeichen (grün/rot) variiert.
- *
- * 2. **Separate Data:**
- *    Zwei Linien:
- *      - Eine Linie (grün) enthält ausschließlich die positiven Wortwerte.
- *      - Eine Linie (rot) enthält ausschließlich die negativen Wortwerte.
- *
- * Mithilfe des Booleans `splitMode` wird entweder der kombinierte oder der getrennte Chart angezeigt.
+ * Depending on the boolean `splitMode`, either the combined chart or the separated chart is displayed.
  */
 const SentimentAnalysis: React.FC = () => {
   const { filteredMessages, darkMode, metadata } = useChat();
@@ -427,12 +401,13 @@ const SentimentAnalysis: React.FC = () => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [expanded, setExpanded] = useState(false);
   const dimensions = useResizeObserver(containerRef);
-  // splitMode steuert, ob der kombinierte Chart (false) oder der getrennte Chart (true) angezeigt wird.
+  // splitMode controls whether the combined chart (false) or the split chart (true) is displayed.
   const [splitMode, setSplitMode] = useState(false);
   const sentimentAnalyzer = useMemo(() => new Sentiment(), []);
   const [afinn, setAfinn] = useState<Record<string, number>>({});
   const [isLanguageRegistered, setIsLanguageRegistered] = useState(false);
 
+  // Load the appropriate AFINN lexicon based on metadata language.
   useEffect(() => {
     if (!metadata || !metadata.language) return;
     const langToLoad = VALID_LANGUAGES.includes(metadata.language as 'de' | 'en' | 'fr' | 'es')
@@ -447,6 +422,7 @@ const SentimentAnalysis: React.FC = () => {
       });
   }, [metadata]);
 
+  // Register the language with the sentiment analyzer.
   useEffect(() => {
     if (!metadata || !metadata.language) return;
     if (Object.keys(afinn).length === 0) return;
@@ -464,16 +440,12 @@ const SentimentAnalysis: React.FC = () => {
   }, [metadata, afinn, sentimentAnalyzer]);
 
   /**
-   * Berechnet beim Laden drei Datensätze:
+   * Computes three datasets:
+   * - combinedData: Total sentiment per day (sum of all word scores).
+   * - positiveData: Sum of positive word scores per day.
+   * - negativeData: Sum of negative word scores per day.
    *
-   * - **combinedData:** Gesamtscore pro Tag (Summe aller Wortwerte) – wie im bisherigen Chart.
-   *
-   * - **positiveData:** Für jeden Tag werden _nur_ die positiven Wortwerte aufsummiert.
-   *
-   * - **negativeData:** Für jeden Tag werden _nur_ die negativen Wortwerte aufsummiert.
-   *
-   * Dabei wird – für den separaten Ansatz – nicht auf result.calculation vertraut, sondern
-   * es wird direkt über das geladene AFINN‑Lexikon anhand der Wörter in der Nachricht gearbeitet.
+   * Missing days are filled (with optional interpolation) and a moving average is applied.
    */
   const { combinedData, positiveData, negativeData } = useMemo<{
     combinedData: SentimentDataPoint[];
@@ -485,7 +457,6 @@ const SentimentAnalysis: React.FC = () => {
     const langToUse = VALID_LANGUAGES.includes(metadata.language as 'de' | 'en' | 'fr' | 'es')
       ? metadata.language
       : 'en';
-    // Objekte für tägliche Totalsummen initialisieren
     const dailyCombined: Record<string, { totalScore: number }> = {};
     const dailyPositive: Record<string, { totalScore: number }> = {};
     const dailyNegative: Record<string, { totalScore: number }> = {};
@@ -497,18 +468,15 @@ const SentimentAnalysis: React.FC = () => {
         dailyNegative[dateKey] = { totalScore: 0 };
       }
       try {
-        // Gesamte Analyse (wie bisher)
         const result = sentimentAnalyzer.analyze(msg.message, {
           language: langToUse,
         });
         dailyCombined[dateKey].totalScore += result.score;
-        // Für den separaten Ansatz: Berechnung direkt über das AFINN‑Lexikon.
-        // Wir zerlegen die Nachricht in Wörter, bereinigen diese und summieren jeweils positive bzw. negative Werte.
+        // Directly calculate positive and negative scores using the AFINN lexicon.
         const words = msg.message.split(/\s+/);
         let posScore = 0;
         let negScore = 0;
         words.forEach((word) => {
-          // Bereinige das Wort (nur Buchstaben, Kleinbuchstaben)
           const cleaned = word.toLowerCase().replace(/[^a-zäöüß]/g, '');
           const score = afinn[cleaned] || 0;
           if (score > 0) {
@@ -520,11 +488,9 @@ const SentimentAnalysis: React.FC = () => {
         dailyPositive[dateKey].totalScore += posScore;
         dailyNegative[dateKey].totalScore += negScore;
       } catch (error) {
-        // TODO
         console.error(`Error analyzing message with language ${langToUse}:`, error);
       }
     });
-    // Umwandeln in Arrays und sortieren
     const combinedRawData: SentimentDataPoint[] = Object.entries(dailyCombined)
       .map(([date, { totalScore }]) => ({
         date: new Date(date),
@@ -544,11 +510,9 @@ const SentimentAnalysis: React.FC = () => {
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
     if (!combinedRawData.length) return { combinedData: [], positiveData: [], negativeData: [] };
-    // Fehlende Tage auffüllen
     const filledCombined = fillMissingDays(combinedRawData, INTERPOLATE_MISSING);
     const filledPositive = fillMissingDays(positiveRawData, INTERPOLATE_MISSING);
     const filledNegative = fillMissingDays(negativeRawData, INTERPOLATE_MISSING);
-    // Gleiten Durchschnitt anwenden (gleiche Fenstergröße für alle Datensätze)
     const windowSize = filledCombined.length / 50;
     const smoothedCombined = smoothData(filledCombined, windowSize);
     const smoothedPositive = smoothData(filledPositive, windowSize);
@@ -560,7 +524,7 @@ const SentimentAnalysis: React.FC = () => {
     };
   }, [filteredMessages, metadata, isLanguageRegistered, sentimentAnalyzer, afinn]);
 
-  // Je nach splitMode wird entweder der kombinierte Chart oder der getrennte Chart gezeichnet.
+  // Draw chart based on splitMode (combined vs. separate lines).
   useEffect(() => {
     if (!dimensions) return;
     if (!combinedData.length) return;
@@ -590,13 +554,11 @@ const SentimentAnalysis: React.FC = () => {
     >
       <div className="flex items-center justify-between px-4 md:px-0 mb-4">
         <h2
-          className={`text-base md:text-lg font-semibold  ${
-            darkMode ? 'text-white' : 'text-black'
-          }`}
+          className={`text-base md:text-lg font-semibold ${darkMode ? 'text-white' : 'text-black'}`}
         >
           {t('Sentiment.title')}
         </h2>
-        <div className="flex flex row">
+        <div className="flex flex-row">
           <Split
             className={`hidden md:inline-block ${
               darkMode ? 'text-white' : 'text-gray-700'
@@ -640,14 +602,11 @@ const SentimentAnalysis: React.FC = () => {
               darkMode ? 'text-white' : 'text-gray-700'
             } w-4 h-4 md:w-5 md:h-5`}
           />
-
-          {/* Hier kannst du später einen Button einfügen, der splitMode toggelt */}
           <button
             className={`ml-0 md:ml-4 md:flex items-center justify-center p-0 border-none focus:outline-none ${
               darkMode ? 'text-white' : 'text-black'
             }`}
             onClick={() => {
-              // setSplitMode(!splitMode);
               setExpanded(!expanded);
               setTimeout(() => {
                 window.dispatchEvent(new Event('resize'));

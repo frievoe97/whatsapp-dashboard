@@ -3,130 +3,80 @@ import { OperatingSystem } from '../types/chatTypes';
 
 ////////////////////// Constants ////////////////////////
 
-/**
- * An array representing the default weekdays.
- */
 export const DEFAULT_WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /**
- * An array of operating system configurations used to parse chat files.
- * Each configuration includes a regex for matching message lines and a function to parse dates.
+ * Eine neue Version der Operating-System-Konfigurationen, die
+ * eine Methode `parseLine` beinhalten, um eine Zeile direkt zu parsen.
  */
 export const OPERATING_SYSTEMS = [
   {
     name: 'ios_1',
     regex: /^\[(\d{2}\.\d{2}\.\d{2}), (\d{2}:\d{2}:\d{2})\] (.*?): (.+)$/,
-    parseDate: (dateString: string) => {
-      const dateParts = dateString.split('.');
-      return `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+    parseLine: (line: string) => {
+      const match = line.match(/^\[(\d{2}\.\d{2}\.\d{2}), (\d{2}:\d{2}:\d{2})\] (.*?): (.+)$/);
+      if (!match) return null;
+      const [, dateString, timeString, sender, message] = match;
+      // Datum in Bestandteile zerlegen und in ISO-Format bringen
+      const [day, month, year] = dateString.split('.');
+      const isoDate = `20${year}-${month}-${day}T${timeString}`;
+      return {
+        date: new Date(isoDate),
+        time: timeString,
+        sender,
+        message,
+      };
     },
   },
   {
     name: 'android_1',
     regex: /^(\d{2}\.\d{2}\.\d{2}), (\d{2}:\d{2}) - (.*?): (.+)$/,
-    parseDate: (dateString: string) => {
-      const dateParts = dateString.split('.');
-      return `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+    parseLine: (line: string) => {
+      const match = line.match(/^(\d{2}\.\d{2}\.\d{2}), (\d{2}:\d{2}) - (.*?): (.+)$/);
+      if (!match) return null;
+      const [, dateString, timeString, sender, message] = match;
+      const [day, month, year] = dateString.split('.');
+      // Zeit anpassen, indem Sekunden angehängt werden
+      const fullTime = `${timeString}:00`;
+      const isoDate = `20${year}-${month}-${day}T${fullTime}`;
+      return {
+        date: new Date(isoDate),
+        time: fullTime,
+        sender,
+        message,
+      };
     },
   },
   {
     name: 'android_2',
     regex: /^(\d{2}\/\d{2}\/\d{4}), (\d{1,2}):(\d{2}) (am|pm) - (.*?): (.+)$/,
-    parseDate: (dateString: string) => {
+    parseLine: (line: string) => {
+      const match = line.match(/^(\d{2}\/\d{2}\/\d{4}), (\d{1,2}):(\d{2}) (am|pm) - (.*?): (.+)$/i);
+      if (!match) return null;
+      const [, dateString, hourStr, minuteStr, modifier, sender, message] = match;
       const [day, month, year] = dateString.split('/');
-      return `${year}-${month}-${day}`;
+      let hour = parseInt(hourStr, 10);
+      const minute = parseInt(minuteStr, 10);
+      // Konvertiere in 24-Stunden-Format
+      if (modifier.toLowerCase() === 'pm' && hour !== 12) {
+        hour += 12;
+      } else if (modifier.toLowerCase() === 'am' && hour === 12) {
+        hour = 0;
+      }
+      const formattedTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(
+        2,
+        '0',
+      )}:00`;
+      const isoDate = `${year}-${month}-${day}T${formattedTime}`;
+      return {
+        date: new Date(isoDate),
+        time: formattedTime,
+        sender,
+        message,
+      };
     },
   },
 ] as OperatingSystem[];
-
-////////////////////// Helper Functions ////////////////////////
-
-/**
- * Formats a date string into the specified format.
- *
- * @param dateString - The raw date string.
- * @param format - The target format: 'dd.mm.yy' or 'dd/mm/yyyy'.
- * @returns The formatted date string.
- */
-const formatDate = (dateString: string, format: 'dd.mm.yy' | 'dd/mm/yyyy') => {
-  if (format === 'dd.mm.yy') {
-    const [day, month, year] = dateString.split('.');
-    return `${day}.${month}.${year}`;
-  }
-  if (format === 'dd/mm/yyyy') {
-    const [day, month, year] = dateString.split('/');
-    return `${day}.${month}.${year.slice(-2)}`;
-  }
-  return dateString;
-};
-
-/**
- * Formats a time string into a standardized format (HH:MM:SS).
- *
- * If the input contains 'am' or 'pm', it converts it to 24-hour format.
- *
- * @param timeString - The raw time string.
- * @returns The formatted time string.
- */
-const formatTime = (timeString: string) => {
-  if (timeString.includes('am') || timeString.includes('pm')) {
-    const [time, modifier] = timeString.split(' ');
-    let [hours] = time.split(':').map(Number);
-    const [, minutes] = time.split(':').map(Number);
-
-    if (modifier === 'pm' && hours !== 12) hours += 12;
-    if (modifier === 'am' && hours === 12) hours = 0;
-
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
-  }
-  return `${timeString}:00`;
-};
-
-////////////////////// Message Extraction ////////////////////////
-
-/**
- * Extracts message data from a regex match based on the operating system format.
- *
- * @param match - The RegExpMatchArray obtained from matching a chat line.
- * @param osName - The operating system identifier to determine the parsing strategy.
- * @returns An object with the parsed date, time, sender, and message; or null if parsing fails.
- */
-export const extractMessageData = (match: RegExpMatchArray, osName: string) => {
-  if (!match) return null;
-
-  let date, time, sender, message;
-
-  switch (osName) {
-    case 'ios_1': {
-      const [, dateString, timeString, senderString, messageString] = match;
-      date = formatDate(dateString, 'dd.mm.yy'); // Expected format: 06.02.25
-      time = timeString; // Expected format: 20:52:00
-      sender = senderString;
-      message = messageString;
-      break;
-    }
-    case 'android_1': {
-      const [, dateString, timeString, senderString, messageString] = match;
-      date = formatDate(dateString, 'dd.mm.yy'); // Expected format: 06.02.25
-      time = formatTime(timeString); // Expected format: 20:52:00
-      sender = senderString;
-      message = messageString;
-      break;
-    }
-    case 'android_2': {
-      const [, dateString, hour, minute, ampm, senderString, messageString] = match;
-      date = formatDate(dateString, 'dd/mm/yyyy'); // Expected format: 06.02.25 (with two-digit year)
-      time = formatTime(`${hour}:${minute} ${ampm}`); // Expected format: 20:52:00
-      sender = senderString;
-      message = messageString;
-      break;
-    }
-    default:
-      return null;
-  }
-
-  return { date, time, sender, message };
-};
 
 ////////////////////// Enum: SenderStatus ////////////////////////
 

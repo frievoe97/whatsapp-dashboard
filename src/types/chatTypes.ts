@@ -68,6 +68,5 @@ export interface FilterOptions {
 export interface OperatingSystem {
   name: string;
   regex: RegExp;
-  parseDate: (dateString: string) => string;
-  parseTime: (timeString: string, period?: string) => string;
+  parseLine: (line: string) => { date: Date; time: string; sender: string; message: string } | null;
 }
