@@ -1,34 +1,36 @@
-/**
- * Custom React Hook: useResizeObserver
- *
- * This hook provides real-time monitoring of an HTML element's dimensions (width and height)
- * using the ResizeObserver API. It is useful for responsive components that need to adjust
- * dynamically based on their size.
- *
- * @param {RefObject<HTMLElement>} ref - A React ref object pointing to the target HTML element.
- * @returns {ResizeObserverEntry | undefined} - An object containing the width and height of the observed element.
- */
-
+// Imports: React hooks
 import { useState, useEffect, RefObject } from 'react';
 
-// Define the structure of the ResizeObserver entry state
+/////////////////////// Type Definition ///////////////////////
+
+/**
+ * Represents the dimensions of an HTML element.
+ */
 interface ResizeObserverEntry {
   width: number;
   height: number;
 }
 
+/////////////////////// Custom Hook: useResizeObserver ///////////////////////
+
+/**
+ * Custom Hook: useResizeObserver
+ *
+ * Monitors the size of a given HTML element using the ResizeObserver API and returns its current dimensions.
+ *
+ * @param ref - A React ref object that points to the target HTML element.
+ * @returns The current width and height of the element, or undefined if the element is not available.
+ */
 const useResizeObserver = (ref: RefObject<HTMLElement>): ResizeObserverEntry | undefined => {
-  // State to store the current dimensions of the observed element
+  // State: Holds the current dimensions of the element
   const [dimensions, setDimensions] = useState<ResizeObserverEntry>();
 
+  //////////// useEffect: Setup and Cleanup ResizeObserver ////////////
   useEffect(() => {
     const element = ref.current;
-    if (!element) return; // Ensure the element exists before proceeding
+    if (!element) return; // Exit if element is not available
 
-    /**
-     * Function to manually update the dimensions in case ResizeObserver
-     * is not immediately triggered or needs an initial value.
-     */
+    // Function: Update dimensions from element's bounding rectangle
     const updateDimensions = () => {
       const rect = element.getBoundingClientRect();
       setDimensions({
@@ -37,10 +39,10 @@ const useResizeObserver = (ref: RefObject<HTMLElement>): ResizeObserverEntry | u
       });
     };
 
-    // Initial update to set dimensions before the observer starts
+    // Initial update before starting the observer
     updateDimensions();
 
-    // Create a new ResizeObserver instance to track element size changes
+    // Create a new ResizeObserver instance to monitor size changes
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
@@ -51,10 +53,7 @@ const useResizeObserver = (ref: RefObject<HTMLElement>): ResizeObserverEntry | u
     // Start observing the target element
     resizeObserver.observe(element);
 
-    /**
-     * Cleanup function to remove the observer when the component unmounts
-     * or when the observed element changes.
-     */
+    // Cleanup: Unobserve the element when component unmounts or ref changes
     return () => {
       if (element) {
         resizeObserver.unobserve(element);

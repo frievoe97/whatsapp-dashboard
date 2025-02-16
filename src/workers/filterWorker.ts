@@ -1,16 +1,23 @@
-// src/workers/filterWorker.ts
 /// <reference lib="webworker" />
 
+/////////////////////// Imports ///////////////////////
 import { filterMessages, computeSenderStatuses } from '../logic/filterChatMessages';
 import { ChatMessage } from '../types/chatTypes';
 
+/////////////////////// Worker Message Handler ///////////////////////
+
+/**
+ * This web worker listens for messages from the main thread to filter chat messages.
+ * It applies date and weekday filters, computes sender statuses, and returns the filtered
+ * messages along with the updated filter options.
+ */
 self.addEventListener('message', (event) => {
   const { originalMessages, tempFilters, lastAppliedMinPercentage } = event.data;
 
-  // Bestimme, ob ein manueller Reset nötig ist
+  // Determine whether a manual reset is required based on the minPercentage change.
   const resetManual = tempFilters.minPercentagePerSender !== lastAppliedMinPercentage;
 
-  // Filtere Nachrichten nach Datum und Wochentagen
+  // Filter messages by date range and selected weekdays.
   const messagesByTime = originalMessages.filter((msg: ChatMessage) => {
     if (tempFilters.startDate && new Date(msg.date) < new Date(tempFilters.startDate)) return false;
     if (tempFilters.endDate && new Date(msg.date) > new Date(tempFilters.endDate)) return false;
@@ -18,7 +25,7 @@ self.addEventListener('message', (event) => {
     return tempFilters.selectedWeekdays.includes(weekday);
   });
 
-  // Berechne neue Sender-Status
+  // Compute new sender statuses using the filtered messages.
   const newSenderStatuses = computeSenderStatuses(
     messagesByTime,
     tempFilters.minPercentagePerSender,
@@ -26,12 +33,12 @@ self.addEventListener('message', (event) => {
     resetManual,
   );
 
-  // Erstelle das neue Filter-Objekt
+  // Create an updated filters object with the new sender statuses.
   const newFilters = { ...tempFilters, senderStatuses: newSenderStatuses };
 
-  // Filtere alle Nachrichten anhand der neuen Filter
+  // Filter all original messages using the updated filter options.
   const filteredMessages = filterMessages(originalMessages, newFilters);
 
-  // Sende das Ergebnis zurück
+  // Post the result back to the main thread.
   self.postMessage({ filteredMessages, newFilters });
 });

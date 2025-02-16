@@ -1,12 +1,13 @@
 /**
- * TypeScript module declaration for Web Workers.
+ * Module declaration for TypeScript Web Worker files.
  *
- * This declaration allows importing TypeScript worker files with the `*.worker.ts` extension.
- * It ensures that when a worker is instantiated, it behaves as expected within TypeScript.
+ * This declaration allows importing files with the `.worker.ts` extension.
+ * Imported workers will be treated as a class that extends the native Web Worker API.
  */
 declare module '*.worker.ts' {
   /**
-   * A wrapper class extending the Web Worker API.
+   * A custom Worker class that extends the native Web Worker.
+   * This wrapper allows TypeScript to correctly infer types when importing worker files.
    */
   class WorkerWrapper extends Worker {
     constructor();
