@@ -168,7 +168,7 @@ const App: React.FC = () => {
       </Helmet>
 
       {/* Main Container */}
-      <div className="p-4 flex flex-col min-h-screen md:h-screen">
+      <div className="p-4 flex flex-col h-[100lvh] h-[100svh] h-[-webkit-fill-available]">
         {/* File Upload Components (Desktop & Mobile) */}
         <div className="hidden md:block">
           {/*<FileUpload onFileUpload={(_: File) => {}} /> */}
@@ -183,7 +183,7 @@ const App: React.FC = () => {
         {/* Chat Analysis Components */}
         <div
           ref={containerRef}
-          className="mt-4  md:h-full flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-between items-stretch"
+          className="mt-4 md:h-lvh flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-between items-stretch"
         >
           {filteredMessages.length === 0 ? (
             <div
