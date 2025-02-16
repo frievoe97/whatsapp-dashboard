@@ -104,4 +104,4 @@ This project is licensed under the [MIT License](./LICENSE.txt), with an additio
 - For any questions, suggestions, or discussions, please open a [GitHub Issue](../../issues).
 - We primarily use GitHub Issues for communication and will do our best to respond promptly.
 
-Thank you for contributing to **WhatsApp Dashboard**—your support and interest make this project better!
+Thank you for contributing to **WhatsApp Dashboard**—your support and interest make this project better!!!
