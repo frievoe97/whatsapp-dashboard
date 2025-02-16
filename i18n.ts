@@ -32,12 +32,12 @@ const resources = {
         HowToExportChats: {
           title: 'How to Export Chats',
           content:
-            '<p class=\'mb-3\'>To export a chat from WhatsApp without media, follow these steps:</p><h3 class=\'font-semibold\'>iOS:</h3><ol class=\'list-decimal ml-4 mb-3\'><li>Open WhatsApp and go to the chat you want to export.</li><li>Tap on the contact or group name at the top.</li><li>Scroll down and select "Export Chat".</li><li>Choose "Without Media" when prompted.</li><li>Save or share the exported .txt file.</li></ol><h3 class=\'font-semibold\'>Android:</h3><ol class=\'list-decimal ml-4\'><li>Open WhatsApp and go to the chat you want to export.</li><li>Tap on the three dots (menu) in the top right corner.</li><li>Select "More" and then "Export Chat".</li><li>Choose "Without Media" when prompted.</li><li>Save or share the exported .txt file.</li></ol><p class=\'mt-3\'>You can upload the .txt file here via "Select File".</p>',
+            "<style>ol { list-style-type: disc; }</style><p class='mb-3'>How to export a WhatsApp chat without media:</p><h3 class='font-semibold'>iOS:</h3><ol class='list-decimal ml-4 mb-3'><li>Open the chat.</li><li>Tap the contact or group name.</li><li>Select “Export Chat”.</li><li>Choose “Without Media” when prompted.</li><li>Save or share the .txt file.</li></ol><h3 class='font-semibold'>Android:</h3><ol class='list-decimal ml-4'><li>Open the chat.</li><li>Tap the menu (three dots).</li><li>Select “More” > “Export Chat”.</li><li>Choose “Without Media” when prompted.</li><li>Save or share the .txt file.</li></ol><p class='mt-3'>Upload the .txt file here.</p>",
         },
         MenuExplanation: {
           title: 'Menu Explanation',
           content:
-            "<p class='mb-3'>The menu allows you to configure the following settings:</p><ul class='list-disc list-inside'><li><strong>Dark Mode:</strong> Toggle between light and dark themes.</li><li><strong>Date Filters:</strong> Select a start and end date to filter messages.</li><li><strong>Sender Selection:</strong> Choose specific participants whose messages should be included.</li><li><strong>Weekday Selection:</strong> Filter messages by the days they were sent.</li><li><strong>Minimum Message Share:</strong> Set a threshold for sender message percentage.</li></ul>",
+            "<p class='mb-3'>Configure these settings:</p><ul class='list-disc list-inside'><li><strong>Dark Mode:</strong> Switch between light and dark theme.</li><li><strong>Date Filter:</strong> Select time range.</li><li><strong>Sender Selection:</strong> Choose participants.</li><li><strong>Weekday Filter:</strong> Filter by days.</li><li><strong>Minimum Share:</strong> Set message percentage limit.</li></ul>",
         },
       },
       Emoji: {
@@ -51,6 +51,8 @@ const resources = {
       },
       SentimentWord: {
         title: ['Top 10 ', '{{wordCategory}}', ' Words per Person'],
+        best: 'Best',
+        worst: 'Worst',
       },
       WordCount: {
         title: 'Top 10 Words per Person',
@@ -65,8 +67,12 @@ const resources = {
   },
   de: {
     translation: {
+      General: {
+        noDataAvailable: 'Keine Daten verfügbar.',
+      },
       App: {
         placeholder: 'Bitte laden Sie einen WhatsApp-Chat über „Datei auswählen“ hoch.',
+        title: 'WhatsApp Dashboard – Visualisieren Sie Ihre Chats',
       },
       FileUpload: {
         selectFile: 'Datei auswählen',
@@ -79,6 +85,46 @@ const resources = {
         apply: 'Anwenden',
         useAbbreviations: 'Abkürzungen',
         useFullNames: 'Vollständige Namen',
+      },
+      InfoModal: {
+        InfoAndDisclaimer: {
+          title: 'Informationen',
+          content:
+            "<p class='mb-3'>Dieses Tool speichert keine Daten auf einem Server. Alle Informationen bleiben nur in Ihrem Browser. Es werden keine Nachrichten oder Statistiken hochgeladen.</p><p class='mb-3'>Dieses Projekt ist Open Source, und der gesamte Quellcode ist öffentlich auf <a href='https://github.com/frievoe97/whatsapp-dashboard' target='_blank' rel='noopener noreferrer' class='no-underline no-underline text-current hover:text-current'>GitHub</a> verfügbar.</p><p>Dieses Projekt steht unter der MIT-Lizenz. Sie dürfen den Code frei nutzen, modifizieren und verbreiten, solange die Lizenz enthalten bleibt.</p>",
+        },
+        HowToExportChats: {
+          title: 'So exportieren Sie Chats',
+          content:
+            "<style>ol { list-style-type: disc; }</style><p class='mb-3'>So exportieren Sie einen WhatsApp-Chat ohne Medien:</p><h3 class='font-semibold'>iOS:</h3><ol class='list-decimal ml-4 mb-3'><li>Chat öffnen.</li><li>Auf Namen tippen.</li><li>„Chat exportieren“ wählen.</li><li>„Ohne Medien“ auswählen.</li><li>.txt-Datei speichern oder teilen.</li></ol><h3 class='font-semibold'>Android:</h3><ol class='list-decimal ml-4'><li>Chat öffnen.</li><li>Menü (drei Punkte) tippen.</li><li>„Mehr“ > „Chat exportieren“.</li><li>„Ohne Medien“ auswählen.</li><li>.txt-Datei speichern oder teilen.</li></ol><p class='mt-3'>Laden Sie die .txt-Datei hier hoch.</p>",
+        },
+        MenuExplanation: {
+          title: 'Menüerklärung',
+          content:
+            "<p class='mb-3'>Konfigurieren Sie diese Einstellungen:</p><ul class='list-disc list-inside'><li><strong>Dunkler Modus:</strong> Helles/dunkles Design wechseln.</li><li><strong>Datumsfilter:</strong> Zeitraum auswählen.</li><li><strong>Absenderauswahl:</strong> Teilnehmer festlegen.</li><li><strong>Wochentagsauswahl:</strong> Nach Tagen filtern.</li><li><strong>Mindestanteil:</strong> Nachrichtenanteil begrenzen.</li></ul>",
+        },
+      },
+      Emoji: {
+        title: 'Top 10 Emojis pro Person',
+      },
+      Heatmap: {
+        title: 'Nachrichten nach',
+      },
+      Sentiment: {
+        title: 'Sentiment-Analyse über die Zeit',
+      },
+      SentimentWord: {
+        title: ['Top 10 ', '{{wordCategory}}', ' Wörter pro Person'],
+        best: 'Besten',
+        worst: 'Schlechtesten',
+      },
+      WordCount: {
+        title: 'Top 10 Wörter pro Person',
+      },
+      ChordDiagram: {
+        title: 'Wer antwortet wem (Top ',
+      },
+      Stats: {
+        title: 'Nachrichtenstatistik pro Person',
       },
     },
   },
@@ -145,7 +191,10 @@ i18n
     defaultNS: 'translation',
     interpolation: { escapeValue: false },
   })
-  .then(() => console.log('i18n initialized successfully'))
+  .then(() => {
+    console.log('i18n initialized successfully');
+    console.log('Current language:', i18n.language);
+  })
   .catch((err) => console.error('i18n initialization failed:', err));
 
 export default i18n;
