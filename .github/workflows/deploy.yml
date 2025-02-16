@@ -1,14 +1,14 @@
 name: Deploy React App to FTP
 
 on:
-  push:
-    branches:
-      - master # Nur wenn etwas auf master gepusht wird (nach einem Merge)
+  workflow_run:
+    workflows: ['Run Tests']
+    types: [completed]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

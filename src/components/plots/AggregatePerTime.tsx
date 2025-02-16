@@ -462,7 +462,7 @@ const AggregatePerTimePlot: React.FC = () => {
             const newMetric = showPercentage ? 'percentage' : 'count';
             const interpolators = d.values.map((newPoint) => {
               const prevPoint = prevValues.find((p) => p.category === newPoint.category);
-              const prevVal = prevPoint ? (prevPoint as DataPoint)[prevMetric] ?? 0 : 0;
+              const prevVal = prevPoint ? ((prevPoint as DataPoint)[prevMetric] ?? 0) : 0;
               const newVal = (newPoint as DataPoint)[newMetric] ?? 0;
               const startPixel = _prevYScale ? _prevYScale(prevVal) : innerHeight;
               const endPixel = yScale(newVal);
@@ -621,8 +621,8 @@ const AggregatePerTimePlot: React.FC = () => {
                 ? 'bg-white text-black border border-gray-300 hover:border-gray-300 '
                 : 'bg-black text-white border-none '
               : darkMode
-              ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
-              : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200';
+                ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
+                : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200';
             return (
               <button
                 key={item}
