@@ -9,6 +9,7 @@ const resources = {
       },
       App: {
         placeholder: 'Please upload a WhatsApp chat using "Select File".',
+        title: 'WhatsApp Dashboard – Visualize your Chats',
       },
       FileUpload: {
         selectFile: 'Select File',
