@@ -190,7 +190,7 @@ describe('Stats', () => {
 
     await waitFor(
       () => {
-        const svgElement = container.querySelector('div#stats-card');
+        const svgElement = container.querySelector('div#stats-card2');
         expect(svgElement).toBeTruthy();
       },
       { timeout: 5000 },
