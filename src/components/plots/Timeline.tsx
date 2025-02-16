@@ -493,6 +493,7 @@ function useTimelineChart(
         .attr('stroke-width', 1)
         .style('opacity', 0);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     svgRef,
     containerRef,

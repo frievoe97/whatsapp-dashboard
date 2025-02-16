@@ -276,6 +276,7 @@ const SenderComparisonBarChart: FC = () => {
         Math.max(0, innerHeight - yScale(d[selectedProperty as keyof AggregatedStat] as number)),
       )
       .attr('fill', (d) => colorScale(d.sender));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     dimensions,
     currentStats,

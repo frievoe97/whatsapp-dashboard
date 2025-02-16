@@ -517,6 +517,7 @@ const AggregatePerTimePlot: React.FC = () => {
     prevShowPercentageRef.current = showPercentage;
     prevShowMergedRef.current = showMerged;
     prevDarkMode.current = darkMode;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     dimensions,
     mergedData,
