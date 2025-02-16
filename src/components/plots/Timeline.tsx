@@ -208,7 +208,7 @@ function useTimelineChart(
       .line<TimeDataPoint>()
       .defined((d) => d.date >= computedStartDate && d.date <= computedEndDate)
       .x((d) => xScale(d.date))
-      .y((d) => yScale(showPercentage ? d.percentage ?? 0 : d.count))
+      .y((d) => yScale(showPercentage ? (d.percentage ?? 0) : d.count))
       .curve(d3.curveMonotoneX);
 
     // Annahme: Du hast bereits definiert:
@@ -471,7 +471,7 @@ function useTimelineChart(
           const value =
             showPercentage && point?.percentage !== undefined
               ? `${point.percentage.toFixed(2)} %`
-              : point?.count ?? 0;
+              : (point?.count ?? 0);
           return { sender: fd.sender, value };
         });
 
@@ -655,8 +655,8 @@ const Timeline: React.FC = () => {
                     ? 'bg-white text-black border border-gray-300 hover:border-gray-300'
                     : 'bg-black text-white border-none'
                   : darkMode
-                  ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
-                  : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
+                    ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
+                    : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
               }`}
               onClick={() => setMode('year')}
             >
@@ -669,8 +669,8 @@ const Timeline: React.FC = () => {
                     ? 'bg-white text-black border border-gray-300 hover:border-gray-300'
                     : 'bg-black text-white border-none'
                   : darkMode
-                  ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
-                  : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
+                    ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
+                    : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
               }`}
               onClick={() => setMode('month')}
             >
