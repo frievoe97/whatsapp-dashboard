@@ -1,5 +1,6 @@
 // AggregatePerTimePlot.test.tsx
-import { render, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { waitFor } from '@testing-library/dom';
 import { describe, it, expect, vi } from 'vitest';
 import { ChatContext } from './context/ChatContext';
 import type { FilterOptions } from './types/chatTypes';
