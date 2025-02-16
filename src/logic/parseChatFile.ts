@@ -102,9 +102,6 @@ export const parseChatFile = async (
   const firstMessageDate = filteredMessages[0]?.date || new Date();
   const lastMessageDate = filteredMessages[filteredMessages.length - 1]?.date || new Date();
 
-  console.log('First message: ', filteredMessages[0]);
-  console.log('Last message: ', filteredMessages[filteredMessages.length - 1]);
-
   const senders: Record<string, number> = {};
   filteredMessages.forEach((msg) => {
     senders[msg.sender] = (senders[msg.sender] || 0) + 1;

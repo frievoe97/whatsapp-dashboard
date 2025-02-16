@@ -267,6 +267,10 @@ function drawChart(
   // In der kombinierten Darstellung werden die Daten in Segmente unterteilt, die dann je nach Vorzeichen eingefärbt werden.
   const segments = splitDataBySign(sentimentData);
   segments.forEach((segment) => {
+    if (segment.length === 1) {
+      return;
+    }
+
     const segmentColor = segment[1].score >= 0 ? 'green' : 'red';
     g.append('path')
       .datum(segment)
@@ -662,7 +666,7 @@ const SentimentAnalysis: React.FC = () => {
         {combinedData.length === 0 ? (
           <span className="text-lg">No Data Available</span>
         ) : (
-          <svg ref={svgRef} className="w-full h-full"></svg>
+          <svg id="sentiment-plot" ref={svgRef} className="w-full h-full"></svg>
         )}
       </div>
     </div>

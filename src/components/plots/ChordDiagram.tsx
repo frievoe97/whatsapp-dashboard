@@ -422,7 +422,7 @@ const ChordDiagram: React.FC = () => {
         {filteredMessages.length === 0 ? (
           <span className="text-lg">No Data Available</span>
         ) : (
-          <svg ref={svgRef} className="w-full h-full" />
+          <svg id="chord-diagram-plot" ref={svgRef} className="w-full h-full" />
         )}
       </div>
     </div>

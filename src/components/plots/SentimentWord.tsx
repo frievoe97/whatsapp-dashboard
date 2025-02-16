@@ -88,6 +88,7 @@ const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
 
   return (
     <div
+      id="sender-sentiment-word-chart"
       className={`border p-4 rounded-none ${darkMode ? 'border-gray-300' : 'border-black'}`}
       style={{
         flex: '1 1 auto',

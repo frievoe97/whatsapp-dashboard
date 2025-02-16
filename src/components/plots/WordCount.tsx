@@ -74,6 +74,7 @@ const SenderWordChart: FC<SenderWordChartProps> = ({
 
   return (
     <div
+      id="word-count-chart"
       className={`border p-4 rounded-none ${darkMode ? 'border-gray-300' : 'border-black'}`}
       style={{
         flex: '1 1 auto',
@@ -161,11 +162,11 @@ const Pagination: FC<PaginationProps> = ({ currentPage, totalPages, darkMode, on
 };
 
 // -----------------------------------------------------------------------------
-// Main Component: Plot4
+// Main Component: WordCount
 // -----------------------------------------------------------------------------
 
 /**
- * Plot4 Component
+ * WordCount Component
  *
  * Displays the top 10 words per sender, aggregated from the available chat messages.
  * Automatically adjusts layout (number of charts per row) based on the container's width.
@@ -176,7 +177,7 @@ const Pagination: FC<PaginationProps> = ({ currentPage, totalPages, darkMode, on
  * - Loading spinner (ClipLoader) when no data is available.
  * - Language-based stopword removal (supported languages: "de", "en", "es", "fr").
  */
-const Plot4: FC = (): ReactElement => {
+const WordCount: FC = (): ReactElement => {
   // Verwende nun filteredMessages; isUploading und minMessagePercentage entfallen.
   const { filteredMessages, darkMode, metadata, useShortNames } = useChat();
 
@@ -364,4 +365,4 @@ const Plot4: FC = (): ReactElement => {
   );
 };
 
-export default Plot4;
+export default WordCount;

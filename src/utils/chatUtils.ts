@@ -75,18 +75,29 @@ export const handleFileUpload = (
   reader.onload = async (e) => {
     const content = e.target?.result;
     if (typeof content === 'string') {
-      try {
-        const { parseChatFile } = await import('../logic/parseChatFile');
-        const result = await parseChatFile(content, file.name);
-        setOriginalMessages(result.messages);
-        // console.log(result.metadata);
-        setMetadata(result.metadata);
-        setIsPanelOpen(false);
-      } catch (error) {
-        console.error('Error parsing file:', error);
-      }
+      // Erstelle einen neuen Worker für das Parsen
+      const worker = new Worker(new URL('../workers/parseWorker.ts', import.meta.url), {
+        type: 'module',
+      });
+
+      // Sende den Dateiinhalt und Dateinamen an den Worker
+      worker.postMessage({ content, fileName: file.name });
+      // Empfange das Ergebnis vom Worker
+      worker.onmessage = (e) => {
+        const { result, error } = e.data;
+        if (error) {
+          console.error('Error parsing file:', error);
+        } else {
+          setOriginalMessages(result.messages);
+          setMetadata(result.metadata);
+          setIsPanelOpen(false);
+        }
+        // Worker nicht länger benötigt – beenden
+        worker.terminate();
+      };
     }
   };
+
   reader.readAsText(file);
 };
 

@@ -298,7 +298,7 @@ const EmojiPlot: FC = () => {
         ) : (
           <>
             {/* Sender Cards */}
-            <div className="flex flex-col md:flex-row gap-4 w-full">
+            <div id="emoji-plot" className="flex flex-col md:flex-row gap-4 w-full">
               {currentData.map((senderData) => (
                 <div
                   key={senderData.sender}

@@ -394,7 +394,7 @@ const SenderComparisonBarChart: FC = () => {
           <span className="text-lg">No Data Available</span>
         </div>
       ) : (
-        <svg ref={svgRef} className="w-full"></svg>
+        <svg id="bar-chart-plot" ref={svgRef} className="w-full"></svg>
       )}
 
       {/* Pagination Controls */}

@@ -527,7 +527,7 @@ function useTimelineChart(
   ]);
 }
 
-const Plot2: React.FC = () => {
+const Timeline: React.FC = () => {
   const { filteredMessages, darkMode, appliedFilters, metadata, useShortNames } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -836,4 +836,4 @@ const Plot2: React.FC = () => {
   );
 };
 
-export default Plot2;
+export default Timeline;

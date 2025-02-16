@@ -1,3 +1,5 @@
+// src/context/ChatContext.tsx
+
 import React, {
   createContext,
   useContext,
@@ -10,7 +12,7 @@ import React, {
   SetStateAction,
 } from 'react';
 import { ChatMessage, ChatMetadata, FilterOptions } from '../types/chatTypes';
-import { filterMessages, computeSenderStatuses } from '../logic/filterChatMessages';
+import { computeSenderStatuses } from '../logic/filterChatMessages';
 import { DEFAULT_WEEKDAYS } from '../config/constants';
 
 interface ChatContextType {
@@ -42,7 +44,7 @@ interface ChatContextType {
   tempSetUseShortNames: Dispatch<SetStateAction<boolean>>;
 }
 
-const ChatContext = createContext<ChatContextType | undefined>(undefined);
+export const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [darkMode, setDarkMode] = useState<boolean>(false);
@@ -101,31 +103,24 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const applyFilters = useCallback(
     (filters?: FilterOptions) => {
       const usedFilters = filters?.startDate ? filters : tempFilters;
-      let resetManual = false;
-      if (usedFilters.minPercentagePerSender !== lastAppliedMinPercentage) {
-        resetManual = true;
-        setLastAppliedMinPercentage(usedFilters.minPercentagePerSender);
-      }
-      const messagesByTime = originalMessages.filter((msg) => {
-        if (usedFilters.startDate && msg.date < usedFilters.startDate) return false;
-        if (usedFilters.endDate && msg.date > usedFilters.endDate) return false;
-        const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][msg.date.getDay()];
-        return usedFilters.selectedWeekdays.includes(weekday);
+
+      // Erstelle einen Worker für das Filtern
+      const worker = new Worker(new URL('../workers/filterWorker.ts', import.meta.url), {
+        type: 'module',
       });
-      const newSenderStatuses = computeSenderStatuses(
-        messagesByTime,
-        usedFilters.minPercentagePerSender,
-        resetManual ? undefined : usedFilters.senderStatuses,
-        resetManual,
-      );
-      const newFilters: FilterOptions = {
-        ...usedFilters,
-        senderStatuses: newSenderStatuses,
+
+      worker.postMessage({
+        originalMessages,
+        tempFilters: usedFilters,
+        lastAppliedMinPercentage,
+      });
+      worker.onmessage = (e) => {
+        const { filteredMessages, newFilters } = e.data;
+        setAppliedFilters(newFilters);
+        setFilteredMessages(filteredMessages);
+        setTempFilters(newFilters);
+        worker.terminate();
       };
-      setAppliedFilters(newFilters);
-      const result = filterMessages(originalMessages, newFilters);
-      setFilteredMessages(result);
-      setTempFilters(newFilters);
     },
     [originalMessages, tempFilters, lastAppliedMinPercentage],
   );

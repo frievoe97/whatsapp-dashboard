@@ -14,7 +14,7 @@ import { useChat } from './context/ChatContext';
 import './index.css';
 import HeatmapMonthWeekday from './components/plots/Heatmap';
 
-import NewFileUploader from './components/NewFileUploader';
+import NewFileUploader from './components/FileUpload';
 
 import { useTranslation } from 'react-i18next';
 import '../i18n';

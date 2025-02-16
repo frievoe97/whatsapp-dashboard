@@ -207,6 +207,7 @@ const SenderStatsCard: React.FC<SenderStatsCardProps> = ({
 }) => {
   return (
     <div
+      id="stats-card"
       className={`border p-4 rounded-none ${darkMode ? 'border-gray-300' : 'border-black'}`}
       style={{
         minWidth: '250px',
@@ -285,11 +286,11 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPrev
 };
 
 /**
- * Plot5 Component
+ * Stats Component
  *
  * Displays aggregated message statistics per sender in a responsive grid with pagination.
  */
-const Plot5: React.FC = () => {
+const Stats: React.FC = () => {
   // Nun werden ausschließlich filteredMessages genutzt – isUploading und minMessagePercentage entfallen
   const { filteredMessages, darkMode, metadata, useShortNames } = useChat();
 
@@ -386,4 +387,4 @@ const Plot5: React.FC = () => {
   );
 };
 
-export default Plot5;
+export default Stats;
