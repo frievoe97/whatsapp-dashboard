@@ -120,7 +120,7 @@ const dummyMessage: ChatMessage[] = [
 
 const dummyMetadata = {
   language: 'en',
-  os: 'ios',
+  os: 'ios_1',
   firstMessageDate: new Date('2025-02-16'),
   lastMessageDate: new Date('2025-02-16'),
   senders: { Alice: 7, Bob: 6, Charlie: 7 },
