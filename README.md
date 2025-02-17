@@ -1,3 +1,9 @@
+<!-- Dark Mode GIF -->
+<!-- <p align="center"><img src="https://github.com/user-attachments/assets/e2b92304-8d8f-449a-98e3-925e0ce4a1cc#gh-dark-mode-only" width="500"></p> -->
+
+<!-- Light Mode GIF -->
+<!-- <p align="center"><img src="https://github.com/user-attachments/assets/0aceb04f-1748-468f-aa07-cfa27ce6814f#gh-light-mode-only" width="500"></p> -->
+
 # WhatsApp Dashboard
 
 ![React](https://img.shields.io/badge/react-18.3.1-blue)
@@ -8,7 +14,15 @@
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-3.4.13-cyan)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
 
-<img src="public/images/page.png" alt="WhatsApp Dashboard Overview" width="600">
+<!-- Dark Mode Bild -->
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/b513738d-fdcf-4ffb-afbc-33cfcef338a2#gh-dark-mode-only" width="500">
+</p>
+
+<!-- Light Mode Bild -->
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/66e2af2c-d577-4052-afee-5405a8dbfe0b#gh-light-mode-only" width="500">
+</p>
 
 WhatsApp Dashboard is a powerful, interactive web application built with React that allows users to analyze and visualize WhatsApp chat data in an intuitive and engaging way. It provides deep insights into messaging patterns, sender statistics, sentiment trends, and much more. Whether you're curious about your own messaging habits, want to explore group dynamics, or simply enjoy data visualization, this tool offers a rich and user-friendly experience.
 
