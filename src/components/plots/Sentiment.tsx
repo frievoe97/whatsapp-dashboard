@@ -193,7 +193,7 @@ function drawChart(
     .x((d) => xScale(d.date))
     .y((d) => yScale(d.score))
     .curve(d3.curveBasis);
-  const g = svg.append('g').attr('transforma', `translate(${margin.left},${margin.top})`);
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
   const gridColor = darkMode ? '#a0a0a0' : '#e0e0e0';
   const yGrid = g
     .append('g')
