@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     sourcemap: true, // Sourcemaps aktivieren
-    minify: 'terser', // Terser statt esbuild verwenden
+    // minify: 'terser', // Terser statt esbuild verwenden
   },
   optimizeDeps: {
     exclude: ['@mui/material', '@mui/x-date-pickers'],
