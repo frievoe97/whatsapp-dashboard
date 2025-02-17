@@ -43,7 +43,6 @@ describe('parseChatFile', () => {
     // Since the message contains "Hello", it should be filtered out.
     expect(result.messages).toEqual([]);
     expect(result.metadata.fileName).toBe('chat.txt');
-    expect(result.metadata.os).toBe('ios_1');
     // No senders should remain as all messages have been filtered out.
     expect(result.metadata.senders).toEqual({});
   });

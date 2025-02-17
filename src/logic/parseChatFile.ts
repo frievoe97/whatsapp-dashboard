@@ -3,34 +3,10 @@
 /////////////////////// Imports ///////////////////////
 import { ChatMessage, ChatMetadata } from '../types/chatTypes';
 import { franc } from 'franc-min';
-import { OPERATING_SYSTEMS } from '../config/constants';
+import * as whatsapp from 'whatsapp-chat-parser';
 import { abbreviateContacts } from '../utils/abbreviateContacts';
 
 /////////////////////// Utility Functions ///////////////////////
-
-/**
- * Determines the operating system of the chat file by testing the first 1000 lines.
- *
- * @param lines - Array of lines from the chat file.
- * @returns The name of the detected operating system.
- */
-const detectOS = (lines: string[]): string => {
-  const counts = new Map<string, number>();
-
-  for (const os of OPERATING_SYSTEMS) {
-    counts.set(os.name, 0);
-  }
-
-  for (const line of lines.slice(0, 1000)) {
-    for (const os of OPERATING_SYSTEMS) {
-      if (os.regex.test(line)) {
-        counts.set(os.name, (counts.get(os.name) || 0) + 1);
-      }
-    }
-  }
-
-  return [...counts.entries()].reduce((a, b) => (a[1] >= b[1] ? a : b))[0];
-};
 
 /**
  * Detects the language of the chat based on a sample of the messages.
@@ -74,6 +50,18 @@ const loadIgnoreLines = async (lang: string): Promise<string[]> => {
   return lines;
 };
 
+/**
+ * Parses a Date object into a string in the format 'HH:mm:ss'.
+ * @param date Date object to be formatted.
+ * @returns Formatted time string.
+ */
+function formatTime(date: Date): string {
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
+}
+
 /////////////////////// Chat File Parsing ///////////////////////
 
 /**
@@ -87,32 +75,21 @@ export const parseChatFile = async (
   content: string,
   fileName: string,
 ): Promise<{ messages: ChatMessage[]; metadata: ChatMetadata }> => {
-  const lines = content
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-  if (lines.length === 0) {
-    // Dont change this error message! Its used in the test. (./parseChatFile.test.ts)
+  if (!content.trim()) {
     throw new Error('The file is empty or invalid.');
   }
 
   const messages: ChatMessage[] = [];
-  const osName = detectOS(lines);
-  const osConfig = OPERATING_SYSTEMS.find((os) => os.name === osName);
-  if (!osConfig) {
-    throw new Error(`Unknown operating system: ${osName}`);
-  }
+  const parsedData = whatsapp.parseString(content);
 
-  // Verwende die neue parseLine-Methode zum Extrahieren der Nachrichtendaten.
-  for (const line of lines) {
-    const result = osConfig.parseLine(line);
-    if (!result) continue;
+  for (const data of parsedData) {
+    if (!data.author) continue;
 
     messages.push({
-      date: result.date,
-      time: result.time,
-      sender: result.sender,
-      message: result.message,
+      date: data.date,
+      time: formatTime(data.date),
+      sender: data.author,
+      message: data.message,
     });
   }
 
@@ -139,7 +116,6 @@ export const parseChatFile = async (
 
   const metadata: ChatMetadata = {
     language,
-    os: osName,
     firstMessageDate,
     lastMessageDate,
     senders,

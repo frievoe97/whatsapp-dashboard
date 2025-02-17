@@ -1,7 +1,7 @@
 {
   "name": "whatsapp-dashboard",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -29,7 +29,8 @@
     "react-spinners": "^0.14.1",
     "react-switch": "^7.0.0",
     "sentiment": "^5.0.2",
-    "stopword": "^3.1.1"
+    "stopword": "^3.1.1",
+    "whatsapp-chat-parser": "^4.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",
