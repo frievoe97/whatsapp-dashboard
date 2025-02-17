@@ -10,8 +10,14 @@ import { useTranslation } from 'react-i18next';
 import '../../../i18n';
 
 ////////////// Constants & Types ////////////////
+
+/**
+ * Represents the categories available for filtering the heatmap data.
+ */
+type Category = 'Year' | 'Month' | 'Weekday' | 'Hour' | 'Day';
+
 /** Valid categories for filtering the heatmap data. */
-const CATEGORIES: Record<string, string[]> = {
+const CATEGORIES: Record<Category, string[]> = {
   Year: [], // Filled dynamically from message years
   Month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   Weekday: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -68,8 +74,8 @@ const Heatmap: FC = () => {
   const dimensions = useResizeObserver(containerRef);
 
   // State for category selection and rotation
-  const [xCategory, setXCategory] = useState<string>('Hour');
-  const [yCategory, setYCategory] = useState<string>('Weekday');
+  const [xCategory, setXCategory] = useState<Category>('Hour');
+  const [yCategory, setYCategory] = useState<Category>('Weekday');
   const [, setIsDesktop] = useState<boolean>(window.innerWidth >= 768);
   const [rotation, setRotation] = useState(0);
 
@@ -93,7 +99,7 @@ const Heatmap: FC = () => {
     .map(String);
 
   // Update the CATEGORIES object for "Year" dynamically.
-  const dynamicCategories = useMemo(
+  const dynamicCategories = useMemo<Record<Category, string[]>>(
     () => ({
       ...CATEGORIES,
       Year: years.length > 0 ? years : ['2024'],
@@ -106,9 +112,9 @@ const Heatmap: FC = () => {
     const dataMap: Record<string, Record<string, number>> = {};
 
     // Initialisiere alle Kombinationen für X- und Y-Kategorien.
-    CATEGORIES[xCategory].forEach((xVal) => {
+    dynamicCategories[xCategory].forEach((xVal) => {
       dataMap[xVal] = {};
-      CATEGORIES[yCategory].forEach((yVal) => {
+      dynamicCategories[yCategory].forEach((yVal) => {
         dataMap[xVal][yVal] = 0;
       });
     });
@@ -116,24 +122,22 @@ const Heatmap: FC = () => {
     // Count messages for each combination.
     filteredMessages.forEach((msg: ChatMessage) => {
       const date = new Date(msg.date);
-      // If msg.time is available, use it; otherwise default to "00:00"
       const time = (msg as ChatMessage).time || '00:00';
-      const xValue = getDateValue(date, xCategory, CATEGORIES[xCategory], time);
-      const yValue = getDateValue(date, yCategory, CATEGORIES[yCategory], time);
+      const xValue = getDateValue(date, xCategory, dynamicCategories[xCategory], time);
+      const yValue = getDateValue(date, yCategory, dynamicCategories[yCategory], time);
       if (xValue && yValue) {
         dataMap[xValue][yValue] += 1;
       }
     });
 
     // Flatten the data into an array.
-    return CATEGORIES[xCategory].flatMap((xVal) =>
-      CATEGORIES[yCategory].map((yVal) => ({
+    return dynamicCategories[xCategory].flatMap((xVal) =>
+      dynamicCategories[yCategory].map((yVal) => ({
         x: xVal,
         y: yVal,
         count: dataMap[xVal][yVal],
       })),
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredMessages, xCategory, yCategory, dynamicCategories]);
 
   // -------------
@@ -197,13 +201,13 @@ const Heatmap: FC = () => {
 
     const xScale = d3
       .scaleBand()
-      .domain(CATEGORIES[xCategory])
+      .domain(dynamicCategories[xCategory])
       .range([0, innerWidth])
       .padding(0.05);
 
     const yScale = d3
       .scaleBand()
-      .domain(CATEGORIES[yCategory])
+      .domain(dynamicCategories[yCategory])
       .range([0, innerHeight])
       .padding(0.05);
 
@@ -323,12 +327,12 @@ const Heatmap: FC = () => {
           ? '#777'
           : '#ddd'
         : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-          ? darkMode
-            ? '#555'
-            : '#eee'
-          : darkMode
-            ? '#333'
-            : 'white',
+        ? darkMode
+          ? '#555'
+          : '#eee'
+        : darkMode
+        ? '#333'
+        : 'white',
       color: darkMode ? 'white' : 'black',
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -359,7 +363,7 @@ const Heatmap: FC = () => {
             onChange={(selected) => setXCategory(selected?.value || 'Weekday')}
             options={Object.keys(dynamicCategories)
               .filter((cat) => cat !== yCategory)
-              .map((cat) => ({ value: cat, label: cat }))}
+              .map((cat) => ({ value: cat as Category, label: cat as Category }))}
             isSearchable={false}
             styles={customSelectStyles}
           />
@@ -370,7 +374,7 @@ const Heatmap: FC = () => {
             isSearchable={false}
             options={Object.keys(dynamicCategories)
               .filter((cat) => cat !== xCategory)
-              .map((cat) => ({ value: cat, label: cat }))}
+              .map((cat) => ({ value: cat as Category, label: cat as Category }))}
             styles={customSelectStyles}
           />
         </h2>
