@@ -1,59 +1,75 @@
-/******** Light Mode Styles ********/
-
-/* Material UI Paper Component */
+/* Standard-Stile (Light Mode) */
 .MuiPaper-root {
   border-radius: 0 !important;
 }
 
-/* Material UI Button Components */
 .MuiButton-root {
   color: black !important;
 }
+
 .MuiButtonBase-root {
   color: black;
 }
 
-/* DatePicker Day Styles */
 .MuiPickersDay-root {
   border-radius: 0;
 }
 
-/* Ripple Effect Styles */
 .MuiTouchRipple-root {
   color: black;
   border-radius: 0 !important;
 }
 
-/* Toolbar Title and Selected Day Styles */
 .MuiDatePickerToolbar-title {
   font-size: 1.5rem !important;
 }
+
 .Mui-selected {
   background-color: transparent !important;
   color: black !important;
   border: 1px solid black !important;
 }
+
 .MuiPickersDay-root:hover {
   background-color: transparent !important;
   color: black !important;
   border: 1px solid black !important;
 }
 
-/* Additional Title & Year Button Styles */
 .MuiDatePickerToolbar-title {
   font-size: 2rem;
 }
+
 .MuiPickersYear-yearButton {
   height: fit-content;
   font-size: 1rem;
   padding: 5px;
-  color: black;
-  border-radius: 0;
-  font-weight: 200;
 }
+
+.MuiPickersDay-root {
+  border-radius: 0 !important;
+  /* border-width: 1px !important;
+  border: black !important;
+  background-color: white !important;
+  color: black !important; */
+}
+
+.Mui-disabled:not(.Mui-selected) {
+  color: rgb(138, 138, 138) !important;
+  border: none !important;
+}
+
 .MuiPickersYear-yearButton.Mui-selected {
   border-radius: 0;
 }
+
+.MuiPickersYear-yearButton {
+  color: black;
+  border-radius: 1;
+  font-weight: 200;
+  border-radius: 0;
+}
+
 .MuiPickersYear-yearButton:hover {
   color: black;
   font-weight: 500;
@@ -62,55 +78,59 @@
   background-color: white !important;
 }
 
-/* Disabled State */
-.Mui-disabled:not(.Mui-selected) {
-  color: rgb(138, 138, 138) !important;
-  border: none !important;
-}
-
-/******** Dark Mode Overrides ********/
-
+/* Dark Mode Overrides */
 .dark-mode .MuiPaper-root {
-  background-color: #1f2937;
+  background-color: #1f2937; /* Beispiel: dunkler Hintergrund */
 }
+
 .dark-mode .MuiButton-root {
   color: white !important;
 }
+
 .dark-mode .MuiButtonBase-root {
   color: white;
 }
+
 .dark-mode .MuiTouchRipple-root {
   color: white;
   border-radius: 0;
 }
+
 .dark-mode .Mui-selected {
   background-color: transparent !important;
   color: white !important;
   border: 1px solid white !important;
 }
+
 .dark-mode .MuiPickersDay-root:hover {
   background-color: transparent !important;
   color: white !important;
   border: 1px solid white !important;
 }
+
 .dark-mode .MuiDatePickerToolbar-title {
   color: white;
 }
-/* .dark-mode .MuiTypography-root {
+
+.dark-mode .MuiTypography-root {
   color: white;
-} */
+}
+
 .dark-mode .MuiPickersCalendarHeader-labelContainer {
   color: white;
 }
+
 .dark-mode .Mui-disabled:not(.Mui-selected) {
   color: rgb(119, 119, 119) !important;
   border: none !important;
 }
+
 .dark-mode .MuiPickersYear-yearButton {
   color: white;
   font-weight: 100;
   border-radius: 0;
 }
+
 .dark-mode .MuiPickersYear-yearButton:hover {
   color: white;
   font-weight: 100;
