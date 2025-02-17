@@ -385,39 +385,39 @@ const FileUploadMobile: React.FC = () => {
                             ? dayjs(metadata.lastMessageDate)
                             : undefined
                       }
-                      // slotProps={{
-                      //   textField: {
-                      //     variant: 'outlined',
-                      //     fullWidth: true,
-                      //     sx: {
-                      //       borderRadius: 0,
-                      //       '& .MuiOutlinedInput-root': {
-                      //         backgroundColor: darkMode ? '#374151' : '#fff',
-                      //         height: '100%',
-                      //         // Überschreibe die Standard-NotchedOutline:
-                      //         '& fieldset': {
-                      //           borderColor: darkMode ? 'white' : 'black', // Nur der schwarze (bzw. weiße im Dark Mode) Rahmen bleibt
-                      //           borderWidth: '1px',
-                      //           borderRadius: 0,
-                      //         },
-                      //         '&:hover fieldset': {
-                      //           borderColor: darkMode ? 'white' : 'black',
-                      //         },
-                      //         '&.Mui-focused fieldset': {
-                      //           borderColor: darkMode ? 'white' : 'black',
-                      //         },
-                      //       },
-                      //       '& .MuiInputLabel-root': {
-                      //         color: darkMode ? 'white' : 'black',
-                      //       },
-                      //       '& .MuiInputBase-input': {
-                      //         padding: '0.6rem', // Dein gewünschtes Padding
-                      //         fontSize: '1rem', // Tailwind base entspricht meist 1rem
-                      //         color: darkMode ? 'white' : 'black',
-                      //       },
-                      //     },
-                      //   },
-                      // }}
+                      slotProps={{
+                        textField: {
+                          variant: 'outlined',
+                          fullWidth: true,
+                          sx: {
+                            borderRadius: 0,
+                            '& .MuiOutlinedInput-root': {
+                              backgroundColor: darkMode ? '#374151' : '#fff',
+                              height: '100%',
+                              // Überschreibe die Standard-NotchedOutline:
+                              '& fieldset': {
+                                borderColor: darkMode ? 'white' : 'black', // Nur der schwarze (bzw. weiße im Dark Mode) Rahmen bleibt
+                                borderWidth: '1px',
+                                borderRadius: 0,
+                              },
+                              '&:hover fieldset': {
+                                borderColor: darkMode ? 'white' : 'black',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: darkMode ? 'white' : 'black',
+                              },
+                            },
+                            '& .MuiInputLabel-root': {
+                              color: darkMode ? 'white' : 'black',
+                            },
+                            '& .MuiInputBase-input': {
+                              padding: '0.6rem', // Dein gewünschtes Padding
+                              fontSize: '1rem', // Tailwind base entspricht meist 1rem
+                              color: darkMode ? 'white' : 'black',
+                            },
+                          },
+                        },
+                      }}
                     />
                   </div>
 
@@ -445,39 +445,39 @@ const FileUploadMobile: React.FC = () => {
                       maxDate={
                         metadata?.lastMessageDate ? dayjs(metadata.lastMessageDate) : undefined
                       }
-                      // slotProps={{
-                      //   textField: {
-                      //     variant: 'outlined',
-                      //     fullWidth: true,
-                      //     sx: {
-                      //       borderRadius: 0,
-                      //       '& .MuiOutlinedInput-root': {
-                      //         backgroundColor: darkMode ? '#374151' : '#fff',
-                      //         height: '100%',
-                      //         // Überschreibe die Standard-NotchedOutline:
-                      //         '& fieldset': {
-                      //           borderColor: darkMode ? 'white' : 'black', // Nur der schwarze (bzw. weiße im Dark Mode) Rahmen bleibt
-                      //           borderWidth: '1px',
-                      //           borderRadius: 0,
-                      //         },
-                      //         '&:hover fieldset': {
-                      //           borderColor: darkMode ? 'white' : 'black',
-                      //         },
-                      //         '&.Mui-focused fieldset': {
-                      //           borderColor: darkMode ? 'white' : 'black',
-                      //         },
-                      //       },
-                      //       '& .MuiInputLabel-root': {
-                      //         color: darkMode ? 'white' : 'black',
-                      //       },
-                      //       '& .MuiInputBase-input': {
-                      //         padding: '0.6rem', // Dein gewünschtes Padding
-                      //         fontSize: '1rem', // Tailwind base entspricht meist 1rem
-                      //         color: darkMode ? 'white' : 'black',
-                      //       },
-                      //     },
-                      //   },
-                      // }}
+                      slotProps={{
+                        textField: {
+                          variant: 'outlined',
+                          fullWidth: true,
+                          sx: {
+                            borderRadius: 0,
+                            '& .MuiOutlinedInput-root': {
+                              backgroundColor: darkMode ? '#374151' : '#fff',
+                              height: '100%',
+                              // Überschreibe die Standard-NotchedOutline:
+                              '& fieldset': {
+                                borderColor: darkMode ? 'white' : 'black', // Nur der schwarze (bzw. weiße im Dark Mode) Rahmen bleibt
+                                borderWidth: '1px',
+                                borderRadius: 0,
+                              },
+                              '&:hover fieldset': {
+                                borderColor: darkMode ? 'white' : 'black',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: darkMode ? 'white' : 'black',
+                              },
+                            },
+                            '& .MuiInputLabel-root': {
+                              color: darkMode ? 'white' : 'black',
+                            },
+                            '& .MuiInputBase-input': {
+                              padding: '0.6rem', // Dein gewünschtes Padding
+                              fontSize: '1rem', // Tailwind base entspricht meist 1rem
+                              color: darkMode ? 'white' : 'black',
+                            },
+                          },
+                        },
+                      }}
                     />
                   </div>
                 </LocalizationProvider>
