@@ -368,8 +368,4 @@ Special thanks to [Pustur](https://github.com/Pustur) for the [whatsapp-chat-par
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-Happy coding! 🚀
+This project is licensed under the [MIT License](LICENSE.txt).
