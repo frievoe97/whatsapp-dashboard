@@ -1,3 +1,9 @@
+<!-- Dark Mode GIF -->
+<!-- <p align="center"><img src="https://github.com/user-attachments/assets/e2b92304-8d8f-449a-98e3-925e0ce4a1cc#gh-dark-mode-only" width="500"></p> -->
+
+<!-- Light Mode GIF -->
+<!-- <p align="center"><img src="https://github.com/user-attachments/assets/0aceb04f-1748-468f-aa07-cfa27ce6814f#gh-light-mode-only" width="500"></p> -->
+
 # WhatsApp Dashboard
 
 ![React](https://img.shields.io/badge/react-18.3.1-blue)
@@ -14,7 +20,7 @@
 ![lucide-react](https://img.shields.io/badge/lucide--react-0.474.0-cyan)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
 
-<!-- Dark Mode Image -->
+<!-- Dark Mode Bild -->
 <p align="center">
   <img src="https://github.com/user-attachments/assets/b513738d-fdcf-4ffb-afbc-33cfcef338a2#gh-dark-mode-only" width="500">
 </p>
