@@ -1,11 +1,3 @@
-//////////////////////////////
-// FileUpload Component (Desktop Version)
-// This component provides the UI for uploading a chat file and applying filters.
-// It includes file selection, deletion, and a filter panel with sender selection,
-// minimum message share, date range, and weekday selection.
-//////////////////////////////
-
-//////////// Imports ////////////
 import React, { ChangeEvent, useRef, useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp, Info, Moon, Sun, Trash2 } from 'lucide-react';
 import InfoModal from './InfoModal';
@@ -26,17 +18,66 @@ import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 
-//////////////////////////////
-// FileUpload Component
-//////////////////////////////
+interface CustomCheckboxProps {
+  checked: boolean;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  darkMode: boolean;
+  disabled?: boolean;
+  label?: React.ReactNode;
+}
+
+const CustomCheckbox: React.FC<CustomCheckboxProps> = ({
+  checked,
+  onChange,
+  darkMode,
+  disabled = false,
+  label,
+}) => {
+  return (
+    <label
+      className={`flex items-center gap-1 cursor-pointer ${
+        disabled ? 'opacity-50 cursor-not-allowed' : ''
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+        className="hidden"
+      />
+      <span
+        className={`flex items-center justify-center w-4 h-4 border ${
+          darkMode ? 'border-white' : 'border-black'
+        } rounded-none relative`}
+      >
+        {checked && (
+          <svg
+            className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-black'}`}
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M2 8L6 12L14 4"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
+      </span>
+      {label && <span className="text-sm rounded-none">{label}</span>}
+    </label>
+  );
+};
 
 const FileUpload: React.FC = () => {
-  //////////// Refs ////////////
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const weekdaysDropdownRef = useRef<HTMLDivElement>(null);
 
-  //////////// Context & Translation ////////////
   const {
     darkMode,
     toggleDarkMode,
@@ -58,15 +99,12 @@ const FileUpload: React.FC = () => {
     setFilteredMessages,
     tempSetUseShortNames,
   } = useChat();
-  const { t } = useTranslation();
 
-  //////////// Local State ////////////
   const [weekdaysDropdownOpen, setWeekdaysDropdownOpen] = useState(false);
   const [sendersDropdownOpen, setSendersDropdownOpen] = useState(false);
 
-  //////////// useEffects ////////////
+  const { t } = useTranslation();
 
-  // Close sender dropdown when clicking outside.
   useEffect(() => {
     const handleSendersClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -77,7 +115,6 @@ const FileUpload: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleSendersClickOutside);
   }, []);
 
-  // Close weekdays dropdown when clicking outside.
   useEffect(() => {
     const handleWeekdaysClickOutside = (event: MouseEvent) => {
       if (
@@ -91,25 +128,13 @@ const FileUpload: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleWeekdaysClickOutside);
   }, []);
 
-  // Control body overflow when Info Modal is open.
-  useEffect(() => {
-    document.body.style.overflow = isInfoOpen ? 'hidden' : '';
-  }, [isInfoOpen]);
-
-  //////////// Helper Functions ////////////
-
-  /**
-   * Toggles the filter panel's visibility and triggers a resize event.
-   */
   const toggleCollapse = () => {
     setIsPanelOpen((prev) => !prev);
     setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
   };
 
-  // Get sender names from metadata.
   const senders = metadata ? Object.keys(metadata.senders) : [];
 
-  //////////// Render ////////////
   return (
     <div className="w-full mx-auto rounded-none">
       <InfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} darkMode={darkMode} />
@@ -151,7 +176,10 @@ const FileUpload: React.FC = () => {
 
       <div className={`border rounded-none ${darkMode ? 'border-white' : 'border-black'}`}>
         {/* File Upload Row */}
-        <div className="flex items-center justify-between p-4">
+        <div
+          className={`flex items-center justify-between p-4
+            `}
+        >
           <div className="flex items-center">
             <label
               htmlFor="file-upload"
@@ -210,14 +238,15 @@ const FileUpload: React.FC = () => {
           )}
         </div>
 
-        {/* Filter Panel – Visible Only if Panel Is Open and a File Is Uploaded */}
+        {/* Filter Panel – nur sichtbar, wenn aufgeklappt */}
         {isPanelOpen && metadata?.fileName && (
           <div
             className={`p-4 pt-0 grid grid-cols-4 gap-4 rounded-none ${
               darkMode ? 'bg-gray-800 text-white border-white' : 'bg-white text-black border-black'
             }`}
           >
-            {/* Row 1: Sender Filter */}
+            {/* Zeile 1 */}
+            {/* 1. Zelle: Sender Filter */}
             <div className="rounded-none flex flex-col">
               <label className="text-md font-semibold rounded-none">
                 {t('FileUpload.selectSenders')}
@@ -225,7 +254,7 @@ const FileUpload: React.FC = () => {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setSendersDropdownOpen((prev) => !prev)}
-                  className={`text-sm w-full mt-2 px-2 py-2 border rounded-none flex justify-between items-center hover:border-current ${
+                  className={`w-full mt-2 px-2 py-2 border rounded-none flex justify-between items-center hover:border-current ${
                     darkMode
                       ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
                       : 'bg-white text-black border-black hover:bg-gray-200'
@@ -251,53 +280,30 @@ const FileUpload: React.FC = () => {
                         const disabled = status === SenderStatus.LOCKED;
                         const checked = status === SenderStatus.ACTIVE;
                         return (
-                          <label
+                          <div
                             key={sender}
                             onMouseDown={(e) => e.preventDefault()}
-                            className={`flex items-center px-2 py-2 cursor-pointer rounded-none ${
-                              disabled
-                                ? 'opacity-50 cursor-not-allowed'
-                                : darkMode
-                                  ? 'hover:bg-gray-800'
-                                  : 'hover:bg-gray-100'
-                            }`}
+                            className={`px-4 py-2 ${
+                              disabled ? 'opacity-50 cursor-not-allowed' : ''
+                            } ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
                           >
-                            <input
-                              type="checkbox"
-                              disabled={disabled}
+                            <CustomCheckbox
                               checked={checked}
                               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                 handleSenderChange(e, sender, setTempFilters)
                               }
-                              className="hidden"
+                              darkMode={darkMode}
+                              disabled={disabled}
+                              label={
+                                <>
+                                  {sender}{' '}
+                                  {metadata?.sendersShort[sender]
+                                    ? `(${metadata.sendersShort[sender]})`
+                                    : ''}
+                                </>
+                              }
                             />
-                            <span
-                              className={`flex items-center justify-center w-4 h-4 border ${
-                                darkMode ? 'border-white' : 'border-black'
-                              } rounded-none relative mr-2`}
-                            >
-                              {checked && (
-                                <svg
-                                  className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-black'}`}
-                                  viewBox="0 0 16 16"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M2 8L6 12L14 4"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              )}
-                            </span>
-                            {sender}{' '}
-                            {metadata?.sendersShort[sender]
-                              ? `(${metadata.sendersShort[sender]})`
-                              : ''}
-                          </label>
+                          </div>
                         );
                       })}
                     </div>
@@ -306,9 +312,9 @@ const FileUpload: React.FC = () => {
               </div>
             </div>
 
-            {/* Row 1: Minimum Message Share Input */}
+            {/* 2. Zelle: Minimum Message Share */}
             <div className="rounded-none flex flex-col">
-              <label className="font-semibold rounded-none">
+              <label className="text-md font-semibold rounded-none">
                 {t('FileUpload.minimumMessageShare')}
               </label>
               <input
@@ -319,20 +325,20 @@ const FileUpload: React.FC = () => {
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   handleMinPercentageChange(e, setTempFilters)
                 }
-                className={`text-sm mt-2 p-2 border rounded-none ${
+                className={`mt-2 p-2 border rounded-none ${
                   darkMode ? 'border-white bg-gray-700' : 'border-black'
                 }`}
               />
             </div>
 
-            {/* Row 1: Date Selection */}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-              {/* Start Date Picker */}
-              <div className="rounded-none flex flex-1 flex-col">
-                <label className="text font-semibold rounded-none mb-2">
+              {/* Start Date */}
+              <div className="rounded-none flex flex-col">
+                <label className="text-md font-semibold rounded-none mb-2">
                   {t('FileUpload.startDate')}
                 </label>
                 <DatePicker
+                  // label="Start Date"
                   value={tempFilters.startDate ? dayjs(tempFilters.startDate) : null}
                   onChange={(newValue) =>
                     handleDateChange(
@@ -348,8 +354,8 @@ const FileUpload: React.FC = () => {
                     tempFilters.endDate
                       ? dayjs(tempFilters.endDate)
                       : metadata?.lastMessageDate
-                        ? dayjs(metadata.lastMessageDate)
-                        : undefined
+                      ? dayjs(metadata.lastMessageDate)
+                      : undefined
                   }
                   slotProps={{
                     textField: {
@@ -360,8 +366,9 @@ const FileUpload: React.FC = () => {
                         '& .MuiOutlinedInput-root': {
                           backgroundColor: darkMode ? '#374151' : '#fff',
                           height: '100%',
+                          // Überschreibe die Standard-NotchedOutline:
                           '& fieldset': {
-                            borderColor: darkMode ? 'white' : 'black',
+                            borderColor: darkMode ? 'white' : 'black', // Nur der schwarze (bzw. weiße im Dark Mode) Rahmen bleibt
                             borderWidth: '1px',
                             borderRadius: 0,
                           },
@@ -376,8 +383,8 @@ const FileUpload: React.FC = () => {
                           color: darkMode ? 'white' : 'black',
                         },
                         '& .MuiInputBase-input': {
-                          padding: '0.55rem',
-                          fontSize: '0.9rem',
+                          padding: '0.6rem', // Dein gewünschtes Padding
+                          fontSize: '1rem', // Tailwind base entspricht meist 1rem
                           color: darkMode ? 'white' : 'black',
                         },
                       },
@@ -386,8 +393,8 @@ const FileUpload: React.FC = () => {
                 />
               </div>
 
-              {/* End Date Picker */}
-              <div className="rounded-none flex flex-1 flex-col">
+              {/* End Date */}
+              <div className="rounded-none flex flex-col">
                 <label className="text-md font-semibold rounded-none mb-2">
                   {t('FileUpload.endDate')}
                 </label>
@@ -400,8 +407,8 @@ const FileUpload: React.FC = () => {
                     tempFilters.startDate
                       ? dayjs(tempFilters.startDate)
                       : metadata?.firstMessageDate
-                        ? dayjs(metadata.firstMessageDate)
-                        : undefined
+                      ? dayjs(metadata.firstMessageDate)
+                      : undefined
                   }
                   maxDate={metadata?.lastMessageDate ? dayjs(metadata.lastMessageDate) : undefined}
                   slotProps={{
@@ -413,8 +420,9 @@ const FileUpload: React.FC = () => {
                         '& .MuiOutlinedInput-root': {
                           backgroundColor: darkMode ? '#374151' : '#fff',
                           height: '100%',
+                          // Überschreibe die Standard-NotchedOutline:
                           '& fieldset': {
-                            borderColor: darkMode ? 'white' : 'black',
+                            borderColor: darkMode ? 'white' : 'black', // Nur der schwarze (bzw. weiße im Dark Mode) Rahmen bleibt
                             borderWidth: '1px',
                             borderRadius: 0,
                           },
@@ -429,8 +437,8 @@ const FileUpload: React.FC = () => {
                           color: darkMode ? 'white' : 'black',
                         },
                         '& .MuiInputBase-input': {
-                          padding: '0.55rem',
-                          fontSize: '0.9rem',
+                          padding: '0.6rem', // Dein gewünschtes Padding
+                          fontSize: '1rem', // Tailwind base entspricht meist 1rem
                           color: darkMode ? 'white' : 'black',
                         },
                       },
@@ -440,14 +448,16 @@ const FileUpload: React.FC = () => {
               </div>
             </LocalizationProvider>
 
-            {/* Row 2: Weekday Selection Dropdown */}
-            <div className="flex flex-col rounded-none relative" ref={weekdaysDropdownRef}>
+            {/* Zeile 2 */}
+            {/* 1. Zelle: Weekdays-Auswahl */}
+            <div className="rounded-none flex flex-col relative" ref={weekdaysDropdownRef}>
+              {/* <label className="text-md font-semibold rounded-none">Select Weekdays:</label> */}
               <button
                 onClick={() => setWeekdaysDropdownOpen((prev) => !prev)}
-                className={`text-sm w-full p-2 border rounded-none flex justify-between items-center hover:border-current ${
+                className={`w-full px-2 py-2 border rounded-none flex justify-between items-center hover:border-current ${
                   darkMode
                     ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
-                    : 'bg-white text-black border-black hover:bg-white'
+                    : 'bg-white text-black border-black hover:bg-gray-200'
                 }`}
               >
                 <span>{t('FileUpload.selectWeekdays')}</span>
@@ -460,59 +470,35 @@ const FileUpload: React.FC = () => {
                       ? 'bg-gray-700 text-white border-white'
                       : 'bg-white text-black border-black'
                   }`}
-                  onMouseDown={(e) => e.stopPropagation()}
                 >
-                  <div className="max-h-70 overflow-auto">
+                  <div className="max-h-70 overflow-auto" onMouseDown={(e) => e.stopPropagation()}>
                     {DEFAULT_WEEKDAYS.map((day) => (
-                      <label
+                      <div
                         key={day}
-                        className={`flex items-center px-4 py-2 cursor-pointer rounded-none ${
+                        className={`px-4 py-2 ${
                           darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
                         }`}
                       >
-                        <input
-                          type="checkbox"
+                        <CustomCheckbox
                           checked={tempFilters.selectedWeekdays.includes(day)}
                           onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             handleWeekdayChange(e, day, setTempFilters)
                           }
-                          className="hidden"
+                          darkMode={darkMode}
+                          label={day}
                         />
-                        <span
-                          className={`flex items-center justify-center w-4 h-4 border ${
-                            darkMode ? 'border-white' : 'border-black'
-                          } rounded-none relative`}
-                        >
-                          {tempFilters.selectedWeekdays.includes(day) && (
-                            <svg
-                              className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-black'}`}
-                              viewBox="0 0 16 16"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M2 8L6 12L14 4"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          )}
-                        </span>
-                        <span className="text-sm ml-1">{day}</span>
-                      </label>
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Row 2: Use Short Names Toggle */}
-            <div className="rounded-none">
+            {/* 2. Zelle: Use Short Names */}
+            <div className="rounded-none ">
               <button
                 onClick={() => tempToggleUseShortNames()}
-                className={`text-sm w-full px-2 py-2 border rounded-none hover:border-current ${
+                className={`w-full px-0 py-2 border rounded-none hover:border-current ${
                   darkMode
                     ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
                     : 'bg-white text-black border-black hover:bg-gray-200'
@@ -526,11 +512,11 @@ const FileUpload: React.FC = () => {
               </button>
             </div>
 
-            {/* Row 2: Reset and Apply Buttons */}
+            {/* 3. und 4. Zelle: Leer */}
             <div className="rounded-none">
               <button
                 onClick={resetFilters}
-                className={`text-sm w-full py-2 border rounded-none hover:border-current ${
+                className={`w-full py-2 border rounded-none hover:border-current ${
                   darkMode
                     ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
                     : 'bg-white text-black border-black hover:bg-gray-200'
@@ -547,7 +533,7 @@ const FileUpload: React.FC = () => {
                   setIsPanelOpen(false);
                   setUseShortNames(tempUseShortNames);
                 }}
-                className={`text-sm w-full py-2 border rounded-none hover:border-current ${
+                className={`w-full py-2 border rounded-none hover:border-current ${
                   darkMode
                     ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
                     : 'bg-white text-black border-black hover:bg-gray-200'
