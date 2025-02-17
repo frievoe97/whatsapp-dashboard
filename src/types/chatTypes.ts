@@ -1,14 +1,5 @@
 ////////////////////// Imports ////////////////////////
 import { SenderStatus } from '../config/constants';
-import { OPERATING_SYSTEMS } from '../config/constants';
-
-////////////////////// Type Definitions ////////////////////////
-
-/**
- * OperatingSystemName represents the name of an operating system as defined
- * in the OPERATING_SYSTEMS array.
- */
-export type OperatingSystemName = (typeof OPERATING_SYSTEMS)[number]['name'];
 
 ////////////////////// Chat Message Types ////////////////////////
 
@@ -28,7 +19,6 @@ export interface ChatMessage {
  */
 export interface ChatMetadata {
   language: 'de' | 'en' | 'fr' | 'es';
-  os: OperatingSystemName;
   firstMessageDate: Date;
   lastMessageDate: Date;
   senders: Record<string, number>;

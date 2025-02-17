@@ -19,7 +19,7 @@ const resources = {
       FileUpload: {
         selectFile: 'Select File',
         selectSenders: 'Select Senders',
-        minimumMessageShare: 'Minimum Message Share (%)',
+        minimumMessageShare: 'Message Share (%)',
         startDate: 'Start Date',
         endDate: 'End Date',
         selectWeekdays: 'Select Weekdays',
@@ -30,21 +30,22 @@ const resources = {
       },
       InfoModal: {
         InfoAndDisclaimer: {
-          title: 'Info & Disclaimer',
+          title: 'Information',
           content:
-            "<p class='mb-3'>This tool does not store any data on a server. All information remains only in your browser. No messages or statistics are uploaded.</p><p class='mb-3'>This project is Open Source, and the entire source code is publicly available on <a href='https://github.com/frievoe97/whatsapp-dashboard' target='_blank' rel='noopener noreferrer' class='no-underline no-underline text-current hover:text-current'>GitHub</a>.</p><p>This project is licensed under the MIT License. You are free to use, modify, and distribute the code, as long as the license is included.</p>",
+            "<p class='mb-3'>This tool does not store any data on a server. All information remains only in your browser. No messages or statistics are uploaded.</p><p class='mb-3'>This project is open source, and the entire source code is publicly available on <a href='https://github.com/frievoe97/whatsapp-dashboard' target='_blank' rel='noopener noreferrer' class='no-underline text-current hover:text-current'>GitHub</a>.</p><p>This project is licensed under the MIT license. You are free to use, modify, and distribute the code as long as the license is included.</p>",
         },
         HowToExportChats: {
           title: 'How to Export Chats',
           content:
-            "<style>ol { list-style-type: disc; }</style><p class='mb-3'>How to export a WhatsApp chat without media:</p><h3 class='font-semibold'>iOS:</h3><ol class='list-decimal ml-4 mb-3'><li>Open the chat.</li><li>Tap the contact or group name.</li><li>Select “Export Chat”.</li><li>Choose “Without Media” when prompted.</li><li>Save or share the .txt file.</li></ol><h3 class='font-semibold'>Android:</h3><ol class='list-decimal ml-4'><li>Open the chat.</li><li>Tap the menu (three dots).</li><li>Select “More” > “Export Chat”.</li><li>Choose “Without Media” when prompted.</li><li>Save or share the .txt file.</li></ol><p class='mt-3'>Upload the .txt file here.</p>",
+            "<style>ol { list-style-type: disc; }</style><p class='mb-3'>How to export a WhatsApp chat without media:</p><h3 class='font-semibold'>iOS:</h3><ol class='list-decimal ml-4 mb-3'><li>Open the chat.</li><li>Tap on the name.</li><li>Select “Export Chat.”</li><li>Choose “Without Media.”</li><li>Save or share the .txt file.</li></ol><h3 class='font-semibold'>Android:</h3><ol class='list-decimal ml-4'><li>Open the chat.</li><li>Tap on the menu (three dots).</li><li>Go to “More” > “Export Chat.”</li><li>Choose “Without Media.”</li><li>Save or share the .txt file.</li></ol>",
         },
         MenuExplanation: {
           title: 'Menu Explanation',
           content:
-            "<p class='mb-3'>Configure these settings:</p><ul class='list-disc list-inside'><li><strong>Dark Mode:</strong> Switch between light and dark theme.</li><li><strong>Date Filter:</strong> Select time range.</li><li><strong>Sender Selection:</strong> Choose participants.</li><li><strong>Weekday Filter:</strong> Filter by days.</li><li><strong>Minimum Share:</strong> Set message percentage limit.</li></ul>",
+            "<p class='mb-3'>Configure these settings:</p><ul class='list-disc list-inside'><li><strong>Date Filter:</strong> Select a time period.</li><li><strong>Sender:</strong> Choose participants.</li><li><strong>Day of the Week Filter:</strong> Filter by specific days.</li><li><strong>Minimum Share:</strong> Limit the share of messages.</li><li><strong>Abbreviations:</strong> Use abbreviations for names.</li></ul>",
         },
       },
+
       Emoji: {
         title: 'Top 10 Emojis for Person',
       },
@@ -63,7 +64,7 @@ const resources = {
         title: 'Top 10 Words per Person',
       },
       ChordDiagram: {
-        title: 'Who Replies to Whom (Top ',
+        title: 'Response Behavior (Top ',
       },
       Stats: {
         title: 'Message Statistics per Person',
@@ -100,12 +101,12 @@ const resources = {
         HowToExportChats: {
           title: 'So exportieren Sie Chats',
           content:
-            "<style>ol { list-style-type: disc; }</style><p class='mb-3'>So exportieren Sie einen WhatsApp-Chat ohne Medien:</p><h3 class='font-semibold'>iOS:</h3><ol class='list-decimal ml-4 mb-3'><li>Chat öffnen.</li><li>Auf Namen tippen.</li><li>„Chat exportieren“ wählen.</li><li>„Ohne Medien“ auswählen.</li><li>.txt-Datei speichern oder teilen.</li></ol><h3 class='font-semibold'>Android:</h3><ol class='list-decimal ml-4'><li>Chat öffnen.</li><li>Menü (drei Punkte) tippen.</li><li>„Mehr“ > „Chat exportieren“.</li><li>„Ohne Medien“ auswählen.</li><li>.txt-Datei speichern oder teilen.</li></ol><p class='mt-3'>Laden Sie die .txt-Datei hier hoch.</p>",
+            "<style>ol { list-style-type: disc; }</style><p class='mb-3'>So exportieren Sie einen WhatsApp-Chat ohne Medien:</p><h3 class='font-semibold'>iOS:</h3><ol class='list-decimal ml-4 mb-3'><li>Chat öffnen.</li><li>Auf Namen tippen.</li><li>„Chat exportieren“ wählen.</li><li>„Ohne Medien“ auswählen.</li><li>.txt-Datei speichern oder teilen.</li></ol><h3 class='font-semibold'>Android:</h3><ol class='list-decimal ml-4'><li>Chat öffnen.</li><li>Menü (drei Punkte) tippen.</li><li>„Mehr“ > „Chat exportieren“.</li><li>„Ohne Medien“ auswählen.</li><li>.txt-Datei speichern oder teilen.</li></ol>",
         },
         MenuExplanation: {
           title: 'Menüerklärung',
           content:
-            "<p class='mb-3'>Konfigurieren Sie diese Einstellungen:</p><ul class='list-disc list-inside'><li><strong>Dunkler Modus:</strong> Helles/dunkles Design wechseln.</li><li><strong>Datumsfilter:</strong> Zeitraum auswählen.</li><li><strong>Absenderauswahl:</strong> Teilnehmer festlegen.</li><li><strong>Wochentagsauswahl:</strong> Nach Tagen filtern.</li><li><strong>Mindestanteil:</strong> Nachrichtenanteil begrenzen.</li></ul>",
+            "<p class='mb-3'>Konfigurieren Sie diese Einstellungen:</p><ul class='list-disc list-inside'><li><strong>Datumsfilter:</strong> Zeitraum auswählen.</li><li><strong>Absender:</strong> Teilnehmer festlegen.</li><li><strong>Wochentagsauswahl:</strong> Nach Tagen filtern.</li><li><strong>Mindestanteil:</strong> Nachrichtenanteil begrenzen.</li><li><strong>Abkürzungen:</strong>Verwende Abkürzungen für die Namen</li></ul>",
         },
       },
       Emoji: {
@@ -126,62 +127,10 @@ const resources = {
         title: 'Top 10 Wörter pro Person',
       },
       ChordDiagram: {
-        title: 'Wer antwortet wem (Top ',
+        title: 'Antwortverhalten (Top ',
       },
       Stats: {
         title: 'Nachrichtenstatistik pro Person',
-      },
-    },
-  },
-  fr: {
-    translation: {
-      App: {
-        placeholder:
-          'Veuillez télécharger une conversation WhatsApp en utilisant "Sélectionner un fichier".',
-      },
-      FileUpload: {
-        selectFile: 'TODO',
-        selectSenders: 'TODO',
-        minimumMessageShare: 'TODO',
-        startDate: 'TODO',
-        endDate: 'TODO',
-        selectWeekdays: 'TODO',
-        reset: 'TODO',
-        apply: 'TODO',
-      },
-    },
-  },
-  es: {
-    translation: {
-      App: {
-        placeholder: 'Por favor, sube un chat de WhatsApp usando "Seleccionar archivo".',
-      },
-      FileUpload: {
-        selectFile: 'TODO',
-        selectSenders: 'TODO',
-        minimumMessageShare: 'TODO',
-        startDate: 'TODO',
-        endDate: 'TODO',
-        selectWeekdays: 'TODO',
-        reset: 'TODO',
-        apply: 'TODO',
-      },
-    },
-  },
-  zh: {
-    translation: {
-      App: {
-        placeholder: '请使用“选择文件”上传WhatsApp聊天记录。',
-      },
-      FileUpload: {
-        selectFile: 'TODO',
-        selectSenders: 'TODO',
-        minimumMessageShare: 'TODO',
-        startDate: 'TODO',
-        endDate: 'TODO',
-        selectWeekdays: 'TODO',
-        reset: 'TODO',
-        apply: 'TODO',
       },
     },
   },
