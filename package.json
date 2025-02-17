@@ -11,6 +11,8 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.4",
     "@mui/x-date-pickers": "^7.26.0",
     "d3": "^7.9.0",

@@ -4,15 +4,19 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   build: {
-    sourcemap: true, // Aktiviert Sourcemaps im Produktions-Build
+    sourcemap: true, // Sourcemaps aktivieren
+    minify: 'terser', // Terser statt esbuild verwenden
+  },
+  optimizeDeps: {
+    exclude: ['@mui/material', '@mui/x-date-pickers'],
   },
   test: {
-    globals: true, // Erlaubt die Nutzung von globalen Testfunktionen (describe, it, expect, …)
-    environment: 'jsdom', // Simuliert den Browser-DOM
+    globals: true,
+    environment: 'jsdom',
     setupFiles: './vitest.setup.ts',
     coverage: {
       reporter: ['text', 'json-summary', 'json'],
-      reportOnFailure: true, // Falls Tests fehlschlagen, trotzdem Coverage erzeugen
+      reportOnFailure: true,
     },
   },
 });
