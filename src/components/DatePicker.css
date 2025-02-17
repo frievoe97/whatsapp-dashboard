@@ -96,9 +96,9 @@
 .dark-mode .MuiDatePickerToolbar-title {
   color: white;
 }
-.dark-mode .MuiTypography-root {
+/* .dark-mode .MuiTypography-root {
   color: white;
-}
+} */
 .dark-mode .MuiPickersCalendarHeader-labelContainer {
   color: white;
 }
