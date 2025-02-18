@@ -1,11 +1,44 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l !== 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-PR78Q6PL');
+    </script>
+    <!-- End Google Tag Manager -->
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WhatsApp Dashboard</title>
+    <meta
+      name="description"
+      content="WhatsApp Dashboard is a powerful, interactive web application built with React that lets you analyze and visualize your WhatsApp chat data. Explore messaging patterns, sender statistics, sentiment trends, emoji usage, and more with ease. All data processing happens locally in your browser, ensuring your privacy and security."
+    />
+    <meta
+      name="keywords"
+      content="WhatsApp, Dashboard, Chat Analysis, Data Visualization, React, D3.js, TypeScript, Vite, Chat Parser, Local Data Processing, Privacy"
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://whatsapp-dashboard.friedrichvoelkers.de" />
 
-    <!-- Standard Favicon -->
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="WhatsApp Dashboard | Analyze Your WhatsApp Chat Data" />
+    <meta
+      property="og:description"
+      content="Analyze and visualize your WhatsApp chat data with interactive charts, multi-language support and local data processing for privacy."
+    />
+    <meta property="og:url" content="https://whatsapp-dashboard.friedrichvoelkers.de" />
+    <meta property="og:type" content="website" />
+
+    <!-- Standard Favicon & Icons -->
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
@@ -23,26 +56,63 @@
     <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png" />
 
-    <!-- Android Icons -->
+    <!-- Android Icon -->
     <link rel="icon" type="image/png" sizes="192x192" href="/android-icon-192x192.png" />
 
     <!-- Microsoft Tiles -->
     <meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
     <meta name="msapplication-TileColor" content="#ffffff" />
 
-    <!-- Safari Pinned Tab -->
+    <!-- Theme Color -->
     <meta name="theme-color" content="#1f2937" />
 
-    <!-- Manifest für PWA -->
+    <!-- Web App Manifest -->
     <link rel="manifest" href="/manifest.json" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "WhatsApp Dashboard",
+        "url": "https://whatsapp-dashboard.friedrichvoelkers.de",
+        "applicationCategory": "Data Analysis",
+        "operatingSystem": "ALL",
+        "description": "WhatsApp Dashboard is a powerful, interactive web application built with React that lets you analyze and visualize your WhatsApp chat data. Explore messaging patterns, sender statistics, sentiment trends, emoji usage, and more with ease. All data processing happens locally in your browser, ensuring your privacy and security.",
+        "author": {
+          "@type": "Person",
+          "name": "Friedrich Völkers"
+        },
+        "softwareVersion": "1.0.0",
+        "keywords": "WhatsApp, Dashboard, Chat Analysis, Data Visualization, React, D3.js, TypeScript, Vite, Chat Parser, Local Data Processing, Privacy",
+        "sameAs": ["https://github.com/frievoe97/whatsapp-dashboard"]
+      }
+    </script>
+
+    <!-- Plausible Analytics (Self-Hosted) -->
+    <script
+      async
+      defer
+      data-domain="whatsapp-dashboard.friedrichvoelkers.de"
+      src="https://plausible.friedrichvoelkers.de/js/plausible.js"
+    ></script>
+
+    <title>WhatsApp Dashboard | Analyze Your WhatsApp Chat Data</title>
   </head>
   <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-PR78Q6PL"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script
-      defer
-      src="https://cloud.umami.is/script.js"
-      data-website-id="0c0e1711-848b-4879-a413-5b3436fd7b25"
-    ></script>
   </body>
 </html>
