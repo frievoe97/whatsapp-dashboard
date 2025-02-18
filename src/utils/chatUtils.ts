@@ -153,6 +153,7 @@ export const handleFileUpload = (
       worker.onmessage = (e) => {
         const { result, error } = e.data;
         const wasError = Boolean(error);
+        const props: Record<string, string | number | boolean> = {};
         let messageCount = 0;
 
         if (wasError) {
@@ -165,17 +166,11 @@ export const handleFileUpload = (
         }
 
         // Plausible Analytics:
-        // Event on upload success:
-        // - fileSize: Size of the uploaded file
-        // - messageCount: Number of messages in the chat
-        // - error: true if an error occurred
-        trackEvent('Nachricht übertragen', {
-          props: {
-            fileSize: file.size,
-            messageCount,
-            error: wasError,
-          },
-        });
+        // Add properties to the event based on the file content and parsing result.
+        if (file.size !== undefined && file.size !== null) props.fileSize = file.size;
+        if (typeof messageCount === 'number') props.messageCount = messageCount;
+        if (wasError !== undefined && wasError !== null) props.error = wasError;
+        trackEvent('Nachricht übertragen', { props });
 
         // Terminate the worker when done.
         worker.terminate();
