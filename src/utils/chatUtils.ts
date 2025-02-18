@@ -138,14 +138,6 @@ export const handleFileUpload = (
   const file = event.target.files?.[0];
   if (!file) return;
 
-  // Track file upload initiated event with custom properties.
-  trackEvent('File Upload Initiated', {
-    props: {
-      fileName: file.name,
-      fileSize: file.size,
-    },
-  });
-
   const reader = new FileReader();
   reader.onload = async (e) => {
     const content = e.target?.result;
@@ -160,21 +152,31 @@ export const handleFileUpload = (
       // Handle the worker's response.
       worker.onmessage = (e) => {
         const { result, error } = e.data;
-        if (error) {
+        const wasError = Boolean(error);
+        let messageCount = 0;
+
+        if (wasError) {
           console.error('Error parsing file:', error);
         } else {
           setOriginalMessages(result.messages);
           setMetadata(result.metadata);
           setIsPanelOpen(false);
-
-          // Track file upload success event with custom properties.
-          trackEvent('File Upload Success', {
-            props: {
-              fileName: file.name,
-              messageCount: result.messages.length,
-            },
-          });
+          messageCount = result.messages.length;
         }
+
+        // Plausible Analytics:
+        // Event on upload success:
+        // - fileSize: Size of the uploaded file
+        // - messageCount: Number of messages in the chat
+        // - error: true if an error occurred
+        trackEvent('Nachricht übertragen', {
+          props: {
+            fileSize: file.size,
+            messageCount,
+            error: wasError,
+          },
+        });
+
         // Terminate the worker when done.
         worker.terminate();
       };
