@@ -170,7 +170,7 @@ export const handleFileUpload = (
         if (file.size !== undefined && file.size !== null) props.fileSize = file.size;
         if (typeof messageCount === 'number') props.messageCount = messageCount;
         if (wasError !== undefined && wasError !== null) props.error = wasError;
-        trackEvent('Nachricht übertragen', { props });
+        trackEvent('Upload File', { props });
 
         // Terminate the worker when done.
         worker.terminate();
