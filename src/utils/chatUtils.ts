@@ -3,6 +3,16 @@ import { Dispatch, SetStateAction, ChangeEvent, RefObject } from 'react';
 import { SenderStatus, DEFAULT_WEEKDAYS } from '../config/constants';
 import { ChatMessage, FilterOptions } from '../types/chatTypes';
 
+import plausible from 'plausible-tracker';
+
+/**
+ * Plausible tracking for the WhatsApp Dashboard.
+ */
+const { trackEvent } = plausible({
+  domain: 'whatsapp-dashboard.friedrichvoelkers.de',
+  apiHost: 'https://plausible.friedrichvoelkers.de',
+});
+
 ////////////////////// Utility Functions for Filter Updates ////////////////////////
 
 /**
@@ -127,6 +137,15 @@ export const handleFileUpload = (
   tempSetUseShortNames(false);
   const file = event.target.files?.[0];
   if (!file) return;
+
+  // Track file upload initiated event with custom properties.
+  trackEvent('File Upload Initiated', {
+    props: {
+      fileName: file.name,
+      fileSize: file.size,
+    },
+  });
+
   const reader = new FileReader();
   reader.onload = async (e) => {
     const content = e.target?.result;
@@ -147,6 +166,14 @@ export const handleFileUpload = (
           setOriginalMessages(result.messages);
           setMetadata(result.metadata);
           setIsPanelOpen(false);
+
+          // Track file upload success event with custom properties.
+          trackEvent('File Upload Success', {
+            props: {
+              fileName: file.name,
+              messageCount: result.messages.length,
+            },
+          });
         }
         // Terminate the worker when done.
         worker.terminate();
