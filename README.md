@@ -366,6 +366,10 @@ Special thanks to [Pustur](https://github.com/Pustur) for the [whatsapp-chat-par
 - **Building:** Build workflows are triggered after each merged PR.
 - **Branch Policy:** Direct pushes to master are restricted; use feature branches and PRs.
 
+## Repo Activity
+
+![Alt](https://repobeats.axiom.co/api/embed/9a02c54f5c7700208516e9afb7c9609fc568c1c3.svg "Repobeats analytics image")
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE.txt).
