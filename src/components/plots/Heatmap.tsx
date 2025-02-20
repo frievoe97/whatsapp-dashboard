@@ -8,6 +8,7 @@ import { ChatMessage } from '../../types/chatTypes';
 import { RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
+import { getCustomSelectStyles } from '../../config/constants';
 
 ////////////// Constants & Types ////////////////
 
@@ -275,73 +276,6 @@ const Heatmap: FC = () => {
       );
   }, [aggregatedData, dimensions, darkMode, xCategory, yCategory, dynamicCategories]);
 
-  // -------------
-  // React-Select Styles
-  // -------------
-  const customSelectStyles = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    control: (provided: any) => ({
-      ...provided,
-      backgroundColor: 'transparent',
-      border: 'none',
-      boxShadow: 'none',
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginLeft: '4px',
-      textDecoration: 'underline',
-      textUnderlineOffset: '3px',
-      marginRight: '4px',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    valueContainer: (provided: any) => ({
-      ...provided,
-      padding: '0px',
-      flex: '1 1 auto',
-    }),
-    indicatorSeparator: () => ({ display: 'none' }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dropdownIndicator: (provided: any) => ({
-      ...provided,
-      padding: '6px',
-      marginLeft: '-5px',
-      color: darkMode ? 'white' : 'black',
-      display: 'none',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: darkMode ? '#333' : 'white',
-      color: darkMode ? 'white' : 'black',
-      boxShadow: 'none',
-      width: 'auto',
-      minWidth: 'fit-content',
-      border: darkMode ? '1px solid white' : '1px solid black',
-      borderRadius: '0',
-      fontSize: '0.9rem',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isHover
-        ? darkMode
-          ? '#777'
-          : '#ddd'
-        : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-          ? darkMode
-            ? '#555'
-            : '#eee'
-          : darkMode
-            ? '#333'
-            : 'white',
-      color: darkMode ? 'white' : 'black',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: darkMode ? 'white' : 'black',
-    }),
-  };
-
   const { t } = useTranslation();
 
   // -------------
@@ -365,7 +299,7 @@ const Heatmap: FC = () => {
               .filter((cat) => cat !== yCategory)
               .map((cat) => ({ value: cat as Category, label: cat as Category }))}
             isSearchable={false}
-            styles={customSelectStyles}
+            styles={getCustomSelectStyles(darkMode)}
           />
           <span>&</span>
           <Select
@@ -375,7 +309,7 @@ const Heatmap: FC = () => {
             options={Object.keys(dynamicCategories)
               .filter((cat) => cat !== xCategory)
               .map((cat) => ({ value: cat as Category, label: cat as Category }))}
-            styles={customSelectStyles}
+            styles={getCustomSelectStyles(darkMode)}
           />
         </h2>
         <RefreshCw
