@@ -1,4 +1,4 @@
-name: Deploy React App to FTP
+name: Deploy React App to SFTP
 
 on:
   push:
