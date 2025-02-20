@@ -28,11 +28,11 @@ export default function WelcomeScreen() {
     setUseShortNames,
     tempSetUseShortNames,
   } = useChat();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fileInputRef = useRef(null);
 
   // Define indices (0-based) of images to skip
-  const skipIndices = [2, 3, 5, 6, 8];
+  const skipIndices = [2, 3, 4, 5, 6, 8];
 
   // Create all image paths
   const allImages = Array.from(
@@ -45,6 +45,8 @@ export default function WelcomeScreen() {
 
   // Determine container background colors for gradient overlays
   const containerBgColor = darkMode ? '#1F2937' : '#ffffff'; // gray-800 or white
+
+  console.log('Language: ', i18n.language);
 
   return (
     <div
