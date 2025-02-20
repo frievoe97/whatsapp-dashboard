@@ -6,10 +6,10 @@ import { ChatMessage, FilterOptions } from '../types/chatTypes';
 import plausible from 'plausible-tracker';
 
 /**
- * Plausible tracking for the WhatsApp Dashboard.
+ * Plausible tracking for the Chat Visualizer.
  */
 const { trackEvent } = plausible({
-  domain: 'whatsapp-dashboard.friedrichvoelkers.de',
+  domain: 'chat-visualizer.de',
   apiHost: 'https://plausible.friedrichvoelkers.de',
 });
 

@@ -10,7 +10,7 @@ const resources = {
   en: {
     translation: {
       WelcomeScreen: {
-        title: 'Welcome to the WhatsApp Dashboard!',
+        title: 'Welcome to the Chat Visualizer!',
         subtitle: 'Upload your chat and explore interactive visualizations!',
       },
       General: {
@@ -18,7 +18,7 @@ const resources = {
       },
       App: {
         placeholder: 'Please upload a WhatsApp chat using "Select File".',
-        title: 'WhatsApp Dashboard – Visualize your Chats',
+        title: 'Chat Visualizer – Visualize your Chats',
       },
       FileUpload: {
         selectFile: 'Select File',
@@ -80,7 +80,7 @@ const resources = {
     de: {
       translation: {
         WelcomeScreen: {
-          title: 'Willkommen auf dem WhatsApp Dashboard!',
+          title: 'Willkommen auf dem Chat Visualizer!',
           subtitle: 'Lade deinen Chat hoch und entdecken die interaktiven Visualisierungen!',
         },
         General: {
@@ -88,7 +88,7 @@ const resources = {
         },
         App: {
           placeholder: 'Bitte laden Sie einen WhatsApp-Chat über „Datei auswählen“ hoch.',
-          title: 'WhatsApp Dashboard – Visualisieren Sie Ihre Chats',
+          title: 'Chat Visualizer – Visualisieren Sie Ihre Chats',
         },
         FileUpload: {
           selectFile: 'Datei auswählen',

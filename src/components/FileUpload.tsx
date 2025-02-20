@@ -151,7 +151,7 @@ const FileUpload: React.FC = () => {
         >
           <Info size={20} />
         </button>
-        <div className="flex-grow text-center text-2xl font-semibold">WhatsApp Dashboard</div>
+        <div className="flex-grow text-center text-2xl font-semibold">Chat Visualizer</div>
         <button
           onClick={toggleDarkMode}
           className={`px-2 py-1 border rounded-none flex items-center hover:border-current ${
