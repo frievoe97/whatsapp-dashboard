@@ -7,6 +7,7 @@ import useResizeObserver from '../../hooks/useResizeObserver';
 import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
+import { getCustomSelectStyles } from '../../config/constants';
 
 ////////////// Constants & Types ////////////////
 /** Properties to display on the sender comparison bar chart. */
@@ -300,71 +301,6 @@ const SenderComparisonBarChart: FC = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   }, [totalPages]);
 
-  // React-Select custom styles.
-  const customSelectStyles = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    control: (provided: any) => ({
-      ...provided,
-      backgroundColor: 'transparent',
-      border: 'none',
-      boxShadow: 'none',
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginLeft: '4px',
-      textDecoration: 'underline',
-      textUnderlineOffset: '3px',
-      marginRight: '4px',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    valueContainer: (provided: any) => ({
-      ...provided,
-      padding: '0px',
-      flex: '1 1 auto',
-    }),
-    indicatorSeparator: () => ({ display: 'none' }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dropdownIndicator: (provided: any) => ({
-      ...provided,
-      padding: '6px',
-      marginLeft: '-5px',
-      color: darkMode ? 'white' : 'black',
-      display: 'none',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: darkMode ? '#333' : 'white',
-      color: darkMode ? 'white' : 'black',
-      boxShadow: 'none',
-      width: 'auto',
-      minWidth: 'fit-content',
-      border: darkMode ? '1px solid white' : '1px solid black',
-      borderRadius: '0',
-      fontSize: '0.9rem',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isHover
-        ? darkMode
-          ? '#777'
-          : '#ddd'
-        : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-          ? darkMode
-            ? '#555'
-            : '#eee'
-          : darkMode
-            ? '#333'
-            : 'white',
-      color: darkMode ? 'white' : 'black',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: darkMode ? 'white' : 'black',
-    }),
-  };
-
   const { t } = useTranslation();
 
   return (
@@ -384,8 +320,9 @@ const SenderComparisonBarChart: FC = () => {
             onChange={(selected) => setSelectedProperty(selected?.key || properties[0].key)}
             options={properties}
             isSearchable={false}
-            styles={customSelectStyles}
+            styles={getCustomSelectStyles(darkMode)}
           />
+          <span>{t('BarChartComp.title')}</span>
         </h2>
         <button
           className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${

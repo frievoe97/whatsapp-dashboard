@@ -144,7 +144,7 @@ const FileUploadMobile: React.FC = () => {
 
         <button
           onClick={toggleDarkMode}
-          className={`px-1 py-1 border mr-2 rounded-none flex items-center hover:border-current ${
+          className={`px-1 py-1 border rounded-none flex items-center hover:border-current ${
             darkMode
               ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
               : 'bg-white text-black border-black hover:bg-gray-200'
@@ -153,16 +153,18 @@ const FileUploadMobile: React.FC = () => {
           {darkMode ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
-        <button
-          onClick={toggleExpanded}
-          className={`px-1 py-1 border rounded-none flex items-center hover:border-current ${
-            darkMode
-              ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
-              : 'bg-white text-black border-black hover:bg-gray-200'
-          }`}
-        >
-          {isPanelOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
+        {metadata?.fileName && (
+          <button
+            onClick={toggleExpanded}
+            className={`px-1 py-1 border ml-2 rounded-none flex items-center hover:border-current ${
+              darkMode
+                ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+                : 'bg-white text-black border-black hover:bg-gray-200'
+            }`}
+          >
+            {isPanelOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+        )}
       </div>
 
       <InfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} darkMode={darkMode} />

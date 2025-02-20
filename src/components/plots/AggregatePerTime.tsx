@@ -222,9 +222,11 @@ const AggregatePerTimePlot: React.FC = () => {
       margin.left = 40;
     }
     const headerHeight = getTotalHeightIncludingMargin('aggregate-per-time-plot-header');
+    const titleHeight = getTotalHeightIncludingMargin('aggregate-per-time-plot-title');
     const legendHeight = getTotalHeightIncludingMargin('aggregate-per-time-plot-legend');
     const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom - headerHeight - legendHeight;
+    const innerHeight =
+      height - margin.top - margin.bottom - headerHeight - legendHeight - titleHeight;
 
     // Scales
     const xScale = d3.scalePoint<string>().domain(categories).range([0, innerWidth]).padding(0);
@@ -552,6 +554,31 @@ const AggregatePerTimePlot: React.FC = () => {
       } flex-grow py-2 pt-4 px-0 md:p-4 flex flex-col`}
       style={{ position: 'relative', minHeight: '400px', maxHeight: '550px', overflow: 'hidden' }}
     >
+      {/* Titel */}
+      <div
+        id="aggregate-per-time-plot-title"
+        className="flex flex-row justify-between mb-4 px-4 md:px-0"
+      >
+        <h2 className="font-semibold text-base md:text-lg">Aggregated Message Trends</h2>
+        <button
+          className={`h-full ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
+            darkMode ? 'text-white' : 'text-black'
+          }`}
+          onClick={() => {
+            setExpanded(!expanded);
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+          }}
+          style={{
+            background: 'transparent',
+            outline: 'none',
+            boxShadow: 'none',
+            border: 'none',
+          }}
+        >
+          {expanded ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+        </button>
+      </div>
+
       {/* Control Panel */}
       <div
         id="aggregate-per-time-plot-header"
@@ -570,7 +597,7 @@ const AggregatePerTimePlot: React.FC = () => {
             return (
               <button
                 key={item}
-                className={`px-3 py-1 md:text-base text-sm rounded-none ${buttonClass}`}
+                className={`px-2 py-1 text-xs md:text-sm rounded-none ${buttonClass}`}
                 onClick={() => setMode(item)}
               >
                 {item.charAt(0).toUpperCase() + item.slice(1)}
@@ -578,7 +605,7 @@ const AggregatePerTimePlot: React.FC = () => {
             );
           })}
         </div>
-        <div className="flex items-center w-fit md:w-auto justify-center md:justify-end space-x-2">
+        <div className="h-full flex items-center w-fit md:w-auto justify-center md:justify-end space-x-2">
           <Split
             className={`hidden md:inline-block ${
               darkMode ? 'text-white' : 'text-gray-700'
@@ -609,16 +636,17 @@ const AggregatePerTimePlot: React.FC = () => {
               if (showPercentage) setShowPercentage(false);
               setShowMerged(!showMerged);
             }}
-            className={`md:hidden p-2 rounded-none border ${
+            className={`flex items-center justify-center aspect-square h-full md:hidden p-0 rounded-none border ${
               darkMode ? 'border-white bg-gray-700' : 'border-black bg-white'
             }`}
           >
             {showMerged ? (
-              <Split className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
+              <Split size={14} className={`${darkMode ? 'text-white' : 'text-gray-700'}`} />
             ) : (
-              <Merge className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
+              <Merge size={14} className={`${darkMode ? 'text-white' : 'text-gray-700'}`} />
             )}
           </button>
+
           <Merge
             className={`hidden md:inline-block ${
               darkMode ? 'text-white' : 'text-gray-700'
@@ -649,43 +677,28 @@ const AggregatePerTimePlot: React.FC = () => {
               className="custom-switch"
             />
           </div>
+
           <button
             onClick={() => {
               if (showMerged) setShowMerged(false);
               setShowPercentage(!showPercentage);
             }}
-            className={`ml-1 md:hidden p-2 rounded-none border ${
+            className={`flex items-center justify-center aspect-square h-full md:hidden p-0 rounded-none border ${
               darkMode ? 'border-white bg-gray-700' : 'border-black bg-white'
             }`}
           >
-            {showPercentage ? (
-              <Hash className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
+            {showMerged ? (
+              <Hash size={14} className={`${darkMode ? 'text-white' : 'text-gray-700'}`} />
             ) : (
-              <Percent className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
+              <Percent size={14} className={`${darkMode ? 'text-white' : 'text-gray-700'}`} />
             )}
           </button>
+
           <Percent
             className={`hidden md:inline-block ${
               darkMode ? 'text-white' : 'text-gray-700'
             } w-4 h-4 md:w-5 md:h-5`}
           />
-          <button
-            className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
-              darkMode ? 'text-white' : 'text-black'
-            }`}
-            onClick={() => {
-              setExpanded(!expanded);
-              setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
-            }}
-            style={{
-              background: 'transparent',
-              outline: 'none',
-              boxShadow: 'none',
-              border: 'none',
-            }}
-          >
-            {expanded ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-          </button>
         </div>
       </div>
       {/* Legend */}
