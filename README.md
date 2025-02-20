@@ -374,27 +374,32 @@ To maintain a clear and structured workflow, we follow a standardized naming con
 <type>/<issue-number>-<short-description>
 ```
 
-### 🚀 Feature Branches  
+### 🚀 Feature Branches
+
 **When to use:** When developing a new feature.  
 **Format:** `feature/<ISSUE-NUMBER>-<DESCRIPTION>`  
 **Example:** `feature/50-add-better-welcome-screen`
 
-### 🛠️ Fix Branches  
+### 🛠️ Fix Branches
+
 **When to use:** When fixing a bug or an issue.  
 **Format:** `fix/<ISSUE-NUMBER>-<DESCRIPTION>`  
 **Example:** `fix/51-update-dependencies`
 
-### 🔄 Refactor Branches  
+### 🔄 Refactor Branches
+
 **When to use:** When improving existing code without adding new features.  
 **Format:** `refactor/<ISSUE-NUMBER>-<DESCRIPTION>`  
 **Example:** `refactor/60-cleanup-auth-service`
 
-### 📖 Docs Branches  
+### 📖 Docs Branches
+
 **When to use:** When updating documentation files.  
 **Format:** `docs/<ISSUE-NUMBER>-<DESCRIPTION>`  
 **Example:** `docs/72-update-api-readme`
 
-### ✅ Test Branches  
+### ✅ Test Branches
+
 **When to use:** When adding or improving tests.  
 **Format:** `test/<ISSUE-NUMBER>-<DESCRIPTION>`  
 **Example:** `test/85-add-user-service-tests`
