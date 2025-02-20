@@ -9,6 +9,10 @@ import { initReactI18next } from 'react-i18next';
 const resources = {
   en: {
     translation: {
+      WelcomeScreen: {
+        title: 'Welcome to the WhatsApp Dashboard!',
+        subtitle: 'Upload your chat and explore interactive visualizations!',
+      },
       General: {
         noDataAvailable: 'No Data Available.',
       },
@@ -73,6 +77,10 @@ const resources = {
   },
   de: {
     translation: {
+      WelcomeScreen: {
+        title: 'Willkommen auf dem WhatsApp Dashboard!',
+        subtitle: 'Lade deinen Chat hoch und entdecken die interaktiven Visualisierungen!',
+      },
       General: {
         noDataAvailable: 'Keine Daten verfügbar.',
       },

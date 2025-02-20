@@ -170,38 +170,39 @@ const FileUploadMobile: React.FC = () => {
       {isPanelOpen && (
         <>
           {/* File Upload Section */}
-          <div className="text-sm w-full flex items-center justify-between rounded-none">
-            <label
-              htmlFor="file-upload-mobile"
-              className={`whitespace-nowrap cursor-pointer px-4 py-2 border rounded-none ${
-                metadata?.fileName ? '' : 'w-full text-center'
-              } ${
-                darkMode
-                  ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
-                  : 'bg-white text-black border-black hover:bg-gray-200'
-              } dark:hover:bg-gray-600 transition-all`}
-            >
-              {t('FileUpload.selectFile')}
-            </label>
-            <input
-              id="file-upload-mobile"
-              type="file"
-              accept=".txt"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleFileUpload(
-                  e,
-                  setOriginalMessages,
-                  setMetadata,
-                  setIsPanelOpen,
-                  setUseShortNames,
-                  tempSetUseShortNames,
-                )
-              }
-            />
-            {metadata?.fileName && (
-              <>
+          {metadata?.fileName && (
+            <>
+              <div className="text-sm w-full flex items-center justify-between rounded-none">
+                <label
+                  htmlFor="file-upload-mobile"
+                  className={`whitespace-nowrap cursor-pointer px-4 py-2 border rounded-none ${
+                    metadata?.fileName ? '' : 'w-full text-center'
+                  } ${
+                    darkMode
+                      ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+                      : 'bg-white text-black border-black hover:bg-gray-200'
+                  } dark:hover:bg-gray-600 transition-all`}
+                >
+                  {t('FileUpload.selectFile')}
+                </label>
+                <input
+                  id="file-upload-mobile"
+                  type="file"
+                  accept=".txt"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    handleFileUpload(
+                      e,
+                      setOriginalMessages,
+                      setMetadata,
+                      setIsPanelOpen,
+                      setUseShortNames,
+                      tempSetUseShortNames,
+                    )
+                  }
+                />
+
                 <span
                   ref={filenameRef}
                   id="fileupload-mobile-filename-text"
@@ -230,9 +231,9 @@ const FileUploadMobile: React.FC = () => {
                 >
                   <Trash2 size={20} />
                 </button>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
 
           {/* Filter Section */}
           {metadata?.fileName && (

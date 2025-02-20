@@ -140,7 +140,7 @@ const FileUpload: React.FC = () => {
       <InfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} darkMode={darkMode} />
 
       {/* Header */}
-      <div className="flex items-center h-8 rounded-none mb-4">
+      <div className={`flex items-center h-8 rounded-none ${metadata?.fileName ? 'mb-4' : ''} `}>
         <button
           onClick={() => setIsInfoOpen((prev) => !prev)}
           className={`px-2 py-1 border rounded-none flex items-center hover:border-current ${
@@ -174,44 +174,50 @@ const FileUpload: React.FC = () => {
         </button>
       </div>
 
-      <div className={`border rounded-none ${darkMode ? 'border-white' : 'border-black'}`}>
+      <div
+        className={`rounded-none ${darkMode ? 'border-white' : 'border-black'}  ${
+          metadata?.fileName ? 'border' : ''
+        } `}
+      >
         {/* File Upload Row */}
         <div
-          className={`flex items-center justify-between p-4
+          className={`flex items-center justify-between  ${metadata?.fileName ? 'p-4' : ''}
             `}
         >
           <div className="flex items-center">
-            <label
-              htmlFor="file-upload"
-              className={`cursor-pointer px-4 py-2 border rounded-none ${
-                metadata?.fileName ? '' : 'w-full text-center'
-              } ${
-                darkMode
-                  ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
-                  : 'bg-white text-black border-black hover:bg-gray-200'
-              } transition-all`}
-            >
-              {t('FileUpload.selectFile')}
-            </label>
-            <input
-              id="file-upload"
-              type="file"
-              accept=".txt"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleFileUpload(
-                  e,
-                  setOriginalMessages,
-                  setMetadata,
-                  setIsPanelOpen,
-                  setUseShortNames,
-                  tempSetUseShortNames,
-                )
-              }
-            />
             {metadata?.fileName && (
-              <span className="text-sm ml-4 rounded-none">{metadata.fileName}</span>
+              <>
+                <label
+                  htmlFor="file-upload"
+                  className={`cursor-pointer px-4 py-2 border rounded-none ${
+                    metadata?.fileName ? '' : 'w-full text-center'
+                  } ${
+                    darkMode
+                      ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
+                      : 'bg-white text-black border-black hover:bg-gray-200'
+                  } transition-all`}
+                >
+                  {t('FileUpload.selectFile')}
+                </label>
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept=".txt"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    handleFileUpload(
+                      e,
+                      setOriginalMessages,
+                      setMetadata,
+                      setIsPanelOpen,
+                      setUseShortNames,
+                      tempSetUseShortNames,
+                    )
+                  }
+                />
+                <span className="text-sm ml-4 rounded-none">{metadata.fileName}</span>
+              </>
             )}
           </div>
           {metadata?.fileName && (
