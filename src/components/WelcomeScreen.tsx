@@ -55,20 +55,19 @@ export default function WelcomeScreen() {
       }`}
     >
       <div>
-        {' '}
         <h1 className="text-3xl font-bold">{t('WelcomeScreen.title')}</h1>
         <h2 className="text-center mt-4">{t('WelcomeScreen.subtitle')}</h2>
       </div>
 
-      {/* Carousel container with responsive height */}
-      <div className="w-full max-w-3xl h-fit md:h-64 lg:h-80 xl:h-96 mt-6 relative overflow-hidden">
+      {/* Carousel container with fixed responsive height */}
+      <div className="w-full max-w-3xl h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 mt-6 relative overflow-hidden">
         <Swiper
           modules={[Autoplay]}
           autoplay={{ delay: 3000, disableOnInteraction: false }}
           loop={true}
           centeredSlides={true}
           speed={750}
-          className="h-fit md:h-full"
+          className="h-full"
         >
           {images.map((src, index) => (
             <SwiperSlide key={index} className="flex items-center justify-center">
