@@ -4,7 +4,7 @@
 <!-- Light Mode GIF -->
 <!-- <p align="center"><img src="https://github.com/user-attachments/assets/0aceb04f-1748-468f-aa07-cfa27ce6814f#gh-light-mode-only" width="500"></p> -->
 
-# WhatsApp Dashboard
+# Chat Visualizer
 
 ![React](https://img.shields.io/badge/react-18.3.1-blue)
 ![D3.js](https://img.shields.io/badge/d3-7.9.0-orange)
@@ -32,11 +32,11 @@
 
 ## Overview
 
-**WhatsApp Dashboard** is a powerful, interactive web application built with React that lets you analyze and visualize your WhatsApp chat data in an intuitive and engaging way. Explore messaging patterns, sender statistics, sentiment trends, emoji usage, and more with ease. Plus, all data processing happens locally in your browser, ensuring your privacy and security.
+**Chat Visualizer** is a powerful, interactive web application built with React that lets you analyze and visualize your WhatsApp chat data in an intuitive and engaging way. Explore messaging patterns, sender statistics, sentiment trends, emoji usage, and more with ease. Plus, all data processing happens locally in your browser, ensuring your privacy and security.
 
 ## Live Demo
 
-Experience it live: [WhatsApp Dashboard](https://whatsapp-dashboard.friedrichvoelkers.de/)
+Experience it live: [Chat Visualizer](https://chat-visualizer.de/)
 
 ## Features
 
@@ -117,7 +117,7 @@ When creating a new plot, please consider the following:
 
 ## Available Plots and Their Functionality
 
-Below is an overview of the different plots available in the WhatsApp Dashboard, along with a description of their functionality. For each plot, you can preview the appearance in both Dark Mode and Light Mode.
+Below is an overview of the different plots available in the Chat Visualizer, along with a description of their functionality. For each plot, you can preview the appearance in both Dark Mode and Light Mode.
 
 ---
 
@@ -321,7 +321,7 @@ This heatmap compares the total number of messages across all participants. You 
 
 ## Message Filtering Options
 
-The WhatsApp Dashboard offers a comprehensive set of filters that allow you to refine the messages used in the analysis. Use these filters to focus on specific time periods, participants, and more, ensuring that the visualizations reflect the data most relevant to you.
+The Chat Visualizer offers a comprehensive set of filters that allow you to refine the messages used in the analysis. Use these filters to focus on specific time periods, participants, and more, ensuring that the visualizations reflect the data most relevant to you.
 
 - **Start Date and End Date:**  
   Specify the time period for the messages to be included in the analysis.

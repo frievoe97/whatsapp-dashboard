@@ -140,7 +140,7 @@ const FileUploadMobile: React.FC = () => {
         >
           <Info size={16} />
         </button>
-        <div className="flex-grow text-center text-lg font-semibold">WhatsApp Dashboard</div>
+        <div className="flex-grow text-center text-lg font-semibold">Chat Visualizer</div>
 
         <button
           onClick={toggleDarkMode}

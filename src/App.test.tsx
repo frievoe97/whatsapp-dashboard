@@ -1,7 +1,7 @@
 //////////////////////////////
 // AggregatePerTimePlot.test.tsx
 //
-// This file contains tests for various chart components used in the WhatsApp Dashboard.
+// This file contains tests for various chart components used in the Chat Visualizer.
 // Each test verifies that a specific component renders the expected SVG or DIV element
 // after loading, using a dummy ChatContext for testing purposes.
 //////////////////////////////
