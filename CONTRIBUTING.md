@@ -1,4 +1,4 @@
-Thank you for your interest in contributing to **WhatsApp Dashboard**! This project is an open-source React application that enables users to analyze and visualize WhatsApp chat data securely and privately. We welcome all contributions—whether you want to fix a bug, propose a new feature, or improve our documentation.
+Thank you for your interest in contributing to **Chat Visualizer**! This project is an open-source React application that enables users to analyze and visualize WhatsApp chat data securely and privately. We welcome all contributions—whether you want to fix a bug, propose a new feature, or improve our documentation.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ Thank you for your interest in contributing to **WhatsApp Dashboard**! This proj
 
 ## Project Overview
 
-**WhatsApp Dashboard** is a React-based web application that processes `.txt` files exported from WhatsApp. Users can visualize, analyze, and explore their chat data locally, with no data sent to external servers.
+**Chat Visualizer** is a React-based web application that processes `.txt` files exported from WhatsApp. Users can visualize, analyze, and explore their chat data locally, with no data sent to external servers.
 
 ## Getting Started
 
@@ -102,4 +102,4 @@ This project is licensed under the [MIT License](./LICENSE.txt), with an additio
 - For any questions, suggestions, or discussions, please open a [GitHub Issue](../../issues).
 - We primarily use GitHub Issues for communication and will do our best to respond promptly.
 
-Thank you for contributing to **WhatsApp Dashboard**—your support and interest make this project better!!!
+Thank you for contributing to **Chat Visualizer**—your support and interest make this project better!!!

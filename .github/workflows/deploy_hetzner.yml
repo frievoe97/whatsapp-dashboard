@@ -1,4 +1,4 @@
-name: Deploy React App to FTP
+name: Deploy React App to SFTP
 
 on:
   push:
@@ -30,8 +30,8 @@ jobs:
       - name: SFTP uploader
         uses: wangyucode/sftp-upload-action@v2.0.2
         with:
-          host: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          host: ${{ secrets.SFTP_HOST_HETZNER }}
+          username: ${{ secrets.SFTP_USERNAME_HETZNER }}
+          password: ${{ secrets.SFTP_PASSWORD_HETZNER }}
           localDir: './dist'
-          remoteDir: '/whatsapp-dashboard'
+          remoteDir: '/public_html'

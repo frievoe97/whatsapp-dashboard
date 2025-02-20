@@ -9,6 +9,7 @@ import { useChat } from '../../context/ChatContext';
 import { ChatMetadata } from '../../types/chatTypes';
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
+import { getCustomSelectStyles } from '../../config/constants';
 
 ////////////// Types & Constants ////////////////
 /**
@@ -331,71 +332,6 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     { value: 'Worst', label: 'Worst' },
   ];
 
-  // Custom styling for the react-select component.
-  const customSelectStyles = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    control: (provided: any) => ({
-      ...provided,
-      backgroundColor: 'transparent',
-      border: 'none',
-      boxShadow: 'none',
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginLeft: '4px',
-      textDecoration: 'underline',
-      textUnderlineOffset: '3px',
-      marginRight: '4px',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    valueContainer: (provided: any) => ({
-      ...provided,
-      padding: '0px',
-      flex: '1 1 auto',
-    }),
-    indicatorSeparator: () => ({ display: 'none' }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dropdownIndicator: (provided: any) => ({
-      ...provided,
-      padding: '6px',
-      marginLeft: '-5px',
-      color: darkMode ? 'white' : 'black',
-      display: 'none',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: darkMode ? '#333' : 'white',
-      color: darkMode ? 'white' : 'black',
-      boxShadow: 'none',
-      width: 'auto',
-      minWidth: 'fit-content',
-      border: darkMode ? '1px solid white' : '1px solid black',
-      borderRadius: '0',
-      fontSize: '0.9rem',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isHover
-        ? darkMode
-          ? '#777'
-          : '#ddd'
-        : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-          ? darkMode
-            ? '#555'
-            : '#eee'
-          : darkMode
-            ? '#333'
-            : 'white',
-      color: darkMode ? 'white' : 'black',
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: darkMode ? 'white' : 'black',
-    }),
-  };
-
   const { t } = useTranslation();
   const titleParts = t('SentimentWord.title', {
     wordCategory: showBest ? 'Best' : 'Worst',
@@ -419,7 +355,7 @@ const SentimentWordsPlot: FC = (): ReactElement => {
             onChange={(selected) => setShowBest(selected?.value === 'Best')}
             options={options}
             isSearchable={false}
-            styles={customSelectStyles}
+            styles={getCustomSelectStyles(darkMode)}
           />
           <span>{titleParts[2]}</span>
         </h2>

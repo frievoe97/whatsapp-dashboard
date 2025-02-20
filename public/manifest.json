@@ -1,6 +1,6 @@
 {
-  "name": "WhatsApp Dashboard",
-  "short_name": "WA Dashboard",
+  "name": "Chat Visualizer",
+  "short_name": "Chat Visualizer",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

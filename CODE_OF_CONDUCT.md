@@ -1,6 +1,6 @@
 ## Introduction
 
-Our goal is to foster an open and welcoming environment for everyone interested in **WhatsApp Dashboard**. Although we have not adopted a formal code of conduct framework at this time, we expect contributors to interact with respect and professionalism.
+Our goal is to foster an open and welcoming environment for everyone interested in **Chat Visualizer**. Although we have not adopted a formal code of conduct framework at this time, we expect contributors to interact with respect and professionalism.
 
 ## Our Pledge
 
@@ -39,4 +39,4 @@ This Code of Conduct applies to all project spaces, including Issues, Pull Reque
 
 We appreciate your cooperation in helping us create a respectful community. As the project evolves, we may adopt a more formal Code of Conduct and enforcement policy.
 
-Thank you for supporting a friendly, positive environment for everyone involved in **WhatsApp Dashboard**.
+Thank you for supporting a friendly, positive environment for everyone involved in **Chat Visualizer**.

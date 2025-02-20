@@ -10,7 +10,7 @@ const resources = {
   en: {
     translation: {
       WelcomeScreen: {
-        title: 'Welcome to the WhatsApp Dashboard!',
+        title: 'Welcome to the Chat Visualizer!',
         subtitle: 'Upload your chat and explore interactive visualizations!',
       },
       General: {

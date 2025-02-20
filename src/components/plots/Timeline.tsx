@@ -192,10 +192,13 @@ function useTimelineChart(
       margin.right = 20;
       margin.left = 40;
     }
+
+    const titleHeight = getTotalHeightIncludingMargin('timeline-plot-title');
     const headerHeight = getTotalHeightIncludingMargin('timeline-plot-header');
     const legendHeight = getTotalHeightIncludingMargin('timeline-plot-legend');
     const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom - headerHeight - legendHeight;
+    const innerHeight =
+      height - margin.top - margin.bottom - headerHeight - legendHeight - titleHeight;
     if (filteredData.every((d) => d.values.length === 0)) return;
 
     // Setup X and Y scales based on computed dates and data values
@@ -643,6 +646,28 @@ const Timeline: React.FC = () => {
         overflow: 'hidden',
       }}
     >
+      {/* Titel */}
+      <div id="timeline-plot-title" className="flex flex-row justify-between mb-4 px-4 md:px-0">
+        <h2 className="font-semibold text-base md:text-lg">Message Timeline</h2>
+        <button
+          className={`h-full ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
+            darkMode ? 'text-white' : 'text-black'
+          }`}
+          onClick={() => {
+            setExpanded(!expanded);
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+          }}
+          style={{
+            background: 'transparent',
+            outline: 'none',
+            boxShadow: 'none',
+            border: 'none',
+          }}
+        >
+          {expanded ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+        </button>
+      </div>
+
       {/* Header with controls */}
       <div
         id="timeline-plot-header"
@@ -651,7 +676,7 @@ const Timeline: React.FC = () => {
         {!uniqueYearsLessThanThree ? (
           <div className="flex space-x-2 mt-0">
             <button
-              className={`px-3 py-1 md:text-base text-sm rounded-none ${
+              className={`px-2 py-1 text-xs md:text-sm rounded-none ${
                 mode === 'year'
                   ? darkMode
                     ? 'bg-white text-black border border-gray-300 hover:border-gray-300'
@@ -665,7 +690,7 @@ const Timeline: React.FC = () => {
               Year
             </button>
             <button
-              className={`px-3 py-1 md:text-base text-sm rounded-none ${
+              className={`px-2 py-1 text-xs md:text-sm rounded-none ${
                 mode === 'month'
                   ? darkMode
                     ? 'bg-white text-black border border-gray-300 hover:border-gray-300'
@@ -682,7 +707,7 @@ const Timeline: React.FC = () => {
         ) : (
           <div></div>
         )}
-        <div className="flex items-center w-fit md:w-auto justify-center md:justify-end space-x-2">
+        <div className="h-full flex items-center w-fit md:w-auto justify-center md:justify-end space-x-2">
           <Split
             className={`hidden md:inline-block ${
               darkMode ? 'text-white' : 'text-gray-700'
@@ -713,14 +738,14 @@ const Timeline: React.FC = () => {
               if (showPercentage) setShowPercentage(false);
               setShowMerged(!showMerged);
             }}
-            className={`md:hidden p-2 rounded-none border ${
+            className={`flex items-center justify-center aspect-square h-full md:hidden p-0 rounded-none border ${
               darkMode ? 'border-white bg-gray-700' : 'border-black bg-white'
             }`}
           >
             {showMerged ? (
-              <Split className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
+              <Split size={14} className={`${darkMode ? 'text-white' : 'text-gray-700'}`} />
             ) : (
-              <Merge className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
+              <Merge size={14} className={`${darkMode ? 'text-white' : 'text-gray-700'}`} />
             )}
           </button>
           <Merge
@@ -758,14 +783,14 @@ const Timeline: React.FC = () => {
               if (showMerged) setShowMerged(false);
               setShowPercentage(!showPercentage);
             }}
-            className={`ml-1 md:hidden p-2 rounded-none border ${
+            className={`flex items-center justify-center aspect-square h-full md:hidden p-0 rounded-none border ${
               darkMode ? 'border-white bg-gray-700' : 'border-black bg-white'
             }`}
           >
-            {showPercentage ? (
-              <Hash className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
+            {showMerged ? (
+              <Hash size={14} className={`${darkMode ? 'text-white' : 'text-gray-700'}`} />
             ) : (
-              <Percent className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
+              <Percent size={14} className={`${darkMode ? 'text-white' : 'text-gray-700'}`} />
             )}
           </button>
           <Percent
@@ -773,23 +798,6 @@ const Timeline: React.FC = () => {
               darkMode ? 'text-white' : 'text-gray-700'
             } w-4 h-4 md:w-5 md:h-5`}
           />
-          <button
-            className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
-              darkMode ? 'text-white' : 'text-black'
-            }`}
-            onClick={() => {
-              setExpanded(!expanded);
-              setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
-            }}
-            style={{
-              background: 'transparent',
-              outline: 'none',
-              boxShadow: 'none',
-              border: 'none',
-            }}
-          >
-            {expanded ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-          </button>
         </div>
       </div>
       {/* Legend displaying sender colors */}

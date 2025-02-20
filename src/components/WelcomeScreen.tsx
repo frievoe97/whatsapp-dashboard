@@ -28,11 +28,11 @@ export default function WelcomeScreen() {
     setUseShortNames,
     tempSetUseShortNames,
   } = useChat();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fileInputRef = useRef(null);
 
   // Define indices (0-based) of images to skip
-  const skipIndices = [2, 3, 5, 6, 8];
+  const skipIndices = [2, 3, 4, 5, 6, 8];
 
   // Create all image paths
   const allImages = Array.from(
@@ -46,6 +46,8 @@ export default function WelcomeScreen() {
   // Determine container background colors for gradient overlays
   const containerBgColor = darkMode ? '#1F2937' : '#ffffff'; // gray-800 or white
 
+  console.log('Language: ', i18n.language);
+
   return (
     <div
       className={`p-2 w-full h-full flex flex-col items-center justify-around  ${
@@ -53,20 +55,19 @@ export default function WelcomeScreen() {
       }`}
     >
       <div>
-        {' '}
         <h1 className="text-3xl font-bold">{t('WelcomeScreen.title')}</h1>
         <h2 className="text-center mt-4">{t('WelcomeScreen.subtitle')}</h2>
       </div>
 
-      {/* Carousel container with responsive height */}
-      <div className="w-full max-w-3xl h-fit md:h-64 lg:h-80 xl:h-96 mt-6 relative overflow-hidden">
+      {/* Carousel container with fixed responsive height */}
+      <div className="w-full max-w-3xl h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 mt-6 relative overflow-hidden">
         <Swiper
           modules={[Autoplay]}
           autoplay={{ delay: 3000, disableOnInteraction: false }}
           loop={true}
           centeredSlides={true}
           speed={750}
-          className="h-fit md:h-full"
+          className="h-full"
         >
           {images.map((src, index) => (
             <SwiperSlide key={index} className="flex items-center justify-center">

@@ -116,7 +116,7 @@ function useEqualRowHeights(
 /**
  * Component: App
  *
- * This is the root component for the WhatsApp Dashboard application. It sets up SEO tags,
+ * This is the root component for the Chat Visualizer application. It sets up SEO tags,
  * manages dark mode, renders file upload components for desktop and mobile, and displays
  * various chat analysis plots based on the uploaded data.
  *
@@ -155,18 +155,15 @@ const App: React.FC = () => {
         <title>{t('App.title')}</title>
         <meta
           name="description"
-          content="Analyze your WhatsApp chats with detailed charts and statistics."
+          content="Visualize your WhatsApp chats with detailed charts and statistics."
         />
-        <meta property="og:title" content="WhatsApp Dashboard" />
+        <meta property="og:title" content="Chat Visualizer" />
         <meta
           property="og:description"
           content="Visualize your WhatsApp chats with interactive graphics."
         />
-        <meta
-          property="og:image"
-          content="https://whatsapp-dashboard.friedrichvoelkers.de/preview.png"
-        />
-        <meta property="og:url" content="https://whatsapp-dashboard.friedrichvoelkers.de" />
+        <meta property="og:image" content="https://chat-visualizer.de/preview.png" />
+        <meta property="og:url" content="https://chat-visualizer.de" />
         <meta name="robots" content="index, follow" />
       </Helmet>
 

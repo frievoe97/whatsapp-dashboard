@@ -2,8 +2,8 @@ RewriteEngine On
 
 # Weiterleitung von www auf non-www
 RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
-RewriteRule ^(.*)$ https://whatsapp-dashboard.friedrichvoelkers.de/$1 [R=301,L]
+RewriteRule ^(.*)$ https://chat-visualizer.de/$1 [R=301,L]
 
 # Weiterleitung von HTTP auf HTTPS
 RewriteCond %{HTTPS} !=on
-RewriteRule ^(.*)$ https://whatsapp-dashboard.friedrichvoelkers.de/$1 [R=301,L]
+RewriteRule ^(.*)$ https://chat-visualizer.de/$1 [R=301,L]
