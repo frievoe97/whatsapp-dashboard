@@ -17,11 +17,11 @@ const resources = {
         noDataAvailable: 'No Data Available.',
       },
       App: {
-        placeholder: 'Please upload a WhatsApp chat using "Select File".',
-        title: 'WhatsApp Dashboard – Visualize your Chats',
+        placeholder: 'Please upload a WhatsApp chat using "Upload Chat".',
+        title: 'Chat Visualizer – Visualize your Chats',
       },
       FileUpload: {
-        selectFile: 'Select File',
+        selectFile: 'Upload Chat',
         selectSenders: 'Select Senders',
         minimumMessageShare: 'Message Share (%)',
         startDate: 'Start Date',
@@ -78,18 +78,18 @@ const resources = {
   de: {
     translation: {
       WelcomeScreen: {
-        title: 'Willkommen auf dem WhatsApp Dashboard!',
+        title: 'Willkommen bei dem Chat Visualizer!',
         subtitle: 'Lade deinen Chat hoch und entdecken die interaktiven Visualisierungen!',
       },
       General: {
         noDataAvailable: 'Keine Daten verfügbar.',
       },
       App: {
-        placeholder: 'Bitte laden Sie einen WhatsApp-Chat über „Datei auswählen“ hoch.',
+        placeholder: 'Bitte laden Sie einen WhatsApp-Chat über „Chat hochladen“ hoch.',
         title: 'WhatsApp Dashboard – Visualisieren Sie Ihre Chats',
       },
       FileUpload: {
-        selectFile: 'Datei auswählen',
+        selectFile: 'Chat hochladen',
         selectSenders: 'Absender',
         minimumMessageShare: 'Mindestanteil',
         startDate: 'Startdatum',
@@ -139,6 +139,9 @@ const resources = {
       },
       Stats: {
         title: 'Nachrichtenstatistik pro Person',
+      },
+      BarChartComp: {
+        title: ' pro Person',
       },
     },
   },
