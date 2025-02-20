@@ -17,11 +17,11 @@ const resources = {
         noDataAvailable: 'No Data Available.',
       },
       App: {
-        placeholder: 'Please upload a WhatsApp chat using "Select File".',
+        placeholder: 'Please upload a WhatsApp chat using "Upload Chat".',
         title: 'Chat Visualizer – Visualize your Chats',
       },
       FileUpload: {
-        selectFile: 'Select File',
+        selectFile: 'Upload Chat',
         selectSenders: 'Select Senders',
         minimumMessageShare: 'Message Share (%)',
         startDate: 'Start Date',
@@ -73,78 +73,75 @@ const resources = {
       Stats: {
         title: 'Message Statistics per Person',
       },
-      BarChartComp: {
-        title: ' per Person',
-      },
     },
-    de: {
-      translation: {
-        WelcomeScreen: {
-          title: 'Willkommen auf dem Chat Visualizer!',
-          subtitle: 'Lade deinen Chat hoch und entdecken die interaktiven Visualisierungen!',
+  },
+  de: {
+    translation: {
+      WelcomeScreen: {
+        title: 'Willkommen bei dem Chat Visualizer!',
+        subtitle: 'Lade deinen Chat hoch und entdecken die interaktiven Visualisierungen!',
+      },
+      General: {
+        noDataAvailable: 'Keine Daten verfügbar.',
+      },
+      App: {
+        placeholder: 'Bitte laden Sie einen WhatsApp-Chat über „Chat hochladen“ hoch.',
+        title: 'WhatsApp Dashboard – Visualisieren Sie Ihre Chats',
+      },
+      FileUpload: {
+        selectFile: 'Chat hochladen',
+        selectSenders: 'Absender',
+        minimumMessageShare: 'Mindestanteil',
+        startDate: 'Startdatum',
+        endDate: 'Enddatum',
+        selectWeekdays: 'Wochentage',
+        reset: 'Zurücksetzen',
+        apply: 'Anwenden',
+        useAbbreviations: 'Abkürzungen',
+        useFullNames: 'Vollständige Namen',
+      },
+      InfoModal: {
+        InfoAndDisclaimer: {
+          title: 'Informationen',
+          content:
+            "<p class='mb-3'>Dieses Tool speichert keine Daten auf einem Server. Alle Informationen bleiben nur in Ihrem Browser. Es werden keine Nachrichten oder Statistiken hochgeladen.</p><p class='mb-3'>Dieses Projekt ist Open Source, und der gesamte Quellcode ist öffentlich auf <a href='https://github.com/frievoe97/whatsapp-dashboard' target='_blank' rel='noopener noreferrer' class='no-underline no-underline text-current hover:text-current'>GitHub</a> verfügbar.</p><p>Dieses Projekt steht unter der MIT-Lizenz. Sie dürfen den Code frei nutzen, modifizieren und verbreiten, solange die Lizenz enthalten bleibt.</p>",
         },
-        General: {
-          noDataAvailable: 'Keine Daten verfügbar.',
+        HowToExportChats: {
+          title: 'So exportieren Sie Chats',
+          content:
+            "<style>ol { list-style-type: disc; }</style><p class='mb-3'>So exportieren Sie einen WhatsApp-Chat ohne Medien:</p><h3 class='font-semibold'>iOS:</h3><ol class='list-decimal ml-4 mb-3'><li>Chat öffnen.</li><li>Auf Namen tippen.</li><li>„Chat exportieren“ wählen.</li><li>„Ohne Medien“ auswählen.</li><li>.txt-Datei speichern oder teilen.</li></ol><h3 class='font-semibold'>Android:</h3><ol class='list-decimal ml-4'><li>Chat öffnen.</li><li>Menü (drei Punkte) tippen.</li><li>„Mehr“ > „Chat exportieren“.</li><li>„Ohne Medien“ auswählen.</li><li>.txt-Datei speichern oder teilen.</li></ol>",
         },
-        App: {
-          placeholder: 'Bitte laden Sie einen WhatsApp-Chat über „Datei auswählen“ hoch.',
-          title: 'Chat Visualizer – Visualisieren Sie Ihre Chats',
+        MenuExplanation: {
+          title: 'Menüerklärung',
+          content:
+            "<p class='mb-3'>Konfigurieren Sie diese Einstellungen:</p><ul class='list-disc list-inside'><li><strong>Datumsfilter:</strong> Zeitraum auswählen.</li><li><strong>Absender:</strong> Teilnehmer festlegen.</li><li><strong>Wochentagsauswahl:</strong> Nach Tagen filtern.</li><li><strong>Mindestanteil:</strong> Nachrichtenanteil begrenzen.</li><li><strong>Abkürzungen:</strong>Verwende Abkürzungen für die Namen</li></ul>",
         },
-        FileUpload: {
-          selectFile: 'Datei auswählen',
-          selectSenders: 'Absender',
-          minimumMessageShare: 'Mindestanteil',
-          startDate: 'Startdatum',
-          endDate: 'Enddatum',
-          selectWeekdays: 'Wochentage',
-          reset: 'Zurücksetzen',
-          apply: 'Anwenden',
-          useAbbreviations: 'Abkürzungen',
-          useFullNames: 'Vollständige Namen',
-        },
-        InfoModal: {
-          InfoAndDisclaimer: {
-            title: 'Informationen',
-            content:
-              "<p class='mb-3'>Dieses Tool speichert keine Daten auf einem Server. Alle Informationen bleiben nur in Ihrem Browser. Es werden keine Nachrichten oder Statistiken hochgeladen.</p><p class='mb-3'>Dieses Projekt ist Open Source, und der gesamte Quellcode ist öffentlich auf <a href='https://github.com/frievoe97/whatsapp-dashboard' target='_blank' rel='noopener noreferrer' class='no-underline no-underline text-current hover:text-current'>GitHub</a> verfügbar.</p><p>Dieses Projekt steht unter der MIT-Lizenz. Sie dürfen den Code frei nutzen, modifizieren und verbreiten, solange die Lizenz enthalten bleibt.</p>",
-          },
-          HowToExportChats: {
-            title: 'So exportieren Sie Chats',
-            content:
-              "<style>ol { list-style-type: disc; }</style><p class='mb-3'>So exportieren Sie einen WhatsApp-Chat ohne Medien:</p><h3 class='font-semibold'>iOS:</h3><ol class='list-decimal ml-4 mb-3'><li>Chat öffnen.</li><li>Auf Namen tippen.</li><li>„Chat exportieren“ wählen.</li><li>„Ohne Medien“ auswählen.</li><li>.txt-Datei speichern oder teilen.</li></ol><h3 class='font-semibold'>Android:</h3><ol class='list-decimal ml-4'><li>Chat öffnen.</li><li>Menü (drei Punkte) tippen.</li><li>„Mehr“ > „Chat exportieren“.</li><li>„Ohne Medien“ auswählen.</li><li>.txt-Datei speichern oder teilen.</li></ol>",
-          },
-          MenuExplanation: {
-            title: 'Menüerklärung',
-            content:
-              "<p class='mb-3'>Konfigurieren Sie diese Einstellungen:</p><ul class='list-disc list-inside'><li><strong>Datumsfilter:</strong> Zeitraum auswählen.</li><li><strong>Absender:</strong> Teilnehmer festlegen.</li><li><strong>Wochentagsauswahl:</strong> Nach Tagen filtern.</li><li><strong>Mindestanteil:</strong> Nachrichtenanteil begrenzen.</li><li><strong>Abkürzungen:</strong>Verwende Abkürzungen für die Namen</li></ul>",
-          },
-        },
-        Emoji: {
-          title: 'Top 10 Emojis pro Person',
-        },
-        Heatmap: {
-          title: 'Nachrichten nach',
-        },
-        Sentiment: {
-          title: 'Sentiment-Analyse über die Zeit',
-        },
-        SentimentWord: {
-          title: ['Top 10 ', '{{wordCategory}}', ' Wörter pro Person'],
-          best: 'Besten',
-          worst: 'Schlechtesten',
-        },
-        WordCount: {
-          title: 'Top 10 Wörter pro Person',
-        },
-        ChordDiagram: {
-          title: 'Antwortverhalten (Top ',
-        },
-        Stats: {
-          title: 'Nachrichtenstatistik pro Person',
-        },
-        BarChartComp: {
-          title: ' pro Person',
-        },
+      },
+      Emoji: {
+        title: 'Top 10 Emojis pro Person',
+      },
+      Heatmap: {
+        title: 'Nachrichten nach',
+      },
+      Sentiment: {
+        title: 'Sentiment-Analyse über die Zeit',
+      },
+      SentimentWord: {
+        title: ['Top 10 ', '{{wordCategory}}', ' Wörter pro Person'],
+        best: 'Besten',
+        worst: 'Schlechtesten',
+      },
+      WordCount: {
+        title: 'Top 10 Wörter pro Person',
+      },
+      ChordDiagram: {
+        title: 'Antwortverhalten (Top ',
+      },
+      Stats: {
+        title: 'Nachrichtenstatistik pro Person',
+      },
+      BarChartComp: {
+        title: ' pro Person',
       },
     },
   },
