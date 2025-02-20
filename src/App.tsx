@@ -23,6 +23,7 @@ import ChordDiagram from './components/plots/ChordDiagram';
 import HeatmapMonthWeekday from './components/plots/Heatmap';
 import FileUploadMobile from './components/FileUploadMobile';
 import NewFileUploader from './components/FileUpload';
+import WelcomeScreen from './components/WelcomeScreen';
 
 ///////////////////////////////////////////////////////////////
 // Custom Hooks
@@ -184,13 +185,15 @@ const App: React.FC = () => {
           ref={containerRef}
           className="mt-4 md:h-lvh flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-between items-stretch"
         >
+          {/* p-4 px-8 */}
           {filteredMessages.length === 0 ? (
             <div
-              className={`w-full p-4 px-8 flex text-lg items-center justify-center h-full border rounded-none text-center ${
+              className={`w-full flex text-lg items-center justify-center h-full border rounded-none text-center ${
                 darkMode ? 'border-white' : 'border-black'
               }`}
             >
-              {t('App.placeholder')}
+              {/* {t('App.placeholder')} */}
+              <WelcomeScreen />
             </div>
           ) : (
             <>

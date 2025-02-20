@@ -104,7 +104,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, darkMode }) => {
   // Render Modal
   //////////////////////////////
   return (
-    <div className="p-4 fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 text-sm">
+    <div className="p-4 fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 text-sm]">
       <div
         className={`p-6 border rounded-none shadow-lg max-w-md w-full relative ${modalBgClasses}`}
       >

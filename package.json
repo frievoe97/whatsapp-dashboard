@@ -32,6 +32,7 @@
     "react-switch": "^7.0.0",
     "sentiment": "^5.0.2",
     "stopword": "^3.1.1",
+    "swiper": "^11.2.4",
     "whatsapp-chat-parser": "^4.0.2"
   },
   "devDependencies": {
