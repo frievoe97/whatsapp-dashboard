@@ -368,7 +368,7 @@ Special thanks to [Pustur](https://github.com/Pustur) for the [whatsapp-chat-par
 
 ## Repo Activity
 
-![Alt](https://repobeats.axiom.co/api/embed/9a02c54f5c7700208516e9afb7c9609fc568c1c3.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/9a02c54f5c7700208516e9afb7c9609fc568c1c3.svg 'Repobeats analytics image')
 
 ## License
 
