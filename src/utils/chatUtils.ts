@@ -7,9 +7,15 @@ import plausible from 'plausible-tracker';
 
 // Initialize Plausible tracking with the correct domain and API host
 
-console.log('Location: ', location);
+// Sets the domain for plausible tracking based on the current hostname.
+let domain = '';
+if (location.hostname.includes('whatsapp-dashboard')) {
+  domain = 'whatsapp-dashboard.friedrichvoelkers.de';
+} else if (location.hostname.includes('chat-visualizer')) {
+  domain = 'chat-visualizer.de';
+}
 const { trackEvent } = plausible({
-  domain: 'whatsapp-dashboard.friedrichvoelkers.de',
+  domain: domain,
   apiHost: 'https://plausible.friedrichvoelkers.de',
   trackLocalhost: true,
 });
