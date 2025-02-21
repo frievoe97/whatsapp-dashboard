@@ -75,6 +75,12 @@ const resources = {
       Stats: {
         title: 'Message Statistics per Person',
       },
+      AggregatePerTimePlot: {
+        title: 'Aggregated Messages per',
+      },
+      Timeline: {
+        title: 'Messages by',
+      },
     },
   },
   de: {
@@ -146,6 +152,12 @@ const resources = {
       },
       BarChartComp: {
         title: ' pro Person',
+      },
+      AggregatePerTimePlot: {
+        title: 'Aggregierte Nachrichten pro',
+      },
+      Timeline: {
+        title: 'Nachrichten nach',
       },
     },
   },

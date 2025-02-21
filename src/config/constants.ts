@@ -171,7 +171,7 @@ export const LOCALES = {
       'Dez',
     ],
     sentiment: ['Besten', 'Schlechtesten'],
-    interval: ['Stunde', 'Tag', 'Monat', 'Jahr', 'Tag'],
+    interval: ['Stunde', 'Tag', 'Monat', 'Jahr', 'Tag'], // interval[4] means 'Weekday'
     stats: {
       numberOfMessages: 'Anzahl der Nachrichten',
       averageWordsPerMessage: 'Durchschn. Wörter pro Nachricht',

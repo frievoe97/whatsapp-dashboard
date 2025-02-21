@@ -14,7 +14,7 @@ import i18n from '../../../i18n';
 ////////////// Types ////////////////
 
 // Define a type alias for valid category keys
-type CategoryKey = 'Year' | 'Month' | 'Weekday' | 'Hour' | 'Day';
+type CategoryKey = 'Year' | 'Month' | 'Weekday' | 'Hour';
 
 ////////////// Constants & Types ////////////////
 
@@ -24,7 +24,7 @@ const CATEGORIES: Record<CategoryKey, string[]> = {
   Month: LOCALES[i18n.language].monthShort,
   Weekday: LOCALES[i18n.language].weekdaysShort,
   Hour: Array.from({ length: 24 }, (_, i) => i.toString()),
-  Day: Array.from({ length: 31 }, (_, i) => (i + 1).toString()),
+  // Day: Array.from({ length: 31 }, (_, i) => (i + 1).toString()),
 };
 
 /**
@@ -50,8 +50,8 @@ function getDateValue(
       return validValues[(date.getDay() + 6) % 7];
     case 'Hour':
       return validValues[Number(time.split(':')[0])];
-    case 'Day':
-      return validValues[date.getDate() - 1];
+    // case 'Day':
+    //   return validValues[date.getDate() - 1];
     default:
       return undefined;
   }
@@ -73,7 +73,7 @@ const Heatmap: FC = () => {
   // Mapping of canonical keys to localized labels based on current locale.
   const categoryLabels: Record<CategoryKey, string> = {
     Hour: LOCALES[i18n.language].interval[0],
-    Day: LOCALES[i18n.language].interval[1],
+    // Day: LOCALES[i18n.language].interval[1],
     Month: LOCALES[i18n.language].interval[2],
     Year: LOCALES[i18n.language].interval[3],
     Weekday: LOCALES[i18n.language].interval[4],
@@ -294,10 +294,10 @@ const Heatmap: FC = () => {
       ref={containerRef}
       className={`relative border-[1px] ${
         darkMode ? 'border-gray-300 bg-gray-800 text-white' : 'border-black bg-white text-black'
-      } w-full p-4 pl-0 md:pl-4 flex min-h-[400px] md:min-h-[400px] flex-col`}
+      } w-full p-4 pl-0 md:pl-4 pt-2 md:pt-4 flex min-h-[400px] md:min-h-[400px] flex-col`}
     >
       {/* Title and Category Selectors */}
-      <div className="flex flex-row justify-between items-center w-full pl-4 md:pl-0 mb-4 ">
+      <div className="flex flex-row justify-between items-center w-full pl-4 md:pl-0 mb-2 md:mb-4 ">
         <h2 className="text-sm md:text-lg font-semibold flex items-center space-x-0">
           <span>{t('Heatmap.title')}</span>
           <Select

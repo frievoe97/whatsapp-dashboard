@@ -311,7 +311,7 @@ const SenderComparisonBarChart: FC = () => {
     <div
       id="plot-sender-comparison"
       ref={containerRef}
-      className={`border w-full flex-grow p-4 flex-col ${
+      className={`border w-full flex-grow p-4 pt-2 md:p-4 flex-col ${
         darkMode ? 'border-gray-300 bg-gray-800 text-white' : 'border-black bg-white text-black'
       } ${expanded ? 'md:basis-[3000px]' : 'md:basis-[550px]'}`}
       style={{ minHeight: '500px', maxHeight: '550px', overflow: 'hidden' }}
@@ -366,7 +366,7 @@ const SenderComparisonBarChart: FC = () => {
             <ChevronLeft className="w-6 h-6" />
           </button>
           <span className={darkMode ? 'text-white' : 'text-black'}>
-            {t('General.page')} {currentPage} {t('General.page')} {totalPages}
+            {t('General.page')} {currentPage} {t('General.of')} {totalPages}
           </span>
           <button
             onClick={handleNextPage}

@@ -347,7 +347,7 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     <div
       id="plot-sentiment-words"
       ref={containerRef}
-      className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 flex-grow ${
+      className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 pt-2 md:pt-4 flex-grow ${
         darkMode ? 'border-gray-300 bg-gray-800 text-white' : 'border-black bg-white text-black'
       }`}
       style={{ minHeight: '350px', maxHeight: '550px', overflow: 'hidden' }}
