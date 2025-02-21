@@ -5,13 +5,17 @@ import { ChatMessage, FilterOptions } from '../types/chatTypes';
 
 import plausible from 'plausible-tracker';
 
-/**
- * Plausible tracking for the Chat Visualizer.
- */
-const { trackEvent } = plausible({
-  domain: 'chat-visualizer.de',
-  apiHost: 'https://plausible.friedrichvoelkers.de',
-});
+// Check if the current URL contains "/testing"
+const isTesting = window.location.pathname.includes('/testing');
+
+// Initialize Plausible tracking with the correct domain and API host
+const { trackEvent } = isTesting
+  ? { trackEvent: () => {} } // No‑Op: tut nichts
+  : plausible({
+      domain: 'chat-visualizer.de',
+      apiHost: 'https://plausible.friedrichvoelkers.de',
+      trackLocalhost: true,
+    });
 
 ////////////////////// Utility Functions for Filter Updates ////////////////////////
 
@@ -138,6 +142,9 @@ export const handleFileUpload = (
   const file = event.target.files?.[0];
   if (!file) return;
 
+  console.log('TrackEvent: ', trackEvent);
+  trackEvent('Upload File');
+
   const reader = new FileReader();
   reader.onload = async (e) => {
     const content = e.target?.result;
@@ -153,8 +160,6 @@ export const handleFileUpload = (
       worker.onmessage = (e) => {
         const { result, error } = e.data;
         const wasError = Boolean(error);
-        const props: Record<string, string | number | boolean> = {};
-        let messageCount = 0;
 
         if (wasError) {
           console.error('Error parsing file:', error);
@@ -162,15 +167,7 @@ export const handleFileUpload = (
           setOriginalMessages(result.messages);
           setMetadata(result.metadata);
           setIsPanelOpen(false);
-          messageCount = result.messages.length;
         }
-
-        // Plausible Analytics:
-        // Add properties to the event based on the file content and parsing result.
-        if (file.size !== undefined && file.size !== null) props.fileSize = file.size;
-        if (typeof messageCount === 'number') props.messageCount = messageCount;
-        if (wasError !== undefined && wasError !== null) props.error = wasError;
-        trackEvent('Upload File', { props });
 
         // Terminate the worker when done.
         worker.terminate();
