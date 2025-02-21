@@ -54,6 +54,7 @@ const FileUploadMobile: React.FC = () => {
     tempToggleUseShortNames,
     setUseShortNames,
     tempSetUseShortNames,
+    isTesting,
   } = useChat();
 
   useEffect(() => {
@@ -201,6 +202,7 @@ const FileUploadMobile: React.FC = () => {
                       setIsPanelOpen,
                       setUseShortNames,
                       tempSetUseShortNames,
+                      isTesting,
                     )
                   }
                 />

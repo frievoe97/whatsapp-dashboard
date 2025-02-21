@@ -1,6 +1,7 @@
 // React & ReactDOM & Helmet Provider
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom'; // Neu importieren
 import { HelmetProvider } from 'react-helmet-async';
 
 // App & Context
@@ -13,18 +14,16 @@ import './index.css';
 /**
  * Providers Component
  *
- * Wraps the application with global providers: HelmetProvider for SEO and
- * ChatProvider for state management. This ensures that all children have access
- * to these contexts.
- *
- * @param children - The child components to wrap.
- * @returns The children wrapped with HelmetProvider and ChatProvider.
+ * Wraps the application with global providers: BrowserRouter for Routing, HelmetProvider for SEO and
+ * ChatProvider for state management.
  */
 // eslint-disable-next-line react-refresh/only-export-components
 const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <HelmetProvider>
-    <ChatProvider>{children}</ChatProvider>
-  </HelmetProvider>
+  <BrowserRouter>
+    <HelmetProvider>
+      <ChatProvider>{children}</ChatProvider>
+    </HelmetProvider>
+  </BrowserRouter>
 );
 
 ///////////////////// Root Element Setup //////////////////////
