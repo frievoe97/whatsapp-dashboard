@@ -47,6 +47,8 @@ const loadIgnoreLines = async (lang: string): Promise<string[]> => {
     .map((line) => line.trim())
     .filter(Boolean);
 
+  console.log('Lines: ', lines);
+
   return lines;
 };
 
