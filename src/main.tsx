@@ -1,7 +1,7 @@
 // React & ReactDOM & Helmet Provider
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom'; // Neu importieren
+import { HashRouter } from 'react-router-dom'; // Neu importieren
 import { HelmetProvider } from 'react-helmet-async';
 
 // App & Context
@@ -19,11 +19,11 @@ import './index.css';
  */
 // eslint-disable-next-line react-refresh/only-export-components
 const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <BrowserRouter>
+  <HashRouter>
     <HelmetProvider>
       <ChatProvider>{children}</ChatProvider>
     </HelmetProvider>
-  </BrowserRouter>
+  </HashRouter>
 );
 
 ///////////////////// Root Element Setup //////////////////////
