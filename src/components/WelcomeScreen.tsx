@@ -54,6 +54,7 @@ export default function WelcomeScreen() {
         darkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'
       }`}
     >
+      {/* Title and subtitle */}
       <div>
         <h1 className="text-3xl font-bold">{t('WelcomeScreen.title')}</h1>
         <h2 className="text-center mt-4">{t('WelcomeScreen.subtitle')}</h2>

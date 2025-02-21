@@ -256,7 +256,7 @@ const EmojiPlot: FC = () => {
       }`}
       style={{ minHeight: '350px', maxHeight: '550px', overflow: 'hidden' }}
     >
-      <h2 className="text-base md:text-lg font-semibold mb-4">{t('Emoji.title')}</h2>
+      <h2 className="text-sm md:text-lg font-semibold mb-3 md:mb-4">{t('Emoji.title')}</h2>
       <div className="flex-grow flex justify-center items-center flex-col">
         {filteredMessages.length === 0 ? (
           <span className="text-lg">{t('General.noDataAvailable')}</span>

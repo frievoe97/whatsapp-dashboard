@@ -138,6 +138,18 @@ const ChordDiagram: React.FC = () => {
   }, [uniqueSenders]);
 
   /**
+   * Computes the options for selecting the number of top senders.
+   * The number of options is determined by (min(sortedSenders.length, MAX_SENDERS) - 2).
+   */
+  const topCountOptions = useMemo(() => {
+    const optionCount = Math.min(sortedSenders.length, MAX_SENDERS) - 2;
+    return Array.from({ length: optionCount }, (_, i) => {
+      const num = i + 3;
+      return { value: num, label: num.toString() };
+    }).reverse();
+  }, [sortedSenders]);
+
+  /**
    * Main effect to draw or update the chord diagram when chord data, dimensions, theme, or topCount change.
    */
   useEffect(() => {
@@ -321,19 +333,18 @@ const ChordDiagram: React.FC = () => {
         className="text-base md:text-lg font-semibold mb-0 md:mb-4 flex items-center px-4 md:px-0"
       >
         <span>{t('ChordDiagram.title')}</span>
-        <Select
-          value={{ value: topCount, label: topCount.toString() }}
-          onChange={(selected) => setTopCount(Number(selected?.value))}
-          options={Array.from(
-            { length: Math.min(sortedSenders.length, MAX_SENDERS) - 2 },
-            (_, i) => {
-              const num = i + 3;
-              return { value: num, label: num.toString() };
-            },
-          ).reverse()}
-          isSearchable={false}
-          styles={getCustomSelectStyles(darkMode)}
-        />
+        {/* Conditionally render either a plain text value or a Select component if multiple options exist */}
+        {topCountOptions.length === 1 ? (
+          <span className="ml-2">{topCountOptions[0].label}</span>
+        ) : (
+          <Select
+            value={{ value: topCount, label: topCount.toString() }}
+            onChange={(selected) => setTopCount(Number(selected?.value))}
+            options={topCountOptions}
+            isSearchable={false}
+            styles={getCustomSelectStyles(darkMode)}
+          />
+        )}
         <span>)</span>
       </h2>
 

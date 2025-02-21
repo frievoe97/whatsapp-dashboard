@@ -8,41 +8,36 @@ import { ChatMessage } from '../../types/chatTypes';
 import { RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
-import { getCustomSelectStyles } from '../../config/constants';
+import { getCustomSelectStyles, LOCALES } from '../../config/constants';
+import i18n from '../../../i18n';
+
+////////////// Types ////////////////
+
+// Define a type alias for valid category keys
+type CategoryKey = 'Year' | 'Month' | 'Weekday' | 'Hour' | 'Day';
 
 ////////////// Constants & Types ////////////////
 
-/**
- * Represents the categories available for filtering the heatmap data.
- */
-type Category = 'Year' | 'Month' | 'Weekday' | 'Hour' | 'Day';
-
-/** Valid categories for filtering the heatmap data. */
-const CATEGORIES: Record<Category, string[]> = {
-  Year: [], // Filled dynamically from message years
-  Month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-  Weekday: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+/** Valid categories for filtering the heatmap data using canonical keys. */
+const CATEGORIES: Record<CategoryKey, string[]> = {
+  Year: [], // Dynamically filled with message years
+  Month: LOCALES[i18n.language].monthShort,
+  Weekday: LOCALES[i18n.language].weekdaysShort,
   Hour: Array.from({ length: 24 }, (_, i) => i.toString()),
   Day: Array.from({ length: 31 }, (_, i) => (i + 1).toString()),
 };
 
 /**
- * Heatmap displays the frequency of messages along two categorical axes.
- * The component allows switching the x and y categories via react-select.
- */
-
-////////////// Helper Functions ////////////////
-/**
- * Converts a Date object to a corresponding string value based on a given category.
+ * Converts a Date object to a corresponding string value based on a given canonical category.
  * @param date The date to convert.
- * @param category The category (e.g., "Year", "Month", "Weekday", "Hour", "Day").
+ * @param category The canonical category (e.g., "Year", "Month", "Weekday", "Hour", "Day").
  * @param validValues Array of valid values for the category.
- * @param time The time string (used for Hour category).
+ * @param time The time string (used for "Hour" category).
  * @returns The corresponding string value or undefined.
  */
 function getDateValue(
   date: Date,
-  category: string,
+  category: CategoryKey,
   validValues: string[],
   time: string,
 ): string | undefined {
@@ -73,10 +68,20 @@ const Heatmap: FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dimensions = useResizeObserver(containerRef);
+  const { t } = useTranslation();
 
-  // State for category selection and rotation
-  const [xCategory, setXCategory] = useState<Category>('Hour');
-  const [yCategory, setYCategory] = useState<Category>('Weekday');
+  // Mapping of canonical keys to localized labels based on current locale.
+  const categoryLabels: Record<CategoryKey, string> = {
+    Hour: LOCALES[i18n.language].interval[0],
+    Day: LOCALES[i18n.language].interval[1],
+    Month: LOCALES[i18n.language].interval[2],
+    Year: LOCALES[i18n.language].interval[3],
+    Weekday: LOCALES[i18n.language].interval[4],
+  };
+
+  // State for category selection and rotation using canonical keys.
+  const [xCategory, setXCategory] = useState<CategoryKey>('Hour');
+  const [yCategory, setYCategory] = useState<CategoryKey>('Weekday');
   const [, setIsDesktop] = useState<boolean>(window.innerWidth >= 768);
   const [rotation, setRotation] = useState(0);
 
@@ -86,21 +91,26 @@ const Heatmap: FC = () => {
     setRotation((prev) => prev + 180);
   };
 
+  /**
+   * Swaps the x and y category selections.
+   */
   function swapXAndYCategories() {
     const temp = xCategory;
     setXCategory(yCategory);
     setYCategory(temp);
   }
 
-  // Derived data: extract years from filteredMessages and update the Year category.
-  const years = Array.from(
-    new Set(filteredMessages.map((msg: ChatMessage) => new Date(msg.date).getFullYear())),
-  )
-    .sort((a, b) => a - b)
-    .map(String);
+  // Derived data: extract years from filteredMessages and update the "Year" category dynamically.
+  const years = useMemo(() => {
+    return Array.from(
+      new Set(filteredMessages.map((msg: ChatMessage) => new Date(msg.date).getFullYear())),
+    )
+      .sort((a, b) => a - b)
+      .map(String);
+  }, [filteredMessages]);
 
   // Update the CATEGORIES object for "Year" dynamically.
-  const dynamicCategories = useMemo<Record<Category, string[]>>(
+  const dynamicCategories = useMemo<Record<CategoryKey, string[]>>(
     () => ({
       ...CATEGORIES,
       Year: years.length > 0 ? years : ['2024'],
@@ -112,7 +122,7 @@ const Heatmap: FC = () => {
   const aggregatedData = useMemo(() => {
     const dataMap: Record<string, Record<string, number>> = {};
 
-    // Initialisiere alle Kombinationen für X- und Y-Kategorien.
+    // Initialize all combinations for x and y categories.
     dynamicCategories[xCategory].forEach((xVal) => {
       dataMap[xVal] = {};
       dynamicCategories[yCategory].forEach((yVal) => {
@@ -172,7 +182,7 @@ const Heatmap: FC = () => {
       .style('color', darkMode ? '#fff' : '#000');
   }, [darkMode]);
 
-  // Set desktop state on dimensions change.
+  // Update desktop state on dimensions change.
   useEffect(() => {
     if (!dimensions) return;
     setIsDesktop(window.innerWidth >= 768);
@@ -276,8 +286,6 @@ const Heatmap: FC = () => {
       );
   }, [aggregatedData, dimensions, darkMode, xCategory, yCategory, dynamicCategories]);
 
-  const { t } = useTranslation();
-
   // -------------
   // Rendering
   // -------------
@@ -290,31 +298,31 @@ const Heatmap: FC = () => {
     >
       {/* Title and Category Selectors */}
       <div className="flex flex-row justify-between items-center w-full pl-4 md:pl-0 mb-4 ">
-        <h2 className="text-base md:text-lg font-semibold flex items-center space-x-0">
+        <h2 className="text-sm md:text-lg font-semibold flex items-center space-x-0">
           <span>{t('Heatmap.title')}</span>
           <Select
-            value={{ value: xCategory, label: xCategory }}
-            onChange={(selected) => setXCategory(selected?.value || 'Weekday')}
-            options={Object.keys(dynamicCategories)
+            value={{ value: xCategory, label: categoryLabels[xCategory] }}
+            onChange={(selected) => setXCategory((selected?.value as CategoryKey) || 'Hour')}
+            options={(Object.keys(dynamicCategories) as CategoryKey[])
               .filter((cat) => cat !== yCategory)
-              .map((cat) => ({ value: cat as Category, label: cat as Category }))}
+              .map((cat) => ({ value: cat, label: categoryLabels[cat] }))}
             isSearchable={false}
             styles={getCustomSelectStyles(darkMode)}
           />
           <span>&</span>
           <Select
-            value={{ value: yCategory, label: yCategory }}
-            onChange={(selected) => setYCategory(selected?.value || 'Weekday')}
+            value={{ value: yCategory, label: categoryLabels[yCategory] }}
+            onChange={(selected) => setYCategory((selected?.value as CategoryKey) || 'Weekday')}
             isSearchable={false}
-            options={Object.keys(dynamicCategories)
+            options={(Object.keys(dynamicCategories) as CategoryKey[])
               .filter((cat) => cat !== xCategory)
-              .map((cat) => ({ value: cat as Category, label: cat as Category }))}
+              .map((cat) => ({ value: cat, label: categoryLabels[cat] }))}
             styles={getCustomSelectStyles(darkMode)}
           />
         </h2>
         <RefreshCw
           onClick={handleClick}
-          className="w-5 h-5 transition-transform duration-700"
+          className="w-4 h-4 md:w-5 md:h-5 transition-transform duration-700"
           style={{ transform: `rotate(${rotation}deg)` }}
         />
       </div>

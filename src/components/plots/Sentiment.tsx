@@ -544,7 +544,7 @@ const SentimentAnalysis: React.FC = () => {
         darkMode ? 'border-gray-300 bg-gray-800 text-white' : 'border-black bg-white text-black'
       } w-full md:min-w-[500px] ${
         expanded ? 'md:basis-[3000px]' : 'md:basis-[500px]'
-      } p-4 px-0 md:p-4 flex-grow flex flex-col`}
+      } pt-4 md:p-4 flex-grow flex flex-col`}
       style={{
         position: 'relative',
         minHeight: '400px',
@@ -552,9 +552,9 @@ const SentimentAnalysis: React.FC = () => {
         overflow: 'hidden',
       }}
     >
-      <div className="flex items-center justify-between px-4 md:px-0 mb-4">
+      <div className="flex items-center justify-between px-4 md:px-0 mb-3 md:mb-4">
         <h2
-          className={`text-base md:text-lg font-semibold ${darkMode ? 'text-white' : 'text-black'}`}
+          className={`text-sm md:text-lg font-semibold ${darkMode ? 'text-white' : 'text-black'}`}
         >
           {t('Sentiment.title')}
         </h2>
@@ -564,7 +564,7 @@ const SentimentAnalysis: React.FC = () => {
               darkMode ? 'text-white' : 'text-gray-700'
             } w-4 h-4 md:w-5 md:h-5`}
           />
-          <div className="mx-1 md:mx-2 hidden md:inline-block h-[20px]">
+          <div className="mx-1 md:mx-2 hidden md:inline-block">
             <Switch
               onChange={() => {
                 setSplitMode(!splitMode);
@@ -587,14 +587,14 @@ const SentimentAnalysis: React.FC = () => {
             onClick={() => {
               setSplitMode(!splitMode);
             }}
-            className={`md:hidden p-2 rounded-none border ${
+            className={`flex items-center justify-center aspect-square h-full md:hidden p-0 rounded-none z ${
               darkMode ? 'border-white bg-gray-700' : 'border-black bg-white'
             }`}
           >
             {!splitMode ? (
-              <Split className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
+              <Split size={24} className={`h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
             ) : (
-              <Merge className={`w-3 h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
+              <Merge size={24} className={`h-3 ${darkMode ? 'text-white' : 'text-gray-700'}`} />
             )}
           </button>
           <Merge
@@ -627,6 +627,7 @@ const SentimentAnalysis: React.FC = () => {
           </button>
         </div>
       </div>
+
       <div className="flex-grow flex justify-center items-center max-h-full">
         {combinedData.length === 0 ? (
           <span className="text-lg">{t('General.noDataAvailable')}</span>
