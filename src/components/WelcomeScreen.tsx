@@ -28,7 +28,7 @@ export default function WelcomeScreen() {
     setUseShortNames,
     tempSetUseShortNames,
   } = useChat();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const fileInputRef = useRef(null);
 
   // Define indices (0-based) of images to skip
@@ -45,8 +45,6 @@ export default function WelcomeScreen() {
 
   // Determine container background colors for gradient overlays
   const containerBgColor = darkMode ? '#1F2937' : '#ffffff'; // gray-800 or white
-
-  console.log('Language: ', i18n.language);
 
   return (
     <div

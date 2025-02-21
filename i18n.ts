@@ -166,10 +166,7 @@ i18n
     defaultNS: 'translation', // Default namespace for translations.
     interpolation: { escapeValue: false }, // React already escapes values.
   })
-  .then(() => {
-    console.log('i18n initialized successfully');
-    console.log('Current language:', i18n.language);
-  })
+  .then(() => {})
   .catch((err) => console.error('i18n initialization failed:', err));
 
 /////////////////////// Export ///////////////////////

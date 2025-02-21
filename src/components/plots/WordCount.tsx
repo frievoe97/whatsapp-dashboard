@@ -190,19 +190,19 @@ const WordCount: FC = (): ReactElement => {
       let filteredWords: string[] = [];
       switch (metadata?.language) {
         case 'de':
-          filteredWords = removeStopwords(words, deu).filter((word) => word.length > 2);
+          filteredWords = removeStopwords(words, deu).filter((word) => word.length > 4);
           break;
         case 'en':
-          filteredWords = removeStopwords(words, eng).filter((word) => word.length > 2);
+          filteredWords = removeStopwords(words, eng).filter((word) => word.length > 4);
           break;
         case 'es':
-          filteredWords = removeStopwords(words, spa).filter((word) => word.length > 2);
+          filteredWords = removeStopwords(words, spa).filter((word) => word.length > 4);
           break;
         case 'fr':
-          filteredWords = removeStopwords(words, fra).filter((word) => word.length > 2);
+          filteredWords = removeStopwords(words, fra).filter((word) => word.length > 4);
           break;
         default:
-          filteredWords = removeStopwords(words, eng).filter((word) => word.length > 2);
+          filteredWords = removeStopwords(words, eng).filter((word) => word.length > 4);
           break;
       }
 
