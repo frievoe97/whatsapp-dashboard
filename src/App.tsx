@@ -123,7 +123,7 @@ function useEqualRowHeights(
  * @returns The application UI.
  */
 const App: React.FC = () => {
-  const { darkMode, filteredMessages, isTesting } = useChat();
+  const { darkMode, filteredMessages } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { t } = useTranslation();
 
@@ -148,7 +148,8 @@ const App: React.FC = () => {
    * head only if isTesting is false.
    */
   useEffect(() => {
-    if (!isTesting) {
+    if (!location.hash.startsWith('#/testing')) {
+      console.log('Google Tag Manager script added.');
       const script = document.createElement('script');
       script.innerHTML = `
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -166,7 +167,7 @@ const App: React.FC = () => {
       `;
       document.body.appendChild(noscript);
     }
-  }, [isTesting]);
+  }, []);
 
   // Apply dark mode settings and update meta tag
   useDarkModeThemeEffect(darkMode);

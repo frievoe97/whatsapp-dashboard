@@ -131,7 +131,6 @@ export const handleFileUpload = (
   setIsPanelOpen: Dispatch<SetStateAction<boolean>>,
   setUseShortNames: Dispatch<SetStateAction<boolean>>,
   tempSetUseShortNames: Dispatch<SetStateAction<boolean>>,
-  isTesting: boolean,
 ) => {
   // Reset short names options on new file upload.
   setUseShortNames(false);
@@ -139,7 +138,7 @@ export const handleFileUpload = (
   const file = event.target.files?.[0];
   if (!file) return;
 
-  if (!isTesting) {
+  if (!location.hash.startsWith('#/testing')) {
     trackEvent('uploadFile');
   }
 

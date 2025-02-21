@@ -12,7 +12,6 @@ import React, {
   Dispatch,
   SetStateAction,
 } from 'react';
-import { useLocation } from 'react-router-dom';
 import { ChatMessage, ChatMetadata, FilterOptions } from '../types/chatTypes';
 import { computeSenderStatuses } from '../logic/filterChatMessages';
 import { DEFAULT_WEEKDAYS } from '../config/constants';
@@ -51,10 +50,10 @@ interface ChatContextType {
   tempToggleUseShortNames: () => void;
   setUseShortNames: Dispatch<SetStateAction<boolean>>;
   tempSetUseShortNames: Dispatch<SetStateAction<boolean>>;
-  isTesting: boolean;
 }
 
 ///////////////////////// Context Creation ///////////////////////////
+// eslint-disable-next-line react-refresh/only-export-components
 export const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 ///////////////////////// ChatProvider Component ///////////////////////////
@@ -98,10 +97,6 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const toggleUseShortNames = useCallback(() => setUseShortNames((prev) => !prev), []);
   const [tempUseShortNames, tempSetUseShortNames] = useState<boolean>(false);
   const tempToggleUseShortNames = useCallback(() => tempSetUseShortNames((prev) => !prev), []);
-
-  //////////// State: Testing Flag //////////////////
-  const location = useLocation();
-  const isTesting = location.pathname.startsWith('/testing');
 
   //////////// Effect: Initialize Filters when Metadata or Messages Change ////////////
   useEffect(() => {
@@ -202,7 +197,6 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       tempToggleUseShortNames,
       setUseShortNames,
       tempSetUseShortNames,
-      isTesting,
     }),
     [
       darkMode,
@@ -223,7 +217,6 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       tempToggleUseShortNames,
       setUseShortNames,
       tempSetUseShortNames,
-      isTesting,
     ],
   );
 

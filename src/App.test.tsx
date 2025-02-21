@@ -55,6 +55,7 @@ const dummyContextValue = {
   setUseShortNames: vi.fn(),
   tempSetUseShortNames: vi.fn(),
   isTesting: false,
+  setIsTesting: vi.fn(),
 };
 
 ////////////////////// Test: AggregatePerTimePlot ////////////////////////
