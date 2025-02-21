@@ -147,27 +147,27 @@ const App: React.FC = () => {
    * This useEffect hook adds the Google Tag Manager script to the document
    * head only if isTesting is false.
    */
-  useEffect(() => {
-    if (!location.hash.startsWith('#/testing')) {
-      console.log('Google Tag Manager script added.');
-      const script = document.createElement('script');
-      script.innerHTML = `
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-MGJZ72QL');
-      `;
-      document.head.appendChild(script);
+  // useEffect(() => {
+  //   if (!location.hash.startsWith('#/testing')) {
+  //     console.log('Google Tag Manager script added.');
+  //     const script = document.createElement('script');
+  //     script.innerHTML = `
+  //       (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  //       new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  //       j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  //       'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  //       })(window,document,'script','dataLayer','GTM-MGJZ72QL');
+  //     `;
+  //     document.head.appendChild(script);
 
-      const noscript = document.createElement('noscript');
-      noscript.innerHTML = `
-        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MGJZ72QL"
-          height="0" width="0" style="display:none;visibility:hidden"></iframe>
-      `;
-      document.body.appendChild(noscript);
-    }
-  }, []);
+  //     const noscript = document.createElement('noscript');
+  //     noscript.innerHTML = `
+  //       <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MGJZ72QL"
+  //         height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  //     `;
+  //     document.body.appendChild(noscript);
+  //   }
+  // }, []);
 
   // Apply dark mode settings and update meta tag
   useDarkModeThemeEffect(darkMode);
