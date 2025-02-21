@@ -1,4 +1,4 @@
-name: Deploy React App to SFTP
+name: Deploy React App to FTP
 
 on:
   push:
@@ -13,12 +13,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Rename Hetzner files
+      - name: Rename Ionos files
         run: |
-          mv index_hetzner.html index.html
-          mv public/.htaccess_hetzner public/.htaccess
-          mv public/robots_hetzner.txt public/robots.txt
-          mv public/sitemap_hetzner.xml public/sitemap.xml
+          mv index_ionos.html index.html
+          mv public/.htaccess_ionos public/.htaccess
+          mv public/robots_ionos.txt public/robots.txt
+          mv public/sitemap_ionos.xml public/sitemap.xml
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -37,8 +37,8 @@ jobs:
       - name: SFTP uploader
         uses: wangyucode/sftp-upload-action@v2.0.2
         with:
-          host: ${{ secrets.SFTP_HOST_HETZNER }}
-          username: ${{ secrets.SFTP_USERNAME_HETZNER }}
-          password: ${{ secrets.SFTP_PASSWORD_HETZNER }}
+          host: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
           localDir: './dist'
-          remoteDir: '/public_html'
+          remoteDir: '/whatsapp-dashboard'
