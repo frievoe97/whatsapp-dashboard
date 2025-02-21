@@ -8,6 +8,8 @@ import { ChatMessage, ChatMetadata } from '../../types/chatTypes';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
+import i18n from '../../../i18n';
+import { LOCALES } from '../../config/constants';
 
 ////////////// Type Definitions ////////////////
 interface TimeDataPoint {
@@ -21,21 +23,21 @@ interface TimeAggregatedData {
   values: TimeDataPoint[];
 }
 
-type Mode = 'year' | 'month';
+// type Mode = LOCALES[i18n.language].interval[3] | LOCALES[i18n.language].interval[2];
 
 ////////////// Helper Functions ////////////////
 
 /**
  * Generate time category labels based on the selected mode and messages.
- * For 'year' mode returns years, for 'month' mode returns "YYYY-MM" strings.
+ * For LOCALES[i18n.language].interval[3] mode returns years, for LOCALES[i18n.language].interval[2] mode returns "YYYY-MM" strings.
  */
-function getTimeCategories(mode: Mode, messages: ChatMessage[]): string[] {
+function getTimeCategories(mode: string, messages: ChatMessage[]): string[] {
   if (messages.length === 0) return [];
   const dates = messages.map((msg) => new Date(msg.date));
   const minDate = d3.min(dates)!;
   const maxDate = d3.max(dates)!;
 
-  if (mode === 'year') {
+  if (mode === LOCALES[i18n.language].interval[3]) {
     const startYear = new Date(minDate.getFullYear(), 0, 1);
     const endYear = new Date(maxDate.getFullYear() + 1, 0, 1);
     return d3.timeYear.range(startYear, endYear).map((date) => date.getFullYear().toString());
@@ -49,9 +51,11 @@ function getTimeCategories(mode: Mode, messages: ChatMessage[]): string[] {
 /**
  * Return a time category for a given message based on the mode.
  */
-function getCategoryFromMessage(msg: ChatMessage, mode: Mode): string {
+function getCategoryFromMessage(msg: ChatMessage, mode: string): string {
   const date = new Date(msg.date);
-  return mode === 'year' ? date.getFullYear().toString() : d3.timeFormat('%Y-%m')(date);
+  return mode === LOCALES[i18n.language].interval[3]
+    ? date.getFullYear().toString()
+    : d3.timeFormat('%Y-%m')(date);
 }
 
 /**
@@ -60,7 +64,7 @@ function getCategoryFromMessage(msg: ChatMessage, mode: Mode): string {
  */
 function aggregateTimeMessages(
   messages: ChatMessage[],
-  mode: Mode,
+  mode: string,
   categories: string[],
   showPercentage: boolean,
 ): TimeAggregatedData[] {
@@ -80,7 +84,7 @@ function aggregateTimeMessages(
   const result: TimeAggregatedData[] = Object.keys(dataMap).map((sender) => {
     const values = categories.map((cat) => {
       let date: Date;
-      if (mode === 'year') {
+      if (mode === LOCALES[i18n.language].interval[3]) {
         date = new Date(parseInt(cat), 0, 1);
       } else {
         const [year, month] = cat.split('-').map(Number);
@@ -130,19 +134,19 @@ function useTimelineChart(
   dimensions: { width: number; height: number } | undefined,
   aggregatedData: TimeAggregatedData[],
   mergedData: TimeAggregatedData[],
-  mode: Mode,
+  mode: string,
   showPercentage: boolean,
   darkMode: boolean,
   startDate: Date | undefined,
   endDate: Date | undefined,
-  setMode: React.Dispatch<React.SetStateAction<Mode>>,
+  setMode: React.Dispatch<React.SetStateAction<string>>,
   setUniqueYearsLessThanThree: React.Dispatch<React.SetStateAction<boolean>>,
   showMerged: boolean,
   useShortNames: boolean,
   metadata: ChatMetadata | null,
 ): void {
   // Store previous mode to detect mode changes for transitions
-  const prevModeRef = useRef<Mode>(mode);
+  const prevModeRef = useRef<string>(mode);
 
   useEffect(() => {
     if (!dimensions || aggregatedData.length === 0) return;
@@ -151,7 +155,7 @@ function useTimelineChart(
     const filteredData = (showMerged ? mergedData : aggregatedData).map((d) => ({
       sender: d.sender,
       values: d.values.filter((v) => {
-        if (mode === 'year') {
+        if (mode === LOCALES[i18n.language].interval[3]) {
           const startYear = startDate ? startDate.getFullYear() : -Infinity;
           const endYear = endDate ? endDate.getFullYear() : Infinity;
           return v.date.getFullYear() >= startYear && v.date.getFullYear() <= endYear;
@@ -171,7 +175,7 @@ function useTimelineChart(
     const maxDate = d3.max(filteredDates) || new Date();
     let computedStartDate: Date;
     let computedEndDate: Date;
-    if (mode === 'year') {
+    if (mode === LOCALES[i18n.language].interval[3]) {
       computedStartDate = new Date(minDate.getFullYear(), 0, 1);
       computedEndDate = new Date(maxDate.getFullYear(), 0, 1);
     } else {
@@ -183,7 +187,7 @@ function useTimelineChart(
     const hasLessThanThreeYears = uniqueYears.size < 3;
     setUniqueYearsLessThanThree(hasLessThanThreeYears);
     if (hasLessThanThreeYears) {
-      setMode('month');
+      setMode(LOCALES[i18n.language].interval[2]);
     }
     const { width, height } = dimensions;
     const svg = d3.select(svgRef.current);
@@ -452,7 +456,10 @@ function useTimelineChart(
         const d1 = dates[i];
         const nearestDate =
           !d0 || (d1 && x0.getTime() - d0.getTime() > d1.getTime() - x0.getTime()) ? d1 : d0;
-        const dateFormatter = mode === 'year' ? d3.timeFormat('%Y') : d3.timeFormat('%Y-%m');
+        const dateFormatter =
+          mode === LOCALES[i18n.language].interval[3]
+            ? d3.timeFormat('%Y')
+            : d3.timeFormat('%Y-%m');
         const formattedDate = nearestDate ? dateFormatter(nearestDate) : '';
         const tooltipData = filteredData.map((fd) => {
           const point = fd.values.find((v) => dateFormatter(v.date) === formattedDate);
@@ -532,7 +539,7 @@ const Timeline: React.FC = () => {
   ////////////// Component State //////////////
   const [expanded, setExpanded] = useState(false);
   const [uniqueYearsLessThanThree, setUniqueYearsLessThanThree] = useState(false);
-  const [mode, setMode] = useState<Mode>('year');
+  const [mode, setMode] = useState<string>(LOCALES[i18n.language].interval[3]);
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
   const [showMerged, setShowMerged] = useState(false);
 
@@ -565,7 +572,7 @@ const Timeline: React.FC = () => {
   ////////////// useEffect: Adjust Mode Based on Data Availability //////////////
   useEffect(() => {
     if (filteredMessages.length === 0) {
-      setMode('month');
+      setMode(LOCALES[i18n.language].interval[2]);
       setShowPercentage(false);
     }
   }, [filteredMessages]);
@@ -677,7 +684,7 @@ const Timeline: React.FC = () => {
           <div className="flex space-x-2 mt-0">
             <button
               className={`px-2 py-1 text-xs md:text-sm rounded-none ${
-                mode === 'year'
+                mode === LOCALES[i18n.language].interval[3]
                   ? darkMode
                     ? 'bg-white text-black border border-gray-300 hover:border-gray-300'
                     : 'bg-black text-white border-none'
@@ -685,13 +692,13 @@ const Timeline: React.FC = () => {
                     ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
                     : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
               }`}
-              onClick={() => setMode('year')}
+              onClick={() => setMode(LOCALES[i18n.language].interval[3])}
             >
-              Year
+              {LOCALES[i18n.language].interval[3]}
             </button>
             <button
               className={`px-2 py-1 text-xs md:text-sm rounded-none ${
-                mode === 'month'
+                mode === LOCALES[i18n.language].interval[2]
                   ? darkMode
                     ? 'bg-white text-black border border-gray-300 hover:border-gray-300'
                     : 'bg-black text-white border-none'
@@ -699,9 +706,9 @@ const Timeline: React.FC = () => {
                     ? 'bg-gray-700 text-white border border-gray-300 hover:border-gray-300 hover:bg-gray-800'
                     : 'bg-white text-gray-700 border border-black hover:border-black hover:bg-gray-200'
               }`}
-              onClick={() => setMode('month')}
+              onClick={() => setMode(LOCALES[i18n.language].interval[2])}
             >
-              Month
+              {LOCALES[i18n.language].interval[2]}
             </button>
           </div>
         ) : (

@@ -7,19 +7,23 @@ import useResizeObserver from '../../hooks/useResizeObserver';
 import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
-import { getCustomSelectStyles } from '../../config/constants';
+import { getCustomSelectStyles, LOCALES } from '../../config/constants';
+import i18n from '../../../i18n';
 
 ////////////// Constants & Types ////////////////
 /** Properties to display on the sender comparison bar chart. */
 const properties = [
-  { key: 'messageCount', label: 'Number of Messages' },
-  { key: 'averageWordsPerMessage', label: 'Avg. Words per Message' },
-  { key: 'medianWordsPerMessage', label: 'Median Words per Message' },
-  { key: 'totalWordsSent', label: 'Total Words Sent' },
-  { key: 'maxWordsInMessage', label: 'Max Words in a Message' },
-  { key: 'activeDays', label: 'Active Days' },
-  { key: 'uniqueWordsCount', label: 'Unique Words Count' },
-  { key: 'averageCharactersPerMessage', label: 'Avg. Characters per Message' },
+  { key: 'messageCount', label: LOCALES[i18n.language].stats.numberOfMessages },
+  { key: 'averageWordsPerMessage', label: LOCALES[i18n.language].stats.averageWordsPerMessage },
+  { key: 'medianWordsPerMessage', label: LOCALES[i18n.language].stats.medianWordsPerMessage },
+  { key: 'totalWordsSent', label: LOCALES[i18n.language].stats.totalWordsSent },
+  { key: 'maxWordsInMessage', label: LOCALES[i18n.language].stats.maxWordsInMessage },
+  { key: 'activeDays', label: LOCALES[i18n.language].stats.activeDays },
+  { key: 'uniqueWordsCount', label: LOCALES[i18n.language].stats.uniqueWordsCount },
+  {
+    key: 'averageCharactersPerMessage',
+    label: LOCALES[i18n.language].stats.avgCharactersPerMessage,
+  },
 ] as const;
 
 /** Aggregated statistics per sender. */
@@ -314,7 +318,7 @@ const SenderComparisonBarChart: FC = () => {
     >
       {/* Header with property selector and expand/minimize button */}
       <div id="bar-chart-header" className="flex items-center justify-between">
-        <h2 className="text-base md:text-lg font-semibold flex items-center space-x-0">
+        <h2 className="text-sm md:text-lg font-semibold flex items-center space-x-0">
           <Select
             value={properties.find((option) => option.key === selectedProperty)}
             onChange={(selected) => setSelectedProperty(selected?.key || properties[0].key)}
@@ -322,7 +326,7 @@ const SenderComparisonBarChart: FC = () => {
             isSearchable={false}
             styles={getCustomSelectStyles(darkMode)}
           />
-          <span>{t('BarChartComp.title')}</span>
+          {/* <span>{t('BarChartComp.title')}</span> */}
         </h2>
         <button
           className={`ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${

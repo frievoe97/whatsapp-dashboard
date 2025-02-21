@@ -91,7 +91,7 @@ const resources = {
       FileUpload: {
         selectFile: 'Chat hochladen',
         selectSenders: 'Absender',
-        minimumMessageShare: 'Mindestanteil',
+        minimumMessageShare: 'Mindestanteil (%)',
         startDate: 'Startdatum',
         endDate: 'Enddatum',
         selectWeekdays: 'Wochentage',

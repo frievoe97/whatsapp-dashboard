@@ -185,7 +185,7 @@ const App: React.FC = () => {
           {/* p-4 px-8 */}
           {filteredMessages.length === 0 ? (
             <div
-              className={`w-full flex text-lg items-center justify-center h-full border rounded-none text-center ${
+              className={`w-full h-full flex text-lg items-center justify-center  border rounded-none text-center ${
                 darkMode ? 'border-white' : 'border-black'
               }`}
             >
@@ -193,7 +193,7 @@ const App: React.FC = () => {
               <WelcomeScreen />
             </div>
           ) : (
-            <>
+            <div className="w-full flex flex-col gap-4 pb-4">
               <AggregatePerTime />
               <Timeline />
               <BarChartComp />
@@ -204,7 +204,7 @@ const App: React.FC = () => {
               <Sentiment />
               <SentimentWord />
               <HeatmapMonthWeekday />
-            </>
+            </div>
           )}
         </div>
       </div>

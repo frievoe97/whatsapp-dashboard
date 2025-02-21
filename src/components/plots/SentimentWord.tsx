@@ -9,7 +9,8 @@ import { useChat } from '../../context/ChatContext';
 import { ChatMetadata } from '../../types/chatTypes';
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
-import { getCustomSelectStyles } from '../../config/constants';
+import { getCustomSelectStyles, LOCALES } from '../../config/constants';
+import i18n from '../../../i18n';
 
 ////////////// Types & Constants ////////////////
 /**
@@ -328,13 +329,15 @@ const SentimentWordsPlot: FC = (): ReactElement => {
 
   // Options for the react-select toggle.
   const options = [
-    { value: 'Best', label: 'Best' },
-    { value: 'Worst', label: 'Worst' },
+    { value: LOCALES[i18n.language].sentiment[0], label: LOCALES[i18n.language].sentiment[0] },
+    { value: LOCALES[i18n.language].sentiment[1], label: LOCALES[i18n.language].sentiment[1] },
   ];
 
   const { t } = useTranslation();
   const titleParts = t('SentimentWord.title', {
-    wordCategory: showBest ? 'Best' : 'Worst',
+    wordCategory: showBest
+      ? LOCALES[i18n.language].sentiment[0]
+      : LOCALES[i18n.language].sentiment[1],
     returnObjects: true,
   }) as string[];
 
@@ -347,12 +350,20 @@ const SentimentWordsPlot: FC = (): ReactElement => {
       }`}
       style={{ minHeight: '350px', maxHeight: '550px', overflow: 'hidden' }}
     >
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-base md:text-lg font-semibold flex items-center space-x-0">
+      <div className="flex justify-between items-center mb-3 md:mb-4">
+        <h2 className="text-sm md:text-lg font-semibold flex items-center space-x-0">
           <span>{titleParts[0]}</span>
           <Select
-            value={options.find((option) => option.value === (showBest ? 'Best' : 'Worst'))}
-            onChange={(selected) => setShowBest(selected?.value === 'Best')}
+            value={options.find(
+              (option) =>
+                option.value ===
+                (showBest
+                  ? LOCALES[i18n.language].sentiment[0]
+                  : LOCALES[i18n.language].sentiment[1]),
+            )}
+            onChange={(selected) =>
+              setShowBest(selected?.value === LOCALES[i18n.language].sentiment[0])
+            }
             options={options}
             isSearchable={false}
             styles={getCustomSelectStyles(darkMode)}

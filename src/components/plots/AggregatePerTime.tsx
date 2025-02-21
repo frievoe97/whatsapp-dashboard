@@ -8,6 +8,8 @@ import { Hash, Percent, Maximize2, Minimize2, Split, Merge } from 'lucide-react'
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
 import { ChatMessage } from '../../types/chatTypes';
+import i18n from '../../../i18n';
+import { LOCALES } from '../../config/constants';
 
 ////////////// Types & Constants ////////////////
 /** Data point representing a category value, count and optional percentage. */
@@ -24,59 +26,33 @@ interface AggregatedData {
 }
 
 /** Supported modes for aggregation. */
-type Mode = 'weekday' | 'hour' | 'month';
+// type Mode = 'weekday' | 'hour' | 'month';
 
 /** Returns an array of category labels for a given mode. */
-const getCategories = (mode: Mode): string[] => {
+const getCategories = (mode: string): string[] => {
   switch (mode) {
-    case 'weekday':
-      return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    case 'hour':
+    case LOCALES[i18n.language].interval[4]:
+      return LOCALES[i18n.language].weekdays;
+    case LOCALES[i18n.language].interval[0]:
       return Array.from({ length: 24 }, (_, i) => i.toString());
-    case 'month':
-      return [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
-      ];
+    case LOCALES[i18n.language].interval[2]:
+      return LOCALES[i18n.language].months;
     default:
       return [];
   }
 };
 
+// console.log(LOCALES[i18n.language]);
+
 /** Extracts a category value from a chat message based on the mode. */
-const getCategoryFromMessage = (msg: ChatMessage, mode: Mode): string => {
+const getCategoryFromMessage = (msg: ChatMessage, mode: string): string => {
   const date = new Date(msg.date);
-  if (mode === 'weekday') {
-    return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][
-      (date.getDay() + 6) % 7
-    ];
-  } else if (mode === 'hour') {
+  if (mode === LOCALES[i18n.language].interval[4]) {
+    return LOCALES[i18n.language].weekdays[(date.getDay() + 6) % 7];
+  } else if (mode === LOCALES[i18n.language].interval[0]) {
     return parseInt(msg.time.split(':')[0], 10).toString();
-  } else if (mode === 'month') {
-    return [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ][date.getMonth()];
+  } else if (mode === LOCALES[i18n.language].interval[2]) {
+    return LOCALES[i18n.language].months[date.getMonth()];
   }
   return '';
 };
@@ -84,7 +60,7 @@ const getCategoryFromMessage = (msg: ChatMessage, mode: Mode): string => {
 /** Aggregates chat messages into sender-based statistics per category. */
 const aggregateMessages = (
   messages: ChatMessage[],
-  mode: Mode,
+  mode: string,
   categories: string[],
   showPercentage: boolean,
 ): AggregatedData[] => {
@@ -134,7 +110,7 @@ const AggregatePerTimePlot: React.FC = () => {
   const dimensions = useResizeObserver(containerRef);
 
   const [expanded, setExpanded] = useState(false);
-  const [mode, setMode] = useState<Mode>('hour');
+  const [mode, setMode] = useState<string>(LOCALES[i18n.language].interval[0]);
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
   const [showMerged, setShowMerged] = useState<boolean>(false);
 
@@ -237,7 +213,7 @@ const AggregatePerTimePlot: React.FC = () => {
     const yScale = d3.scaleLinear().domain([0, yMax]).nice().range([innerHeight, 0]);
     const yTickValues = yScale.ticks(5);
 
-    const tickSpacing = mode === 'hour' ? 20 : 70;
+    const tickSpacing = mode === LOCALES[i18n.language].interval[0] ? 20 : 70;
     const maxTicks = Math.max(2, Math.floor(innerWidth / tickSpacing));
     const xTickValues = categories.filter(
       (_, i) => i % Math.ceil(categories.length / maxTicks) === 0,
@@ -557,9 +533,9 @@ const AggregatePerTimePlot: React.FC = () => {
       {/* Titel */}
       <div
         id="aggregate-per-time-plot-title"
-        className="flex flex-row justify-between mb-4 px-4 md:px-0"
+        className="flex flex-row justify-between mb-3 md:mb-4 px-4 md:px-0"
       >
-        <h2 className="font-semibold text-base md:text-lg">Aggregated Message Trends</h2>
+        <h2 className="font-semibold text-sm md:text-lg">Aggregated Message Trends</h2>
         <button
           className={`h-full ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
             darkMode ? 'text-white' : 'text-black'
@@ -585,7 +561,13 @@ const AggregatePerTimePlot: React.FC = () => {
         className="flex items-center justify-between mb-2 px-4 md:px-0"
       >
         <div className="flex space-x-2">
-          {(['hour', 'weekday', 'month'] as Mode[]).map((item) => {
+          {(
+            [
+              LOCALES[i18n.language].interval[0],
+              LOCALES[i18n.language].interval[4],
+              LOCALES[i18n.language].interval[2],
+            ] as string[]
+          ).map((item) => {
             const isActive = mode === item;
             const buttonClass = isActive
               ? darkMode

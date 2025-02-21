@@ -6,6 +6,8 @@ import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { ChatMessage, ChatMetadata } from '../../types/chatTypes';
 import { useTranslation } from 'react-i18next';
 import '../../../i18n';
+import { LOCALES } from '../../config/constants';
+import i18n from '../../../i18n';
 
 ////////////// Type Definitions ////////////////
 export interface SenderStats {
@@ -215,20 +217,41 @@ const SenderStatsCard: React.FC<SenderStatsCardProps> = ({
           : stat.sender}
       </h3>
       <div className="space-y-1">
-        <StatRow label="Number of Messages:" value={stat.messageCount} />
-        <StatRow label="Avg. Words per Message:" value={stat.averageWordsPerMessage} />
-        <StatRow label="Median Words per Message:" value={stat.medianWordsPerMessage} />
-        <StatRow label="Total Words Sent:" value={stat.totalWordsSent} />
-        <StatRow label="Max Words in a Message:" value={stat.maxWordsInMessage} />
-        <StatRow label="Active Days:" value={stat.activeDays} />
-        <StatRow label="Unique Words Count:" value={stat.uniqueWordsCount} />
-        <StatRow label="Avg. Characters per Message:" value={stat.averageCharactersPerMessage} />
         <StatRow
-          label="First Message:"
+          label={LOCALES[i18n.language].stats.numberOfMessages + ':'}
+          value={stat.messageCount}
+        />
+        <StatRow
+          label={LOCALES[i18n.language].stats.averageWordsPerMessage + ':'}
+          value={stat.averageWordsPerMessage}
+        />
+        <StatRow
+          label={LOCALES[i18n.language].stats.medianWordsPerMessage + ':'}
+          value={stat.medianWordsPerMessage}
+        />
+        <StatRow
+          label={LOCALES[i18n.language].stats.totalWordsSent + ':'}
+          value={stat.totalWordsSent}
+        />
+        <StatRow
+          label={LOCALES[i18n.language].stats.maxWordsInMessage + ':'}
+          value={stat.maxWordsInMessage}
+        />
+        <StatRow label={LOCALES[i18n.language].stats.activeDays + ':'} value={stat.activeDays} />
+        <StatRow
+          label={LOCALES[i18n.language].stats.uniqueWordsCount + ':'}
+          value={stat.uniqueWordsCount}
+        />
+        <StatRow
+          label={LOCALES[i18n.language].stats.avgCharactersPerMessage + ':'}
+          value={stat.averageCharactersPerMessage}
+        />
+        <StatRow
+          label={LOCALES[i18n.language].stats.firstMessage + ':'}
           value={d3.timeFormat('%d.%m.%Y %H:%M')(stat.firstMessageDate)}
         />
         <StatRow
-          label="Last Message:"
+          label={LOCALES[i18n.language].stats.lastMessage + ':'}
           value={d3.timeFormat('%d.%m.%Y %H:%M')(stat.lastMessageDate)}
         />
       </div>
@@ -346,7 +369,7 @@ const Stats: React.FC = () => {
       }`}
       style={{ minHeight: '350px', maxHeight: '550px', overflow: 'hidden' }}
     >
-      <h2 className="text-base md:text-lg font-semibold mb-4">{t('Stats.title')}</h2>
+      <h2 className="text-sm md:text-lg font-semibold mb-3 md:mb-4">{t('Stats.title')}</h2>
       <div className="flex-grow flex justify-center items-center flex-col">
         {filteredMessages.length === 0 || aggregatedStats.length === 0 ? (
           <span className="text-base md:text-lg">{t('General.noDataAvailable')}</span>
