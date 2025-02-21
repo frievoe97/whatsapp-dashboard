@@ -123,7 +123,7 @@ function useEqualRowHeights(
  * @returns The application UI.
  */
 const App: React.FC = () => {
-  const { darkMode, filteredMessages } = useChat();
+  const { darkMode, filteredMessages, isTesting } = useChat();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { t } = useTranslation();
 
@@ -140,6 +140,33 @@ const App: React.FC = () => {
       document.body.classList.remove('dark-mode');
     }
   }, [darkMode]);
+
+  //////////// useEffect: Google Tag Manager Script ////////////
+
+  /**
+   * This useEffect hook adds the Google Tag Manager script to the document
+   * head only if isTesting is false.
+   */
+  useEffect(() => {
+    if (!isTesting) {
+      const script = document.createElement('script');
+      script.innerHTML = `
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-MGJZ72QL');
+      `;
+      document.head.appendChild(script);
+
+      const noscript = document.createElement('noscript');
+      noscript.innerHTML = `
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MGJZ72QL"
+          height="0" width="0" style="display:none;visibility:hidden"></iframe>
+      `;
+      document.body.appendChild(noscript);
+    }
+  }, [isTesting]);
 
   // Apply dark mode settings and update meta tag
   useDarkModeThemeEffect(darkMode);
