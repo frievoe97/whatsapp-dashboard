@@ -316,6 +316,11 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
+  // Reset current page when data changes.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [aggregatedSentimentData]);
+
   // Create a color scale for sender charts.
   const colorScale: Map<string, string> = useMemo(() => {
     const senders = aggregatedSentimentData.map((d) => d.sender);

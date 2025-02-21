@@ -218,6 +218,11 @@ const EmojiPlot: FC = () => {
     }
   }, [currentPage, totalPages]);
 
+  // Reset to the first page when the data changes.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [aggregatedEmojiData]);
+
   // Extract the data for the current page.
   const currentData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;

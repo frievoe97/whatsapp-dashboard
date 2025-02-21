@@ -262,6 +262,13 @@ const WordCount: FC = (): ReactElement => {
   };
 
   // ------------------------------
+  // useEffect: Reset Current Page on Data Change
+  // ------------------------------
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [aggregatedWordData]);
+
+  // ------------------------------
   // Render
   // ------------------------------
   return (

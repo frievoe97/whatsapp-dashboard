@@ -345,6 +345,11 @@ const Stats: React.FC = () => {
     }
   }, [currentPage, totalPages]);
 
+  // Reset to first page when the filtered messages change.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [aggregatedStats]);
+
   // Determine the statistics to display on the current page.
   const currentStats = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
