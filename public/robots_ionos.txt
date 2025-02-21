@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://whatsapp-dashboard.friedrichvoelkers.de/sitemap.xml
