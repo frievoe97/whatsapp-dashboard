@@ -15,6 +15,7 @@ jobs:
 
       - name: Rename Ionos files
         run: |
+          rm index.html
           mv index_ionos.html index.html
           mv public/.htaccess_ionos public/.htaccess
           mv public/robots_ionos.txt public/robots.txt
