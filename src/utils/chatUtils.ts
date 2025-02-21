@@ -13,10 +13,22 @@ if (location.hostname.includes('whatsapp-dashboard')) {
   domain = 'whatsapp-dashboard.friedrichvoelkers.de';
 } else if (location.hostname.includes('chat-visualizer')) {
   domain = 'chat-visualizer.de';
+} else {
+  domain = '';
 }
+
+let apiHost = '';
+if (location.hostname.includes('whatsapp-dashboard')) {
+  apiHost = 'https://plausible.friedrichvoelkers.de';
+} else if (location.hostname.includes('chat-visualizer')) {
+  apiHost = 'https://plausible.friedrichvoelkers.de';
+} else {
+  apiHost = '';
+}
+
 const { trackEvent } = plausible({
   domain: domain,
-  apiHost: 'https://plausible.friedrichvoelkers.de',
+  apiHost: apiHost,
   trackLocalhost: true,
 });
 

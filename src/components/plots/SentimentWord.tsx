@@ -128,6 +128,8 @@ const SenderSentimentWordChart: FC<SenderSentimentWordChartProps> = ({
  * Renders pagination controls with Previous/Next buttons and current page info.
  */
 const Pagination: FC<PaginationProps> = ({ currentPage, totalPages, darkMode, onPrev, onNext }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="flex justify-center items-center mt-4 space-x-2">
       <button
@@ -140,7 +142,7 @@ const Pagination: FC<PaginationProps> = ({ currentPage, totalPages, darkMode, on
         <ChevronLeft className="w-6 h-6" />
       </button>
       <span className={darkMode ? 'text-white' : 'text-black'}>
-        Page {currentPage} of {totalPages}
+        {t('General.page')} {currentPage} {t('General.of')} {totalPages}
       </span>
       <button
         onClick={onNext}
@@ -345,7 +347,7 @@ const SentimentWordsPlot: FC = (): ReactElement => {
     <div
       id="plot-sentiment-words"
       ref={containerRef}
-      className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 flex-grow ${
+      className={`border w-full md:min-w-[500px] md:basis-[500px] p-4 pt-2 md:pt-4 flex-grow ${
         darkMode ? 'border-gray-300 bg-gray-800 text-white' : 'border-black bg-white text-black'
       }`}
       style={{ minHeight: '350px', maxHeight: '550px', overflow: 'hidden' }}

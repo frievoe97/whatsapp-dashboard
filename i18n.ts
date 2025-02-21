@@ -15,6 +15,8 @@ const resources = {
       },
       General: {
         noDataAvailable: 'No Data Available.',
+        page: 'Page',
+        of: 'of',
       },
       App: {
         placeholder: 'Please upload a WhatsApp chat using "Upload Chat".',
@@ -73,16 +75,24 @@ const resources = {
       Stats: {
         title: 'Message Statistics per Person',
       },
+      AggregatePerTimePlot: {
+        title: 'Aggregated Messages per',
+      },
+      Timeline: {
+        title: 'Messages by',
+      },
     },
   },
   de: {
     translation: {
       WelcomeScreen: {
-        title: 'Willkommen bei dem Chat Visualizer!',
+        title: 'Willkommen beim Chat Visualizer!',
         subtitle: 'Lade deinen Chat hoch und entdecken die interaktiven Visualisierungen!',
       },
       General: {
         noDataAvailable: 'Keine Daten verfügbar.',
+        page: 'Seite',
+        of: 'von',
       },
       App: {
         placeholder: 'Bitte laden Sie einen WhatsApp-Chat über „Chat hochladen“ hoch.',
@@ -142,6 +152,12 @@ const resources = {
       },
       BarChartComp: {
         title: ' pro Person',
+      },
+      AggregatePerTimePlot: {
+        title: 'Aggregierte Nachrichten pro',
+      },
+      Timeline: {
+        title: 'Nachrichten nach',
       },
     },
   },

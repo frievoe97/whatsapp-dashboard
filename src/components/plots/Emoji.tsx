@@ -288,7 +288,7 @@ const EmojiPlot: FC = () => {
                   <ChevronLeft className="w-6 h-6" />
                 </button>
                 <span className={darkMode ? 'text-white' : 'text-black'}>
-                  Page {currentPage} of {totalPages}
+                  {t('General.page')} {currentPage} {t('General.of')} {totalPages}
                 </span>
                 <button
                   onClick={handleNextPage}

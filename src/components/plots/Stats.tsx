@@ -271,6 +271,7 @@ interface PaginationProps {
 
 const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPrev, onNext }) => {
   const { darkMode } = useChat();
+  const { t } = useTranslation();
   return (
     <div className="flex justify-center items-center mt-4 space-x-2">
       <button
@@ -283,7 +284,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPrev
         <ChevronLeft className="w-6 h-6" />
       </button>
       <span className={darkMode ? 'text-white' : 'text-black'}>
-        Page {currentPage} of {totalPages}
+        {t('General.page')} {currentPage} {t('General.of')} {totalPages}
       </span>
       <button
         onClick={onNext}

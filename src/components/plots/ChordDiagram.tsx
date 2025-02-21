@@ -323,7 +323,7 @@ const ChordDiagram: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className={`border w-full md:min-w-[400px] md:basis-[500px] p-4 px-0 md:px-4 pb-0 md:pb-4 flex-grow flex flex-col ${
+      className={`border w-full md:min-w-[400px] md:basis-[500px] p-4 px-0 md:px-4 pb-0 md:pb-4 pt-2 md:pt-4 flex-grow flex flex-col ${
         darkMode ? 'border-gray-300 bg-gray-800 text-white' : 'border-black bg-white text-black'
       }`}
       style={{ minHeight: '400px', maxHeight: '550px', overflow: 'hidden' }}

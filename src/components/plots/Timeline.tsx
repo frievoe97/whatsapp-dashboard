@@ -655,7 +655,9 @@ const Timeline: React.FC = () => {
     >
       {/* Titel */}
       <div id="timeline-plot-title" className="flex flex-row justify-between mb-4 px-4 md:px-0">
-        <h2 className="font-semibold text-base md:text-lg">Message Timeline</h2>
+        <h2 className="font-semibold text-sm md:text-lg">
+          {t('Timeline.title')} {mode}
+        </h2>
         <button
           className={`h-full ml-4 hidden md:flex items-center justify-center p-1 border-none focus:outline-none ${
             darkMode ? 'text-white' : 'text-black'
