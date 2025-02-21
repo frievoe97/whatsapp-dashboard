@@ -15,6 +15,7 @@ jobs:
 
       - name: Rename Hetzner files
         run: |
+          rm index.html
           mv index_hetzner.html index.html
           mv public/.htaccess_hetzner public/.htaccess
           mv public/robots_hetzner.txt public/robots.txt
