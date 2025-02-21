@@ -558,13 +558,13 @@ const SentimentAnalysis: React.FC = () => {
         >
           {t('Sentiment.title')}
         </h2>
-        <div className="flex flex-row">
+        <div className="flex flex-row items-center">
           <Split
             className={`hidden md:inline-block ${
               darkMode ? 'text-white' : 'text-gray-700'
             } w-4 h-4 md:w-5 md:h-5`}
           />
-          <div className="mx-1 md:mx-2 hidden md:inline-block">
+          <div className="mx-1 md:mx-2 hidden md:inline-block h-[20px]">
             <Switch
               onChange={() => {
                 setSplitMode(!splitMode);

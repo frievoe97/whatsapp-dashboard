@@ -215,7 +215,7 @@ const App: React.FC = () => {
           {/* p-4 px-8 */}
           {filteredMessages.length === 0 ? (
             <div
-              className={`w-full h-full flex text-lg items-center justify-center  border rounded-none text-center ${
+              className={`w-full h-full flex text-lg items-center justify-center border rounded-none text-center ${
                 darkMode ? 'border-white' : 'border-black'
               } `}
             >

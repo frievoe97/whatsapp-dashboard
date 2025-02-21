@@ -9,16 +9,3 @@ RewriteCond %{HTTPS} !=on
 RewriteRule ^(.*)$ https://chat-visualizer.de/$1 [R=301,L]
 
 AddDefaultCharset UTF-8
-
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
-</IfModule>
-
-<IfModule mod_brotli.c>
-    BrotliCompressionQuality 6
-    AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css text/javascript application/javascript application/json
-</IfModule>
-
-RewriteCond %{HTTP:Accept-Encoding} gzip
-RewriteCond %{REQUEST_FILENAME}.gz -f
-RewriteRule ^(.*)$ $1.gz [QSA,L]
