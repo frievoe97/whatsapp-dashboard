@@ -7,3 +7,5 @@ RewriteRule ^(.*)$ https://chat-visualizer.de/$1 [R=301,L]
 # Weiterleitung von HTTP auf HTTPS
 RewriteCond %{HTTPS} !=on
 RewriteRule ^(.*)$ https://chat-visualizer.de/$1 [R=301,L]
+
+AddDefaultCharset UTF-8

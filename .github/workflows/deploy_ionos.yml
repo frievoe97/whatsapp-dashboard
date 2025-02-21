@@ -35,6 +35,10 @@ jobs:
       - name: Build React App
         run: npm run build
 
+      - name: Compress files with GZip
+        run: |
+          find ./dist -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" -o -name "*.json" \) -exec gzip -9 -k {} \;
+
       - name: SFTP uploader
         uses: wangyucode/sftp-upload-action@v2.0.2
         with:
