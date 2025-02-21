@@ -208,20 +208,22 @@ const App: React.FC = () => {
         {/* Chat Analysis Components */}
         <div
           ref={containerRef}
-          className="mt-4 md:h-lvh flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-between items-stretch"
+          className={`mt-4 md:h-lvh flex-1 md:overflow-y-auto flex flex-wrap gap-4 justify-between items-stretch ${
+            filteredMessages.length != 0 ? 'pb-4 md:pb-0' : ''
+          }`}
         >
           {/* p-4 px-8 */}
           {filteredMessages.length === 0 ? (
             <div
               className={`w-full h-full flex text-lg items-center justify-center  border rounded-none text-center ${
                 darkMode ? 'border-white' : 'border-black'
-              }`}
+              } `}
             >
               {/* {t('App.placeholder')} */}
               <WelcomeScreen />
             </div>
           ) : (
-            <div className="w-full flex flex-col gap-4 pb-4">
+            <>
               <AggregatePerTime />
               <Timeline />
               <BarChartComp />
@@ -232,7 +234,7 @@ const App: React.FC = () => {
               <Sentiment />
               <SentimentWord />
               <HeatmapMonthWeekday />
-            </div>
+            </>
           )}
         </div>
       </div>
