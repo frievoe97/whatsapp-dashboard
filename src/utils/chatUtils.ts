@@ -7,8 +7,9 @@ import plausible from 'plausible-tracker';
 
 // Initialize Plausible tracking with the correct domain and API host
 
+console.log('Location: ', location);
 const { trackEvent } = plausible({
-  domain: 'chat-visualizer.de',
+  domain: 'whatsapp-dashboard.friedrichvoelkers.de',
   apiHost: 'https://plausible.friedrichvoelkers.de',
   trackLocalhost: true,
 });
