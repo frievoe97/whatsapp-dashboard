@@ -134,7 +134,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, darkMode }) => {
             <ChevronLeft size={20} />
           </button>
           <span className="text-sm">
-            Page {currentPageIndex + 1} of {totalPages}
+            {t('General.page')} {currentPageIndex + 1} {t('General.of')} {totalPages}
           </span>
           <button
             onClick={goToNextPage}

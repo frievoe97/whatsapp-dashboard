@@ -66,8 +66,17 @@ export const ChatContext = createContext<ChatContextType | undefined>(undefined)
  * @returns The Chat context provider wrapping the children.
  */
 export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  //////////// State: Dark Mode ////////////
+  //////////// State & Effect: Dark Mode ////////////
   const [darkMode, setDarkMode] = useState<boolean>(false);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setDarkMode(mediaQuery.matches);
+    const handleChange = (e: MediaQueryListEvent) => {
+      setDarkMode(e.matches);
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
   const toggleDarkMode = useCallback(() => setDarkMode((prev) => !prev), []);
 
   //////////// State: Chat Messages and Metadata ////////////
