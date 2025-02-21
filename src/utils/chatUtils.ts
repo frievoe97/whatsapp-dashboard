@@ -5,17 +5,13 @@ import { ChatMessage, FilterOptions } from '../types/chatTypes';
 
 import plausible from 'plausible-tracker';
 
-// Check if the current URL contains "/testing"
-const isTesting = window.location.pathname.includes('/testing');
-
 // Initialize Plausible tracking with the correct domain and API host
-const { trackEvent } = isTesting
-  ? { trackEvent: () => {} } // No‑Op: tut nichts
-  : plausible({
-      domain: 'chat-visualizer.de',
-      apiHost: 'https://plausible.friedrichvoelkers.de',
-      trackLocalhost: true,
-    });
+
+const { trackEvent } = plausible({
+  domain: 'chat-visualizer.de',
+  apiHost: 'https://plausible.friedrichvoelkers.de',
+  trackLocalhost: true,
+});
 
 ////////////////////// Utility Functions for Filter Updates ////////////////////////
 
@@ -135,6 +131,7 @@ export const handleFileUpload = (
   setIsPanelOpen: Dispatch<SetStateAction<boolean>>,
   setUseShortNames: Dispatch<SetStateAction<boolean>>,
   tempSetUseShortNames: Dispatch<SetStateAction<boolean>>,
+  isTesting: boolean,
 ) => {
   // Reset short names options on new file upload.
   setUseShortNames(false);
@@ -142,8 +139,9 @@ export const handleFileUpload = (
   const file = event.target.files?.[0];
   if (!file) return;
 
-  console.log('TrackEvent: ', trackEvent);
-  trackEvent('Upload File');
+  if (!isTesting) {
+    trackEvent('uploadFile');
+  }
 
   const reader = new FileReader();
   reader.onload = async (e) => {

@@ -27,6 +27,7 @@ export default function WelcomeScreen() {
     setIsPanelOpen,
     setUseShortNames,
     tempSetUseShortNames,
+    isTesting,
   } = useChat();
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
@@ -122,6 +123,7 @@ export default function WelcomeScreen() {
               setIsPanelOpen,
               setUseShortNames,
               tempSetUseShortNames,
+              isTesting,
             )
           }
         />

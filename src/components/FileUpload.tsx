@@ -98,6 +98,7 @@ const FileUpload: React.FC = () => {
     setUseShortNames,
     setFilteredMessages,
     tempSetUseShortNames,
+    isTesting,
   } = useChat();
 
   const [weekdaysDropdownOpen, setWeekdaysDropdownOpen] = useState(false);
@@ -215,6 +216,7 @@ const FileUpload: React.FC = () => {
                       setIsPanelOpen,
                       setUseShortNames,
                       tempSetUseShortNames,
+                      isTesting,
                     )
                   }
                 />
