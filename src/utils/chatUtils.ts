@@ -19,9 +19,9 @@ if (location.hostname.includes('whatsapp-dashboard')) {
 
 let apiHost = '';
 if (location.hostname.includes('whatsapp-dashboard')) {
-  apiHost = 'https://plausible.friedrichvoelkers.de';
+  apiHost = 'https://plausible.kasperlab.de';
 } else if (location.hostname.includes('chat-visualizer')) {
-  apiHost = 'https://plausible.friedrichvoelkers.de';
+  apiHost = 'https://plausible.kasperlab.de';
 } else {
   apiHost = '';
 }
