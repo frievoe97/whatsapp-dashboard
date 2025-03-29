@@ -362,8 +362,8 @@ const FileUpload: React.FC = () => {
                     tempFilters.endDate
                       ? dayjs(tempFilters.endDate)
                       : metadata?.lastMessageDate
-                        ? dayjs(metadata.lastMessageDate)
-                        : undefined
+                      ? dayjs(metadata.lastMessageDate)
+                      : undefined
                   }
                   slotProps={{
                     textField: {
@@ -415,8 +415,8 @@ const FileUpload: React.FC = () => {
                     tempFilters.startDate
                       ? dayjs(tempFilters.startDate)
                       : metadata?.firstMessageDate
-                        ? dayjs(metadata.firstMessageDate)
-                        : undefined
+                      ? dayjs(metadata.firstMessageDate)
+                      : undefined
                   }
                   maxDate={metadata?.lastMessageDate ? dayjs(metadata.lastMessageDate) : undefined}
                   slotProps={{

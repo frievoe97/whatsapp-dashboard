@@ -8,4 +8,20 @@ RewriteRule ^(.*)$ https://whatsapp-dashboard.friedrichvoelkers.de/$1 [R=301,L]
 RewriteCond %{HTTPS} !=on
 RewriteRule ^(.*)$ https://whatsapp-dashboard.friedrichvoelkers.de/$1 [R=301,L]
 
+# Standard-Zeichensatz auf UTF-8 setzen
 AddDefaultCharset UTF-8
+
+# GZip & Brotli Komprimierung aktivieren
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+<IfModule mod_brotli.c>
+    BrotliCompressionQuality 6
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Automatisch die .gz-Versionen von Dateien ausliefern, falls vorhanden
+RewriteCond %{HTTP:Accept-Encoding} gzip
+RewriteCond %{REQUEST_FILENAME}.gz -f
+RewriteRule ^(.*)$ $1.gz [QSA,L]

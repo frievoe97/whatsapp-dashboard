@@ -77,12 +77,12 @@ export const getCustomSelectStyles = (darkMode: boolean) => ({
         ? '#777'
         : '#ddd'
       : window.innerWidth >= 768 && state.isFocused && state.selectProps.menuIsOpen
-        ? darkMode
-          ? '#555'
-          : '#eee'
-        : darkMode
-          ? '#333'
-          : 'white',
+      ? darkMode
+        ? '#555'
+        : '#eee'
+      : darkMode
+      ? '#333'
+      : 'white',
     color: darkMode ? 'white' : 'black',
   }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -133,7 +133,7 @@ export const LOCALES = {
       totalWordsSent: 'Total Words Sent',
       maxWordsInMessage: 'Max Words in a Message',
       activeDays: 'Active Days',
-      uniqueWordsCount: 'Unique Words Count',
+      uniqueWordsCount: 'Unique Words',
       avgCharactersPerMessage: 'Avg. Characters per Message',
       firstMessage: 'First Message',
       lastMessage: 'Last Message',
@@ -170,16 +170,16 @@ export const LOCALES = {
       'Nov',
       'Dez',
     ],
-    sentiment: ['Besten', 'Schlechtesten'],
+    sentiment: ['Positive', 'Negative'],
     interval: ['Stunde', 'Tag', 'Monat', 'Jahr', 'Tag'], // interval[4] means 'Weekday'
     stats: {
       numberOfMessages: 'Anzahl der Nachrichten',
       averageWordsPerMessage: 'Durchschn. Wörter pro Nachricht',
       medianWordsPerMessage: 'Median Wörter pro Nachricht',
       totalWordsSent: 'Gesendete Wörter insgesamt',
-      maxWordsInMessage: 'Maximale Wörter in einer Nachricht',
+      maxWordsInMessage: 'Max. Wörter in einer Nachricht',
       activeDays: 'Aktive Tage',
-      uniqueWordsCount: 'Einzigartige Wörter zählen',
+      uniqueWordsCount: 'Einzigartige Wörter',
       avgCharactersPerMessage: 'Durchschn. Zeichen pro Nachricht',
       firstMessage: 'Erste Nachricht',
       lastMessage: 'Letzte Nachricht',
