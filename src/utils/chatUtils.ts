@@ -8,27 +8,9 @@ import plausible from 'plausible-tracker';
 // Initialize Plausible tracking with the correct domain and API host
 
 // Sets the domain for plausible tracking based on the current hostname.
-let domain = '';
-if (location.hostname.includes('whatsapp-dashboard')) {
-  domain = 'whatsapp-dashboard.friedrichvoelkers.de';
-} else if (location.hostname.includes('chat-visualizer')) {
-  domain = 'chat-visualizer.de';
-} else {
-  domain = '';
-}
-
-let apiHost = '';
-if (location.hostname.includes('whatsapp-dashboard')) {
-  apiHost = 'https://plausible.friedrichvoelkers.de';
-} else if (location.hostname.includes('chat-visualizer')) {
-  apiHost = 'https://plausible.kasperlab.de';
-} else {
-  apiHost = '';
-}
-
 const { trackEvent } = plausible({
-  domain: domain,
-  apiHost: apiHost,
+  domain: 'chat-visualizer.de',
+  apiHost: 'https://plausible.kasperlab.de',
   trackLocalhost: true,
 });
 
