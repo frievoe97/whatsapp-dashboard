@@ -225,3 +225,49 @@ export const handleDeleteFile = (
     fileInputRef.current.value = '';
   }
 };
+
+////////////////////// Example Chat Handling ////////////////////////
+
+/**
+ * Handles loading and parsing an example chat file from a given URL.
+ */
+export const handleExampleChat = async (
+  url: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setOriginalMessages: Dispatch<SetStateAction<any[]>>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setMetadata: Dispatch<SetStateAction<any | null>>,
+  setIsPanelOpen: Dispatch<SetStateAction<boolean>>,
+  setUseShortNames: Dispatch<SetStateAction<boolean>>,
+  tempSetUseShortNames: Dispatch<SetStateAction<boolean>>,
+) => {
+  // Reset short names
+  setUseShortNames(false);
+  tempSetUseShortNames(false);
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const content = await response.text();
+
+    // Create a new worker to parse the file content.
+    const worker = new Worker(new URL('../workers/parseWorker.ts', import.meta.url), {
+      type: 'module',
+    });
+    worker.postMessage({ content, fileName: 'example_chat.txt' });
+
+    worker.onmessage = (e) => {
+      const { result, error } = e.data;
+      if (error) {
+        console.error('Error while parsing example chat:', error);
+      } else {
+        setOriginalMessages(result.messages);
+        setMetadata(result.metadata);
+        setIsPanelOpen(false);
+      }
+      worker.terminate();
+    };
+  } catch (err) {
+    console.error('Error while loading example chat:', err);
+  }
+};
