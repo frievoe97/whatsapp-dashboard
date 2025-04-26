@@ -233,7 +233,9 @@ export const handleDeleteFile = (
  */
 export const handleExampleChat = async (
   url: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setOriginalMessages: Dispatch<SetStateAction<any[]>>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setMetadata: Dispatch<SetStateAction<any | null>>,
   setIsPanelOpen: Dispatch<SetStateAction<boolean>>,
   setUseShortNames: Dispatch<SetStateAction<boolean>>,

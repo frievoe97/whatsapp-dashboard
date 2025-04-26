@@ -51,8 +51,9 @@ export default function WelcomeScreen() {
 
   return (
     <div
-      className={`p-2 w-full h-full flex flex-col items-center justify-around  ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'
-        }`}
+      className={`p-2 w-full h-full flex flex-col items-center justify-around  ${
+        darkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'
+      }`}
     >
       {/* Title and subtitle */}
       <div>
@@ -101,11 +102,13 @@ export default function WelcomeScreen() {
         {/* Datei-Auswahl */}
         <label
           htmlFor="file-upload"
-          className={`text-sm md:text-base cursor-pointer px-4 py-2 border rounded-none ${metadata?.fileName ? '' : 'w-full text-center'
-            } ${darkMode
+          className={`text-sm md:text-base cursor-pointer px-4 py-2 border rounded-none ${
+            metadata?.fileName ? '' : 'w-full text-center'
+          } ${
+            darkMode
               ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
               : 'bg-white text-black border-black hover:bg-gray-200'
-            } transition-all`}
+          } transition-all`}
         >
           {t('FileUpload.selectFile')}
         </label>
@@ -148,9 +151,10 @@ export default function WelcomeScreen() {
             px-4 py-2
             border rounded-none
             ${metadata?.fileName ? '' : 'w-full text-center'}
-            ${darkMode
-              ? 'bg-gray-700 text-white border-white hover:bg-gray-800 hover:border-white focus:outline-none focus:ring-0'
-              : 'bg-white text-black border-black hover:bg-gray-200 hover:border-black focus:outline-none focus:ring-0'
+            ${
+              darkMode
+                ? 'bg-gray-700 text-white border-white hover:bg-gray-800 hover:border-white focus:outline-none focus:ring-0'
+                : 'bg-white text-black border-black hover:bg-gray-200 hover:border-black focus:outline-none focus:ring-0'
             }
 
           transition-colors
