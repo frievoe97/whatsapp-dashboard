@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useChat } from '../context/ChatContext';
 import { useTranslation } from 'react-i18next';
 import '../../i18n';
-import { handleFileUpload } from '../utils/chatUtils';
+import { handleFileUpload, handleExampleChat } from '../utils/chatUtils';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -31,6 +31,9 @@ export default function WelcomeScreen() {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
 
+  const EXAMPLE_CHAT_URL =
+    'https://raw.githubusercontent.com/frievoe97/whatsapp-dashboard/master/exampleData/example_chat.txt';
+
   // Define indices (0-based) of images to skip
   const skipIndices = [2, 3, 4, 5, 6, 8];
 
@@ -48,9 +51,8 @@ export default function WelcomeScreen() {
 
   return (
     <div
-      className={`p-2 w-full h-full flex flex-col items-center justify-around  ${
-        darkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'
-      }`}
+      className={`p-2 w-full h-full flex flex-col items-center justify-around  ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'
+        }`}
     >
       {/* Title and subtitle */}
       <div>
@@ -94,17 +96,16 @@ export default function WelcomeScreen() {
         />
       </div>
 
-      {/* File upload button */}
-      <div className="flex items-center mt-4">
+      {/* File upload & example chat buttons */}
+      <div className="flex items-center mt-4 space-x-2">
+        {/* Datei-Auswahl */}
         <label
           htmlFor="file-upload"
-          className={`text-sm md:text-base cursor-pointer px-4 py-2 border rounded-none ${
-            metadata?.fileName ? '' : 'w-full text-center'
-          } ${
-            darkMode
+          className={`text-sm md:text-base cursor-pointer px-4 py-2 border rounded-none ${metadata?.fileName ? '' : 'w-full text-center'
+            } ${darkMode
               ? 'bg-gray-700 text-white border-white hover:bg-gray-800'
               : 'bg-white text-black border-black hover:bg-gray-200'
-          } transition-all`}
+            } transition-all`}
         >
           {t('FileUpload.selectFile')}
         </label>
@@ -125,6 +126,38 @@ export default function WelcomeScreen() {
             )
           }
         />
+
+        {/* Load example chat */}
+        <button
+          type="button"
+          onClick={() =>
+            handleExampleChat(
+              EXAMPLE_CHAT_URL,
+              setOriginalMessages,
+              setMetadata,
+              setIsPanelOpen,
+              setUseShortNames,
+              tempSetUseShortNames,
+            )
+          }
+          className={`
+            whitespace-nowrap
+            font-normal
+            text-sm md:text-base
+            cursor-pointer
+            px-4 py-2
+            border rounded-none
+            ${metadata?.fileName ? '' : 'w-full text-center'}
+            ${darkMode
+              ? 'bg-gray-700 text-white border-white hover:bg-gray-800 hover:border-white focus:outline-none focus:ring-0'
+              : 'bg-white text-black border-black hover:bg-gray-200 hover:border-black focus:outline-none focus:ring-0'
+            }
+
+          transition-colors
+          `}
+        >
+          {t('FileUpload.useExampleChat')}
+        </button>
       </div>
     </div>
   );

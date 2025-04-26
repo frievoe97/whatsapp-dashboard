@@ -24,6 +24,7 @@ const resources = {
       },
       FileUpload: {
         selectFile: 'Upload Chat',
+        useExampleChat: 'Use Example Chat',
         selectSenders: 'Select Senders',
         minimumMessageShare: 'Message Share (%)',
         startDate: 'Start Date',
@@ -100,6 +101,7 @@ const resources = {
       },
       FileUpload: {
         selectFile: 'Chat hochladen',
+        useExampleChat: 'Beispiel-Chat verwenden',
         selectSenders: 'Absender',
         minimumMessageShare: 'Mindestanteil (%)',
         startDate: 'Startdatum',
