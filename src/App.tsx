@@ -18,6 +18,7 @@ import Stats from './components/plots/Stats';
 import Sentiment from './components/plots/Sentiment';
 import Emoji from './components/plots/Emoji';
 import BarChartComp from './components/plots/BarChartComp';
+import ConversationStarter from './components/plots/ConversationStarter';
 import SentimentWord from './components/plots/SentimentWord';
 import ChordDiagram from './components/plots/ChordDiagram';
 import HeatmapMonthWeekday from './components/plots/Heatmap';
@@ -231,6 +232,7 @@ const App: React.FC = () => {
               <ChordDiagram />
               <WordCount />
               <Stats />
+              <ConversationStarter />
               <Sentiment />
               <SentimentWord />
               <HeatmapMonthWeekday />

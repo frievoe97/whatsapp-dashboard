@@ -70,6 +70,9 @@ const resources = {
       WordCount: {
         title: 'Top 10 Words per Person',
       },
+      ConversationStarter: {
+        title: 'Conversation Starters After Long Pauses',
+      },
       ChordDiagram: {
         title: 'Response Behavior (Top ',
       },
@@ -145,6 +148,9 @@ const resources = {
       },
       WordCount: {
         title: 'Top 10 Wörter pro Person',
+      },
+      ConversationStarter: {
+        title: 'Konversationsstarter nach langen Pausen',
       },
       ChordDiagram: {
         title: 'Antwortverhalten (Top ',

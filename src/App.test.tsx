@@ -22,6 +22,7 @@ import Heatmap from './components/plots/Heatmap';
 import SentimentAnalysis from './components/plots/Sentiment';
 import SentimentWordsPlot from './components/plots/SentimentWord';
 import Stats from './components/plots/Stats';
+import ConversationStarter from './components/plots/ConversationStarter';
 import Timeline from './components/plots/Timeline';
 import WordCount from './components/plots/WordCount';
 
@@ -204,6 +205,25 @@ describe('Stats', () => {
       () => {
         const divElement = container.querySelector('div#stats-card');
         expect(divElement).toBeTruthy();
+      },
+      { timeout: 5000 },
+    );
+  });
+});
+
+////////////////////// Test: ConversationStarter ////////////////////////
+describe('ConversationStarter', () => {
+  it('should render the SVG element after loading (and a short timeout)', async () => {
+    const { container } = render(
+      <ChatContext.Provider value={dummyContextValue}>
+        <ConversationStarter />
+      </ChatContext.Provider>,
+    );
+
+    await waitFor(
+      () => {
+        const svgElement = container.querySelector('svg#conversation-starter-plot');
+        expect(svgElement).toBeTruthy();
       },
       { timeout: 5000 },
     );
