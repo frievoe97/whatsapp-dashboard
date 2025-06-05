@@ -24,6 +24,7 @@ import SentimentWordsPlot from './components/plots/SentimentWord';
 import Stats from './components/plots/Stats';
 import Timeline from './components/plots/Timeline';
 import WordCount from './components/plots/WordCount';
+import MessageSharePieChart from './components/plots/MessageSharePieChart';
 
 ////////////////////// Dummy Context ////////////////////////
 // This dummy context provides all necessary fields for testing.
@@ -242,6 +243,25 @@ describe('WordCount', () => {
       () => {
         const divElement = container.querySelector('div#word-count-chart');
         expect(divElement).toBeTruthy();
+      },
+      { timeout: 5000 },
+    );
+  });
+});
+
+////////////////////// Test: MessageSharePieChart ////////////////////////
+describe('MessageSharePieChart', () => {
+  it('should render the SVG element after loading (and a short timeout)', async () => {
+    const { container } = render(
+      <ChatContext.Provider value={dummyContextValue}>
+        <MessageSharePieChart />
+      </ChatContext.Provider>,
+    );
+
+    await waitFor(
+      () => {
+        const svgElement = container.querySelector('svg');
+        expect(svgElement).toBeTruthy();
       },
       { timeout: 5000 },
     );
