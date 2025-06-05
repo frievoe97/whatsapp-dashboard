@@ -70,6 +70,10 @@ const resources = {
       WordCount: {
         title: 'Top 10 Words per Person',
       },
+      WordCloud: {
+        title: 'Word Cloud',
+        all: 'All Participants',
+      },
       ChordDiagram: {
         title: 'Response Behavior (Top ',
       },
@@ -145,6 +149,10 @@ const resources = {
       },
       WordCount: {
         title: 'Top 10 Wörter pro Person',
+      },
+      WordCloud: {
+        title: 'Wortwolke',
+        all: 'Alle Teilnehmer',
       },
       ChordDiagram: {
         title: 'Antwortverhalten (Top ',
