@@ -76,6 +76,9 @@ const resources = {
       Stats: {
         title: 'Message Statistics per Person',
       },
+      MessageSharePieChart: {
+        title: "Message Share per Person",
+      },
       AggregatePerTimePlot: {
         title: 'Aggregated Messages per',
       },
@@ -151,6 +154,9 @@ const resources = {
       },
       Stats: {
         title: 'Nachrichtenstatistik pro Person',
+      },
+      MessageSharePieChart: {
+        title: 'Nachrichtenanteil pro Person',
       },
       BarChartComp: {
         title: ' pro Person',

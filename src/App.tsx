@@ -21,6 +21,7 @@ import BarChartComp from './components/plots/BarChartComp';
 import SentimentWord from './components/plots/SentimentWord';
 import ChordDiagram from './components/plots/ChordDiagram';
 import HeatmapMonthWeekday from './components/plots/Heatmap';
+import MessageSharePieChart from './components/plots/MessageSharePieChart';
 import FileUploadMobile from './components/FileUploadMobile';
 import NewFileUploader from './components/FileUpload';
 import WelcomeScreen from './components/WelcomeScreen';
@@ -231,6 +232,7 @@ const App: React.FC = () => {
               <ChordDiagram />
               <WordCount />
               <Stats />
+              <MessageSharePieChart />
               <Sentiment />
               <SentimentWord />
               <HeatmapMonthWeekday />
