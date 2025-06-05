@@ -76,6 +76,9 @@ const resources = {
       Stats: {
         title: 'Message Statistics per Person',
       },
+      BoxPlot: {
+        title: 'Message Length Distribution',
+      },
       AggregatePerTimePlot: {
         title: 'Aggregated Messages per',
       },
@@ -151,6 +154,9 @@ const resources = {
       },
       Stats: {
         title: 'Nachrichtenstatistik pro Person',
+      },
+      BoxPlot: {
+        title: 'Nachrichtenlänge pro Person',
       },
       BarChartComp: {
         title: ' pro Person',

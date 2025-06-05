@@ -14,6 +14,7 @@ import { useChat } from './context/ChatContext';
 import AggregatePerTime from './components/plots/AggregatePerTime';
 import Timeline from './components/plots/Timeline';
 import WordCount from './components/plots/WordCount';
+import BoxPlot from './components/plots/BoxPlot';
 import Stats from './components/plots/Stats';
 import Sentiment from './components/plots/Sentiment';
 import Emoji from './components/plots/Emoji';
@@ -230,6 +231,7 @@ const App: React.FC = () => {
               <Emoji />
               <ChordDiagram />
               <WordCount />
+              <BoxPlot />
               <Stats />
               <Sentiment />
               <SentimentWord />

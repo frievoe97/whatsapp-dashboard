@@ -319,6 +319,14 @@ This heatmap compares the total number of messages across all participants. You 
   <img src="https://github.com/user-attachments/assets/cf574bf7-1523-4276-87cb-1d22c7e726c4#gh-light-mode-only" width="500">
 </p>
 
+---
+
+### 11. Message Length Distribution (BoxPlot)
+
+**Location:** `src/components/plots/BoxPlot.tsx`
+**Description:**
+This box-and-whisker plot shows the distribution of message lengths for each participant so you can quickly spot who tends to write shorter or longer messages.
+
 ## Message Filtering Options
 
 The Chat Visualizer offers a comprehensive set of filters that allow you to refine the messages used in the analysis. Use these filters to focus on specific time periods, participants, and more, ensuring that the visualizations reflect the data most relevant to you.
